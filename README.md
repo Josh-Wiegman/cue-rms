@@ -28,6 +28,14 @@ _Please note that you might have to configure Prettier as your default formatter
 
 ### Running the application
 
+Once you have installed the correct packages and extensions, you're good to start developing!
+
+To serve the application, run the following command. Once the application is serving, you can make changes and save files to see your changes reflected without having to rebuild it each time.
+
+```
+ng serve
+```
+
 ## Testing
 
 _Coming soon..._
