@@ -1,11 +1,10 @@
 import { Component } from '@angular/core';
+import { UiShellComponent } from '../../shared/ui-shell/ui-shell-component';
 
 @Component({
-  selector: 'app-home-component',
-  imports: [],
+  selector: 'home-component',
+  imports: [UiShellComponent],
   templateUrl: './home-component.html',
-  styleUrl: './home-component.scss'
+  styleUrl: './home-component.scss',
 })
-export class HomeComponent {
-
-}
+export class HomeComponent {}
