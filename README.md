@@ -24,7 +24,7 @@ To ensure a common coding style and standard within this code base, we'll be usi
 
 These have already been configured, so please install the Prettier and ESLint VSCode extensions to allow for formatting and linting on save.
 
-_Please note that you might have to configure Prettier as your default formatter in the VSCode settings, and turn on format on save_
+_Please note that you might have to configure Prettier as your default formatter in the VSCode settings, and turn on format on save._
 
 ### Running the application
 
