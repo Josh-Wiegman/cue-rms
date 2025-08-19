@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Component } from '@angular/core';
 import { SupabaseService } from '../../supabase.service';
 import { CommonModule } from '@angular/common';
@@ -20,7 +21,7 @@ export class UiShellComponent {
         if (error) {
           console.error('Error fetching data:', error);
         } else {
-          console.log('Fetched:', data); // Logging the fetched data for debugging
+          console.log('Fetched:', data); // Logging the fetched data for debugging, probably shouldn't do this in production
           this.locations = data ?? [];
         }
       });
