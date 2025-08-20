@@ -1,5 +1,11 @@
+@use "style/colors.scss" as *;
+@use "style/fonts.scss" as *;
+
 * {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
+  background-color: $off-white;
+  color: $off-black;
+  font-family: $default-font;
 }
