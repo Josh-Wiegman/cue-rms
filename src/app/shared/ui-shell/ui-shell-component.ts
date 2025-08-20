@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { Component } from '@angular/core';
-import { SupabaseService } from '../../supabase.service';
+import { SupabaseService } from '../supabase-service/supabase.service';
 import { CommonModule } from '@angular/common';
 
 @Component({
@@ -27,11 +27,3 @@ export class UiShellComponent {
       });
   }
 }
-
-@Component({
-  selector: 'app-root',
-  standalone: true,
-  imports: [UiShellComponent],
-  template: `<ui-shell></ui-shell>`,
-})
-export class AppComponent {}
