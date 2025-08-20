@@ -1,0 +1,6 @@
+@use "../../../style/colors.scss" as *;
+
+nav {
+  background-color: $primary-color;
+  height: 100%;
+}

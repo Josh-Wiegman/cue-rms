@@ -1,29 +1,13 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { Component } from '@angular/core';
-import { SupabaseService } from '../supabase-service/supabase.service';
-import { CommonModule } from '@angular/common';
+import { MainNavigationComponent } from '../main-navigation-component/main-navigation-component';
+import { HeaderComponent } from '../header-component/header-component';
 
 @Component({
   selector: 'ui-shell',
   standalone: true,
-  imports: [CommonModule],
+  imports: [MainNavigationComponent, HeaderComponent],
   templateUrl: './ui-shell-component.html',
   styleUrl: './ui-shell-component.scss',
 })
-export class UiShellComponent {
-  locations: any[] = []; // this doesn't like being typed as 'any', but it works for now
-
-  constructor(private supabaseService: SupabaseService) {
-    this.supabaseService.client
-      .from('location_main')
-      .select('*')
-      .then(({ data, error }) => {
-        if (error) {
-          console.error('Error fetching data:', error);
-        } else {
-          console.log('Fetched:', data); // Logging the fetched data for debugging, probably shouldn't do this in production
-          this.locations = data ?? [];
-        }
-      });
-  }
-}
+export class UiShellComponent {}

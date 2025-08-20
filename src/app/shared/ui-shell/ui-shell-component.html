@@ -1,24 +1,7 @@
-<header>
-  <!-- icon -->
-  <h1>Company name</h1>
-  <!-- search bar -->
-</header>
+<header-component></header-component>
 
-<nav>
-  <ul>
-    <li>Sales</li>
-    <li>Crew</li>
-    <li>Inventory</li>
-    <li>Clashes</li>
-    <li>Calendar</li>
-    <li>Reporting</li>
-  </ul>
-</nav>
+<main-navigation-component></main-navigation-component>
 
-<h1>Locations</h1>
-
-<ul>
-  @for (loc of locations; track loc.id) {
-    <li>{{ loc.id }} – {{ loc.name }}</li>
-  }
-</ul>
+<div id="content">
+  <ng-content select="content"></ng-content>
+</div>

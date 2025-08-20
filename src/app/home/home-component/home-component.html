@@ -1,3 +1,11 @@
 <ui-shell>
-  <!-- content -->
+  <content>
+    <h1>Locations</h1>
+
+    <ul>
+      @for (loc of locations; track loc.id) {
+        <li>{{ loc.id }} – {{ loc.name }}</li>
+      }
+    </ul>
+  </content>
 </ui-shell>
