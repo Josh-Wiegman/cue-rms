@@ -3,4 +3,25 @@
 nav {
   background-color: $primary-color;
   height: 100%;
+  display: flex;
+  flex-wrap: wrap;
+  flex-direction: column;
+}
+
+nav li {
+  width: 100%;
+}
+
+nav li a {
+  padding: 16px;
+  color: $off-white;
+  text-decoration: none;
+  display: inline-block;
+  width: 100%;
+  height: 100%;
+  transition: background-color 0.4s ease-in-out 0s;
+}
+
+nav li a:hover {
+  background-color: $secondary-color;
 }
