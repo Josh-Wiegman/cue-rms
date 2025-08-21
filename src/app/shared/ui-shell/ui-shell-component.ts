@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Component } from '@angular/core';
 import { MainNavigationComponent } from '../main-navigation-component/main-navigation-component';
 import { HeaderComponent } from '../header-component/header-component';
