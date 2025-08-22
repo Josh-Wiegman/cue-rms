@@ -3,9 +3,7 @@
     <h1>Locations</h1>
 
     <ul>
-      <li>
-        {{ locations }}
-      </li>
+      <li *ngFor="let i of locations">{{ i.id }} + {{ i.notes }}</li>
     </ul>
   </content>
 </ui-shell>

@@ -16,7 +16,7 @@ export class dbFunctionsService {
         });
 
       if (error) throw error;
-      return data;
+      return data.data;
     } catch (err) {
       console.error('Error fetching functions:', err);
       throw err;
