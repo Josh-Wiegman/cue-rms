@@ -1,8 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { UiShellComponent } from '../../shared/ui-shell/ui-shell-component';
-import { getFunctions } from '../../shared/supabase-service/get_functions.service';
+import { dbFunctionsService } from '../../shared/supabase-service/db_functions.service';
 
 @Component({
   selector: 'home-component',
@@ -10,14 +10,18 @@ import { getFunctions } from '../../shared/supabase-service/get_functions.servic
   templateUrl: './home-component.html',
   styleUrl: './home-component.scss',
 })
-export class HomeComponent {
-  locations: any[] = [];
+export class HomeComponent implements OnInit {
+  locations: any = [];
 
-  constructor() {
-    this.loadLocations();
+  // ✅ inject the service
+  constructor(private dbFunctions: dbFunctionsService) {}
+
+  async ngOnInit() {
+    await this.loadLocations();
   }
+
   async loadLocations() {
-    this.locations = await getFunctions();
+    this.locations = await this.dbFunctions.getFunctions();
     console.log('Locations loaded:', this.locations);
   }
 }
