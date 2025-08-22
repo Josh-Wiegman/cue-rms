@@ -19,4 +19,6 @@ main-navigation-component {
 #content {
   grid-column: 2;
   grid-row: 2;
+  margin: 20px;
+  overflow-x: hidden;
 }
