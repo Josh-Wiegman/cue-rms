@@ -21,7 +21,7 @@ export class HomeComponent implements OnInit {
   }
 
   async loadLocations() {
-    this.locations = await this.dbFunctions.getFunctions();
+    this.locations = await this.dbFunctions.getLocations();
     console.log('Locations loaded:', this.locations);
   }
 }

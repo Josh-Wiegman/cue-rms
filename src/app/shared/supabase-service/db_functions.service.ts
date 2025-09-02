@@ -8,11 +8,11 @@ import { SupabaseService } from './supabase.service';
 export class dbFunctionsService {
   constructor(private supabaseService: SupabaseService) {}
 
-  async getFunctions() {
+  async getLocations() {
     try {
       const { data, error } =
         await this.supabaseService.client.functions.invoke('db_get_functions', {
-          body: { name: 'Functions' },
+          headers: { 'x-query-type': 'locations' },
         });
 
       if (error) throw error;
