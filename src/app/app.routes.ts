@@ -30,6 +30,14 @@ export const routes: Routes = [
     title: 'Crew | Cue RMS',
   },
   {
+    path: 'crew-schedule',
+    loadComponent: () =>
+      import('./crew/crew-scheduler/crew-scheduler').then(
+        (m) => m.CrewScheduler,
+      ),
+    title: 'Scheduler | Cue RMS',
+  },
+  {
     path: 'inventory',
     loadComponent: () =>
       import('./inventory/inventory-component/inventory-component').then(

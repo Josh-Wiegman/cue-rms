@@ -13,7 +13,7 @@ import { dbFunctionsService } from '../../shared/supabase-service/db_functions.s
 export class HomeComponent implements OnInit {
   locations: any = [];
 
-  // ✅ inject the service
+  // inject the service
   constructor(private dbFunctions: dbFunctionsService) {}
 
   async ngOnInit() {

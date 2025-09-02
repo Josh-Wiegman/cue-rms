@@ -22,4 +22,19 @@ export class dbFunctionsService {
       throw err;
     }
   }
+
+  async getJobsByDate(date: string) {
+    try {
+      const { data, error } =
+        await this.supabaseService.client.functions.invoke('db_get_functions', {
+          headers: { 'x-query-type': 'jobs-by-date', 'x-query-date': date },
+        });
+
+      if (error) throw error;
+      return data.data;
+    } catch (err) {
+      console.error('Error fetching functions:', err);
+      throw err;
+    }
+  }
 }

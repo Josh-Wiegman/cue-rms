@@ -1,0 +1,31 @@
+<ui-shell>
+  <content>
+    <h1>Crew Scheduler</h1>
+    <table>
+      <tr>
+        <th>Job Name</th>
+        <th>Job Date</th>
+        <th>Type</th>
+        <th>Start Time</th>
+        <th>End Time</th>
+        <th>Vehicle</th>
+      </tr>
+      <tr *ngFor="let job of jobs">
+        <td>{{ job.job_name }}</td>
+        <td>{{ job.start_date }}</td>
+        <td *ngFor="let line of job.job_lines">{{ line.type }}</td>
+        <td *ngFor="let line of job.job_lines">
+          <input type="time" [(ngModel)]="line.start_time" />
+        </td>
+        <td *ngFor="let line of job.job_lines">
+          <input type="time" [(ngModel)]="line.end_time" />
+        </td>
+        <td *ngFor="let line of job.job_lines">
+          <select [(ngModel)]="line.vehicle">
+            <option *ngFor="let v of vehicles" [value]="v">{{ v }}</option>
+          </select>
+        </td>
+      </tr>
+    </table>
+  </content>
+</ui-shell>
