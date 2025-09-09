@@ -1,0 +1,21 @@
+@use "colors.scss" as *;
+
+@mixin button-base {
+  padding: 12px;
+  border-radius: 5px;
+}
+
+@mixin primary-button {
+  @include button-base;
+  border: none;
+  background-color: $secondary-color;
+  color: $off-white;
+}
+
+@mixin secondary-button {
+  @include button-base;
+  background-color: #fff;
+  border-color: #b4b4b4;
+  border-style: solid;
+  border-width: 1px;
+}

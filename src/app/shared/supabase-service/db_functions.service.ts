@@ -37,4 +37,11 @@ export class dbFunctionsService {
       throw err;
     }
   }
+
+  getItems() {
+    return [
+      { id: 1, name: 'test 1', category: 'light', stock: 5, price: 50 },
+      { id: 2, name: 'test 2', category: 'speaker', stock: 2, price: 25 },
+    ];
+  }
 }
