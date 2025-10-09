@@ -1,0 +1,23 @@
+<div class="kb-shell">
+  <div class="kb-main">
+    <section class="kb-cards">
+      <ng-container *ngIf="articles$ | async as articles">
+        <div *ngIf="articles.length === 0" class="empty">
+          No articles found.
+        </div>
+        <article class="kb-card" *ngFor="let a of articles">
+          <a [routerLink]="['/kb/article', a.id]" class="kb-card-link">
+            <h3 class="kb-card-title">{{ a.title }}</h3>
+            <p class="kb-card-excerpt">{{ a.excerpt }}</p>
+            <div class="kb-card-meta">
+              <small *ngIf="a.tags?.length">{{ a.tags?.join(" • ") }}</small>
+              <small *ngIf="a.updatedAt">
+                — {{ a.updatedAt | date: "mediumDate" }}</small
+              >
+            </div>
+          </a>
+        </article>
+      </ng-container>
+    </section>
+  </div>
+</div>

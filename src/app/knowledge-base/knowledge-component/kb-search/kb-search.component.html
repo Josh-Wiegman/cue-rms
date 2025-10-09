@@ -1,0 +1,7 @@
+<div class="kb-search">
+  <input [formControl]="control" placeholder="Search the knowledge base..." />
+  <button *ngIf="control.value" (click)="clear()">✕</button>
+  <div class="bcount" *ngIf="resultsCount !== null">
+    {{ resultsCount }} results
+  </div>
+</div>

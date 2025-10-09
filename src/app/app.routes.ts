@@ -70,6 +70,14 @@ export const routes: Routes = [
     title: 'Reporting | Cue RMS',
   },
   {
+    path: 'kb',
+    loadChildren: () =>
+      import('./knowledge-base/knowledge-component/knowledge-base.routes').then(
+        (m) => m.KnowledgeBaseRoutes,
+      ),
+    title: 'KBase | Cue RMS',
+  },
+  {
     path: '**',
     component: NotFoundComponent,
     title: 'Page not found | Cue RMS',

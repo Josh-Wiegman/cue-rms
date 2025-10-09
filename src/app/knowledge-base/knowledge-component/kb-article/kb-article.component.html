@@ -1,0 +1,19 @@
+<div class="kb-shell">
+  <main class="kb-main article">
+    <ng-container *ngIf="article$ | async as article">
+      <div *ngIf="!article" class="not-found">Article not found.</div>
+
+      <article *ngIf="article">
+        <h1 class="title">{{ article.title }}</h1>
+        <div class="meta">Updated {{ article.updatedAt | date: "medium" }}</div>
+
+        <!-- For simplicity, article.body is markdown-ish raw text. Replace with markdown renderer if desired -->
+        <div class="body" [innerHTML]="article.body"></div>
+
+        <div class="tags" *ngIf="article.tags?.length">
+          <span class="tag" *ngFor="let t of article.tags">{{ t }}</span>
+        </div>
+      </article>
+    </ng-container>
+  </main>
+</div>

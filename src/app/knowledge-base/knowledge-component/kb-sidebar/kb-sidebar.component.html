@@ -1,0 +1,25 @@
+<aside class="sidebar">
+  <div class="brand">Knowledge Base</div>
+
+  <nav>
+    <div class="section-title">Categories</div>
+    <ul>
+      <li *ngFor="let cat of categories">
+        <a [routerLink]="['/kb', cat.slug]">{{ cat.name }}</a>
+        <ul *ngIf="cat.children">
+          <li *ngFor="let child of cat.children">
+            <a [routerLink]="['/kb/article/', child.id]">{{ child.title }}</a>
+          </li>
+        </ul>
+      </li>
+    </ul>
+  </nav>
+
+  <section class="help">
+    <h4>Quick links</h4>
+    <ul>
+      <li><a href="www.cue-go.co.nz/contact">Contact support</a></li>
+      <li><a [routerLink]="['/kb/submit-article']">Submit article</a></li>
+    </ul>
+  </section>
+</aside>

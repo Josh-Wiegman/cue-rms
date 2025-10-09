@@ -1,0 +1,57 @@
+<div class="submit-article">
+  <h2>Submit an Article</h2>
+
+  <form [formGroup]="form" (ngSubmit)="submit()">
+    <!-- Title -->
+    <label>
+      Title
+      <input type="text" formControlName="title" placeholder="Enter title" />
+    </label>
+    <div
+      class="error"
+      *ngIf="form.controls['title'].invalid && form.controls['title'].touched"
+    >
+      Title is required and must be under 150 characters.
+    </div>
+
+    <!-- Excerpt -->
+    <label>
+      Excerpt
+      <textarea
+        formControlName="excerpt"
+        placeholder="Short summary (optional)"
+      ></textarea>
+    </label>
+
+    <!-- Body -->
+    <label>
+      Body
+      <textarea
+        formControlName="body"
+        placeholder="Full article content"
+      ></textarea>
+    </label>
+    <div
+      class="error"
+      *ngIf="form.controls['body'].invalid && form.controls['body'].touched"
+    >
+      Body is required.
+    </div>
+
+    <!-- Tags -->
+    <label>
+      Tags (comma separated)
+      <input
+        type="text"
+        formControlName="tags"
+        placeholder="e.g. setup, deployment"
+      />
+    </label>
+
+    <button type="submit" [disabled]="isSubmitting || form.invalid">
+      {{ isSubmitting ? "Submitting…" : "Submit Article" }}
+    </button>
+  </form>
+
+  <p class="message" *ngIf="message">{{ message }}</p>
+</div>
