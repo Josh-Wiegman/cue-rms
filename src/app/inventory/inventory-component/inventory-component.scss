@@ -1,0 +1,32 @@
+@use "../../../style/buttons.scss" as *;
+
+#control {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  width: 100%;
+  height: 4rem;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+th {
+  cursor: pointer;
+  user-select: none;
+  background: #f3f3f3;
+}
+
+th,
+td {
+  padding: 8px;
+  border: 1px solid #ccc;
+}
+
+tr:hover {
+  background-color: #f9f9f9;
+}

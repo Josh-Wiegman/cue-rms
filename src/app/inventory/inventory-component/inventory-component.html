@@ -1,9 +1,68 @@
 <ui-shell>
   <content>
-    <h2>Inventory</h2>
-    <button>Add product placeholder</button>
-    <div id="control"><p>Control row placeholder</p></div>
+    <h1>Inventory</h1>
 
-    <product-grid-component [products]="test"></product-grid-component>
+    <table>
+      <thead>
+        <tr>
+          <th>
+            <input
+              type="checkbox"
+              [checked]="isAllSelected()"
+              (change)="toggleSelectAll($event)"
+            />
+          </th>
+          <th (click)="sortData('id')">
+            ID
+            <span *ngIf="sortColumn === 'id'">{{
+              sortDirection === "asc" ? "▲" : "▼"
+            }}</span>
+          </th>
+          <th (click)="sortData('name')">
+            Name
+            <span *ngIf="sortColumn === 'name'">{{
+              sortDirection === "asc" ? "▲" : "▼"
+            }}</span>
+          </th>
+          <th (click)="sortData('category')">
+            Category
+            <span *ngIf="sortColumn === 'category'">{{
+              sortDirection === "asc" ? "▲" : "▼"
+            }}</span>
+          </th>
+          <th (click)="sortData('stock')">
+            Stock
+            <span *ngIf="sortColumn === 'stock'">{{
+              sortDirection === "asc" ? "▲" : "▼"
+            }}</span>
+          </th>
+          <th (click)="sortData('price')">
+            Price
+            <span *ngIf="sortColumn === 'price'">{{
+              sortDirection === "asc" ? "▲" : "▼"
+            }}</span>
+          </th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let item of sortedItems">
+          <td>
+            <input
+              type="checkbox"
+              [checked]="isSelected(item.id)"
+              (change)="toggleSelection(item.id)"
+            />
+          </td>
+          <td>{{ item.id }}</td>
+          <td>{{ item.name }}</td>
+          <td>{{ item.category }}</td>
+          <td>{{ item.stock }}</td>
+          <td>{{ item.price | currency }}</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- Action Button -->
+    <button (click)="performActionOnSelected()">Run Action on Selected</button>
   </content>
 </ui-shell>
