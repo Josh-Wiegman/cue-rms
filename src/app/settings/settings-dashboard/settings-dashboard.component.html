@@ -30,6 +30,13 @@
         >
           Add user
         </button>
+        <button
+          type="button"
+          [class.active]="activeSection === 'logout'"
+          (click)="logout()"
+        >
+          Logout
+        </button>
       </nav>
 
       <section class="settings__panel" *ngIf="activeSection === 'profile'">
@@ -59,7 +66,9 @@
           Grant access to new staff members directly from this dashboard.
         </p>
 
-        <ng-container *ngIf="canManageUsers(user.permissionLevel); else permissionWarning">
+        <ng-container
+          *ngIf="canManageUsers(user.permissionLevel); else permissionWarning"
+        >
           <form
             class="settings__form"
             [formGroup]="createUserForm"
@@ -72,7 +81,10 @@
             </label>
             <div
               class="validation"
-              *ngIf="createUserForm.controls.displayName.invalid && createUserForm.controls.displayName.touched"
+              *ngIf="
+                createUserForm.controls.displayName.invalid &&
+                createUserForm.controls.displayName.touched
+              "
             >
               A display name is required.
             </div>
@@ -83,7 +95,10 @@
             </label>
             <div
               class="validation"
-              *ngIf="createUserForm.controls.email.invalid && createUserForm.controls.email.touched"
+              *ngIf="
+                createUserForm.controls.email.invalid &&
+                createUserForm.controls.email.touched
+              "
             >
               Enter a valid email address.
             </div>
@@ -94,7 +109,10 @@
             </label>
             <div
               class="validation"
-              *ngIf="createUserForm.controls.password.invalid && createUserForm.controls.password.touched"
+              *ngIf="
+                createUserForm.controls.password.invalid &&
+                createUserForm.controls.password.touched
+              "
             >
               Password must be at least 8 characters.
             </div>
@@ -102,17 +120,25 @@
             <label>
               <span>Permission level</span>
               <select formControlName="permissionLevel">
-                <option *ngFor="let level of permissionLevels" [ngValue]="level">
+                <option
+                  *ngFor="let level of permissionLevels"
+                  [ngValue]="level"
+                >
                   {{ permissionLabels[level] }}
                 </option>
               </select>
             </label>
 
-            <button type="submit" [disabled]="createUserForm.invalid || isSavingUser">
-              {{ isSavingUser ? 'Creating user…' : 'Create user' }}
+            <button
+              type="submit"
+              [disabled]="createUserForm.invalid || isSavingUser"
+            >
+              {{ isSavingUser ? "Creating user…" : "Create user" }}
             </button>
 
-            <p class="settings__status" *ngIf="saveMessage">{{ saveMessage }}</p>
+            <p class="settings__status" *ngIf="saveMessage">
+              {{ saveMessage }}
+            </p>
           </form>
         </ng-container>
         <ng-template #permissionWarning>

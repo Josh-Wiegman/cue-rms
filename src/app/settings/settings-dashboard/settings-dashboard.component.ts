@@ -1,10 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { Component, inject } from '@angular/core';
-import {
-  FormBuilder,
-  ReactiveFormsModule,
-  Validators,
-} from '@angular/forms';
+import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 
 import { UiShellComponent } from '../../shared/ui-shell/ui-shell-component';
 import { AuthService } from '../../auth/auth.service';
@@ -16,11 +12,7 @@ import {
 @Component({
   selector: 'app-settings-dashboard',
   standalone: true,
-  imports: [
-    CommonModule,
-    UiShellComponent,
-    ReactiveFormsModule,
-  ],
+  imports: [CommonModule, UiShellComponent, ReactiveFormsModule],
   templateUrl: './settings-dashboard.component.html',
   styleUrl: './settings-dashboard.component.scss',
 })
@@ -89,6 +81,13 @@ export class SettingsDashboardComponent {
           : 'Unable to create the new user.';
     } finally {
       this.isSavingUser = false;
+    }
+  }
+  async logout(): Promise<void> {
+    try {
+      await this.authService.logout();
+    } catch (err) {
+      console.error('Logout failed:', err);
     }
   }
 }
