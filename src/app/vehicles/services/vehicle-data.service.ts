@@ -1,5 +1,5 @@
 import { Injectable, inject } from '@angular/core';
-import { BehaviorSubject } from 'rxjs';
+import { BehaviorSubject, Subscription } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import {
   MaintenanceRecord,
@@ -7,7 +7,8 @@ import {
   VehicleDetails,
   VehicleStatus,
 } from '../models/vehicle.model';
-import { SupabaseService } from '../../shared/supabase-service/supabase.service'; // adjust path if needed
+import { SupabaseService } from '../../shared/supabase-service/supabase.service';
+import { AuthService } from '../../auth/auth.service'; // adjust path if needed
 
 export interface VehicleInput {
   location: string;
@@ -81,21 +82,38 @@ interface MaintenanceMutationApiResponse {
 export class VehicleDataService {
   private readonly vehiclesSubject = new BehaviorSubject<Vehicle[]>([]);
   private readonly supabaseService = inject(SupabaseService);
+  private readonly authService = inject(AuthService);
 
   private readonly baseUrl: string;
+  private readonly orgSlug = 'gravity';
+  private readonly anonKey = environment.supabaseKey ?? ''; // add to env
   private authLevel: 1 | 2 = 2;
+
+  private authSub?: Subscription;
 
   readonly vehicles$ = this.vehiclesSubject.asObservable();
 
   constructor() {
     this.baseUrl = this.buildBaseUrl();
-    void this.refreshVehicles();
+
+    // Only fetch when we actually have a logged-in user/session.
+    // Also refetch on login/logout changes.
+    this.authSub = this.authService.currentUser$.subscribe(async (user) => {
+      if (user) {
+        await this.refreshVehicles();
+      } else {
+        this.vehiclesSubject.next([]);
+      }
+    });
   }
 
   setAuthLevel(level: 1 | 2): void {
     if (this.authLevel === level) return;
     this.authLevel = level;
-    void this.refreshVehicles();
+    // Only refresh if logged in
+    if (this.authService.isAuthenticated()) {
+      void this.refreshVehicles();
+    }
   }
 
   async addVehicle(payload: VehicleInput): Promise<Vehicle | null> {
@@ -114,7 +132,9 @@ export class VehicleDataService {
     const response = await this.request<VehicleMutationApiResponse>(
       'POST',
       '',
-      { body: { ...columns, maintenance: maintenancePayload } },
+      {
+        body: { ...columns, maintenance: maintenancePayload },
+      },
     );
 
     const createdId = response?.vehicle?.id;
@@ -153,7 +173,9 @@ export class VehicleDataService {
     const response = await this.request<VehicleMutationApiResponse>(
       'DELETE',
       '',
-      { body: { id } },
+      {
+        body: { id },
+      },
     );
     if (!response?.ok) return;
     await this.refreshVehicles();
@@ -342,7 +364,7 @@ export class VehicleDataService {
 
   private buildBaseUrl(): string {
     const root = environment.supabaseDataUrl.replace(/\/+$/, '');
-    // no trailing slash; we’ll append path segments explicitly
+    // Supabase function is "vehicles" (no trailing slash). We'll add path segments manually.
     return `${root}/functions/v1/vehicles`;
   }
 
@@ -351,11 +373,8 @@ export class VehicleDataService {
     path: string,
     options?: { query?: Record<string, unknown>; body?: unknown },
   ): Promise<T | null> {
-    // Construct target URL safely: base (no trailing slash) + optional "/path"
-    const target = new URL(
-      path ? `/${path}` : '',
-      this.baseUrl + (this.baseUrl.endsWith('/') ? '' : '/'),
-    );
+    const base = this.baseUrl + (this.baseUrl.endsWith('/') ? '' : '/');
+    const target = new URL(path ? `/${path}` : '', base);
 
     const query = options?.query ?? {};
     for (const [key, value] of Object.entries(query)) {
@@ -363,16 +382,24 @@ export class VehicleDataService {
       target.searchParams.set(key, String(value));
     }
 
-    // Grab the current access token from Supabase
+    // pull session token each request (covers refreshes)
     const { data } = await this.supabaseService.client.auth.getSession();
     const accessToken = data.session?.access_token ?? '';
 
     const headers: Record<string, string> = {
       'x-auth-level': String(this.authLevel),
+      'x-org-slug': this.orgSlug,
+      // Supabase Functions commonly expect both:
+      apikey: this.anonKey,
     };
-
     if (accessToken) {
       headers['authorization'] = `Bearer ${accessToken}`;
+    } else {
+      // If no session, don’t hit a protected function; return null quietly.
+      console.warn(
+        'Vehicle request skipped: no Supabase access token available.',
+      );
+      return null;
     }
 
     let body: string | undefined;
@@ -403,9 +430,7 @@ export class VehicleDataService {
         return null;
       }
 
-      if (response.status === 204) {
-        return { ok: true } as T;
-      }
+      if (response.status === 204) return { ok: true } as T;
 
       const dataJson = (await response.json()) as T;
       if (!dataJson.ok) {
@@ -561,9 +586,8 @@ export class VehicleDataService {
     const rawLines = text.split(/\r?\n/);
     const lines = rawLines.filter((line) => line.trim().length > 0);
 
-    if (lines.length < 2) {
+    if (lines.length < 2)
       return { vehicles: [], skipped: 0, errors: ['No data rows found.'] };
-    }
 
     const headers = this.normaliseHeaderLine(lines.shift()!);
     const vehiclesByPlate = new Map<string, Vehicle>();
@@ -714,13 +738,16 @@ export class VehicleDataService {
         inQuotes = !inQuotes;
         continue;
       }
+
       if (char === ',' && !inQuotes) {
         values.push(current.trim());
         current = '';
         continue;
       }
+
       current += char;
     }
+
     values.push(current.trim());
     return values;
   }
@@ -734,9 +761,8 @@ export class VehicleDataService {
   }
 
   private mergeVehicle(target: Vehicle, source: Vehicle): void {
-    if (source.name && source.name.length > target.name.length) {
+    if (source.name && source.name.length > target.name.length)
       target.name = source.name;
-    }
 
     if (source.location && source.location !== 'Unassigned') {
       const shouldUpdate =
@@ -916,7 +942,6 @@ export class VehicleDataService {
       notes: source.notes?.trim() ?? '',
       locked: source.locked ?? false,
     };
-
     if (!this.hasMaintenanceContent(record)) return null;
     return record;
   }
