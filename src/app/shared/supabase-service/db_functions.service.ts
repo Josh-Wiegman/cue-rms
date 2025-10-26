@@ -86,6 +86,24 @@ export class dbFunctionsService {
     }
   }
 
+  async getNavigationItems(orgId: string) {
+    try {
+      const { data, error } =
+        await this.supabaseService.client.functions.invoke('database-access', {
+          headers: {
+            'x-query-type': 'navigation-items',
+            'x-org-id': orgId,
+          },
+        });
+
+      if (error) throw error;
+      return data.data;
+    } catch (err) {
+      console.error('Error fetching navigation items:', err);
+      throw err;
+    }
+  }
+
   getItems() {
     return [
       { id: 1, name: 'test 1', category: 'light', stock: 5, price: 50 },
