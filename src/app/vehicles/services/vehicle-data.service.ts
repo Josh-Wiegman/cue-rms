@@ -382,9 +382,15 @@ export class VehicleDataService {
       target.searchParams.set(key, String(value));
     }
 
+    // 🔑 Build auth headers
+    const { data } = await this.supabaseService.client.auth.getSession();
+    const accessToken = data.session?.access_token;
+
     const headers: Record<string, string> = {
       'x-auth-level': String(this.authLevel),
       'x-org-slug': this.orgSlug,
+      apikey: this.anonKey, // required by Supabase gateway
+      authorization: `Bearer ${accessToken ?? this.anonKey}`, // required by Supabase gateway & your function
     };
 
     let body: string | undefined;
@@ -399,14 +405,12 @@ export class VehicleDataService {
         headers,
         body,
       });
-
       if (!response.ok) {
         let errorDetails: string | undefined;
         try {
-          const problem = (await response.json()) as { error?: string };
-          errorDetails = problem?.error;
+          errorDetails = (await response.json())?.error;
         } catch {
-          // ignore non-JSON error bodies
+          return null;
         }
         console.error(
           `Vehicle API ${method} ${target.pathname} failed`,
@@ -414,9 +418,7 @@ export class VehicleDataService {
         );
         return null;
       }
-
       if (response.status === 204) return { ok: true } as T;
-
       const dataJson = (await response.json()) as T;
       if (!dataJson.ok) {
         console.error(
@@ -425,7 +427,6 @@ export class VehicleDataService {
         );
         return null;
       }
-
       return dataJson;
     } catch (error) {
       console.error(
