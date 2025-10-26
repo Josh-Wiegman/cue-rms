@@ -4,24 +4,9 @@
   </div>
 
   <ul class="nav__links">
-    <li><a routerLink="/sales" routerLinkActive="active">Sales</a></li>
-    <li><a routerLink="/crew" routerLinkActive="active">Crew</a></li>
-    <li>
-      <a routerLink="/crew-schedule" routerLinkActive="active">Scheduler</a>
+    <li *ngFor="let item of navItems">
+      <a [routerLink]="item.path" routerLinkActive="active">{{ item.label }}</a>
     </li>
-    <li>
-      <a routerLink="/inventory" routerLinkActive="active">Inventory</a>
-    </li>
-    <li>
-      <a routerLink="/vehicles" routerLinkActive="active">Vehicles</a>
-    </li>
-    <li><a routerLink="/clashes" routerLinkActive="active">Clashes</a></li>
-    <li><a routerLink="/calendar" routerLinkActive="active">Calendar</a></li>
-    <li>
-      <a routerLink="/reporting" routerLinkActive="active">Reporting</a>
-    </li>
-    <li><a routerLink="/kb" routerLinkActive="active">KBase</a></li>
-    <li><a routerLink="/settings" routerLinkActive="active">Settings</a></li>
   </ul>
 
   <div class="nav__actions" *ngIf="user$ | async as user; else login">
