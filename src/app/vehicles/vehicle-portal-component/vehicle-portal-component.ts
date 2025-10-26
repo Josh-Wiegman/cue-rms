@@ -41,6 +41,8 @@ export class VehiclePortalComponent implements OnInit {
   vehicles = signal<Vehicle[]>([]);
   selectedVehicleId = signal<string | null>(null);
   authLevel = signal<1 | 2>(2);
+  showAddVehicleModal = signal(false);
+  showAddMaintenanceModal = signal(false);
 
   readonly selectedVehicle = computed(() =>
     this.vehicles().find((vehicle) => vehicle.id === this.selectedVehicleId()) ??
@@ -190,6 +192,66 @@ export class VehiclePortalComponent implements OnInit {
     this.changeAuthLevel(value);
   }
 
+  openAddVehicleModal(): void {
+    this.resetNewVehicleForm();
+    this.showAddVehicleModal.set(true);
+  }
+
+  closeAddVehicleModal(): void {
+    this.showAddVehicleModal.set(false);
+  }
+
+  openAddMaintenanceModal(): void {
+    if (!this.selectedVehicle()) {
+      return;
+    }
+    this.resetMaintenanceForm();
+    this.showAddMaintenanceModal.set(true);
+  }
+
+  closeAddMaintenanceModal(): void {
+    this.showAddMaintenanceModal.set(false);
+  }
+
+  private resetNewVehicleForm(): void {
+    this.newVehicleForm.reset({
+      location: '',
+      name: '',
+      licensePlate: '',
+      purchaseDate: '',
+      vin: '',
+      engine: '',
+      chassis: '',
+      odometer: '',
+      fuelType: '',
+      transmission: '',
+      grossVehicleMass: '',
+      notes: '',
+      status: 'active',
+    });
+  }
+
+  private resetMaintenanceForm(): void {
+    this.maintenanceForm.reset({
+      date: '',
+      enteredBy: '',
+      work: '',
+      odoReading: '',
+      performedAt: '',
+      outcome: '',
+      cost: '',
+      notes: '',
+    });
+  }
+
+  private normalizeFieldValue(value: string | number | null | undefined): string {
+    if (value === null || value === undefined) {
+      return '';
+    }
+    const normalized = String(value).trim();
+    return normalized;
+  }
+
   addVehicle(): void {
     if (this.newVehicleForm.invalid) {
       this.newVehicleForm.markAllAsTouched();
@@ -207,30 +269,17 @@ export class VehiclePortalComponent implements OnInit {
         vin: value.vin,
         engine: value.engine,
         chassis: value.chassis,
-        odometer: value.odometer,
+        odometer: this.normalizeFieldValue(value.odometer),
         fuelType: value.fuelType,
         transmission: value.transmission,
-        grossVehicleMass: value.grossVehicleMass,
+        grossVehicleMass: this.normalizeFieldValue(value.grossVehicleMass),
         notes: value.notes,
       },
     });
 
-    this.newVehicleForm.reset({
-      location: '',
-      name: '',
-      licensePlate: '',
-      purchaseDate: '',
-      vin: '',
-      engine: '',
-      chassis: '',
-      odometer: '',
-      fuelType: '',
-      transmission: '',
-      grossVehicleMass: '',
-      notes: '',
-      status: 'active',
-    });
+    this.resetNewVehicleForm();
     this.selectedVehicleId.set(vehicle.id);
+    this.closeAddVehicleModal();
   }
 
   saveVehicleDetails(): void {
@@ -255,10 +304,10 @@ export class VehiclePortalComponent implements OnInit {
         vin: value.vin,
         engine: value.engine,
         chassis: value.chassis,
-        odometer: value.odometer,
+        odometer: this.normalizeFieldValue(value.odometer),
         fuelType: value.fuelType,
         transmission: value.transmission,
-        grossVehicleMass: value.grossVehicleMass,
+        grossVehicleMass: this.normalizeFieldValue(value.grossVehicleMass),
         notes: value.notes,
       },
     }));
@@ -287,24 +336,16 @@ export class VehiclePortalComponent implements OnInit {
       date: value.date,
       enteredBy: value.enteredBy,
       work: value.work,
-      odoReading: value.odoReading,
+      odoReading: this.normalizeFieldValue(value.odoReading),
       performedAt: value.performedAt,
       outcome: value.outcome,
-      cost: value.cost,
+      cost: this.normalizeFieldValue(value.cost),
       notes: value.notes,
       locked: false,
     });
 
-    this.maintenanceForm.reset({
-      date: '',
-      enteredBy: '',
-      work: '',
-      odoReading: '',
-      performedAt: '',
-      outcome: '',
-      cost: '',
-      notes: '',
-    });
+    this.resetMaintenanceForm();
+    this.closeAddMaintenanceModal();
   }
 
   startEditMaintenance(record: MaintenanceRecord): void {
@@ -343,10 +384,10 @@ export class VehiclePortalComponent implements OnInit {
         date: value.date,
         enteredBy: value.enteredBy,
         work: value.work,
-        odoReading: value.odoReading,
+        odoReading: this.normalizeFieldValue(value.odoReading),
         performedAt: value.performedAt,
         outcome: value.outcome,
-        cost: value.cost,
+        cost: this.normalizeFieldValue(value.cost),
         notes: value.notes,
       }),
     );

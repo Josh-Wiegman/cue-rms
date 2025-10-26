@@ -48,6 +48,14 @@
         <section class="panel vehicle-list">
           <header class="panel__header">
             <h2>Vehicles</h2>
+            <button
+              type="button"
+              class="panel__header-action"
+              (click)="openAddVehicleModal()"
+            >
+              <span class="panel__header-action-icon" aria-hidden="true">+</span>
+              <span class="panel__header-action-label">Add vehicle</span>
+            </button>
           </header>
           <div class="table-wrapper">
             <table class="vehicle-table">
@@ -83,69 +91,6 @@
               </tbody>
             </table>
           </div>
-
-          <form class="panel__form" [formGroup]="newVehicleForm" (ngSubmit)="addVehicle()">
-            <h3>Add a vehicle</h3>
-            <div class="form-grid">
-              <label>
-                <span>Vehicle name</span>
-                <input type="text" formControlName="name" placeholder="e.g. Hino Truck" />
-              </label>
-              <label>
-                <span>License plate</span>
-                <input type="text" formControlName="licensePlate" placeholder="e.g. ABC123" />
-              </label>
-              <label>
-                <span>Location</span>
-                <input type="text" formControlName="location" placeholder="e.g. Dunedin" />
-              </label>
-              <label>
-                <span>Purchase date</span>
-                <input type="date" formControlName="purchaseDate" />
-              </label>
-              <label>
-                <span>VIN</span>
-                <input type="text" formControlName="vin" />
-              </label>
-              <label>
-                <span>Engine</span>
-                <input type="text" formControlName="engine" />
-              </label>
-              <label>
-                <span>Chassis</span>
-                <input type="text" formControlName="chassis" />
-              </label>
-              <label>
-                <span>Odometer</span>
-                <input type="text" formControlName="odometer" />
-              </label>
-              <label>
-                <span>Fuel type</span>
-                <input type="text" formControlName="fuelType" />
-              </label>
-              <label>
-                <span>Transmission</span>
-                <input type="text" formControlName="transmission" />
-              </label>
-              <label>
-                <span>Gross vehicle mass</span>
-                <input type="text" formControlName="grossVehicleMass" />
-              </label>
-              <label class="wide">
-                <span>Notes</span>
-                <textarea rows="2" formControlName="notes"></textarea>
-              </label>
-              <label>
-                <span>Status</span>
-                <select formControlName="status">
-                  <option value="active">Active</option>
-                  <option value="sold">Sold</option>
-                  <option value="archived">Archived</option>
-                </select>
-              </label>
-            </div>
-            <button type="submit" class="primary">Add vehicle</button>
-          </form>
         </section>
 
         <section class="panel vehicle-details" *ngIf="selectedVehicle(); else noSelection">
@@ -200,7 +145,7 @@
               </label>
               <label>
                 <span>Odometer</span>
-                <input type="text" formControlName="odometer" />
+                <input type="number" formControlName="odometer" inputmode="numeric" />
               </label>
               <label>
                 <span>Fuel type</span>
@@ -208,11 +153,19 @@
               </label>
               <label>
                 <span>Transmission</span>
-                <input type="text" formControlName="transmission" />
+                <select formControlName="transmission">
+                  <option value="">Select transmission</option>
+                  <option value="Automatic">Automatic</option>
+                  <option value="Manual">Manual</option>
+                </select>
               </label>
               <label>
                 <span>Gross vehicle mass</span>
-                <input type="text" formControlName="grossVehicleMass" />
+                <input
+                  type="number"
+                  formControlName="grossVehicleMass"
+                  inputmode="numeric"
+                />
               </label>
               <label class="wide">
                 <span>Notes</span>
@@ -236,45 +189,15 @@
                 <h3>Maintenance log</h3>
                 <p>Lock entries to prevent non-admin edits.</p>
               </div>
+              <button
+                type="button"
+                class="panel__header-action maintenance__add-action"
+                (click)="openAddMaintenanceModal()"
+              >
+                <span class="panel__header-action-icon" aria-hidden="true">+</span>
+                <span class="panel__header-action-label">Add record</span>
+              </button>
             </header>
-
-            <form class="maintenance__form" [formGroup]="maintenanceForm" (ngSubmit)="addMaintenance()">
-              <div class="form-grid">
-                <label>
-                  <span>Date</span>
-                  <input type="date" formControlName="date" />
-                </label>
-                <label>
-                  <span>Entered by</span>
-                  <input type="text" formControlName="enteredBy" />
-                </label>
-                <label>
-                  <span>Work</span>
-                  <input type="text" formControlName="work" />
-                </label>
-                <label>
-                  <span>ODO reading</span>
-                  <input type="text" formControlName="odoReading" />
-                </label>
-                <label>
-                  <span>Where</span>
-                  <input type="text" formControlName="performedAt" />
-                </label>
-                <label>
-                  <span>Outcome</span>
-                  <input type="text" formControlName="outcome" />
-                </label>
-                <label>
-                  <span>Cost</span>
-                  <input type="text" formControlName="cost" />
-                </label>
-                <label class="wide">
-                  <span>Notes</span>
-                  <textarea rows="2" formControlName="notes"></textarea>
-                </label>
-              </div>
-              <button type="submit">Add maintenance record</button>
-            </form>
 
             <div class="table-wrapper">
               <table>
@@ -303,10 +226,23 @@
                         <td><input type="date" [formControl]="maintenanceEditForm.controls.date" /></td>
                         <td><input type="text" [formControl]="maintenanceEditForm.controls.enteredBy" /></td>
                         <td><input type="text" [formControl]="maintenanceEditForm.controls.work" /></td>
-                        <td><input type="text" [formControl]="maintenanceEditForm.controls.odoReading" /></td>
+                        <td>
+                          <input
+                            type="number"
+                            inputmode="numeric"
+                            [formControl]="maintenanceEditForm.controls.odoReading"
+                          />
+                        </td>
                         <td><input type="text" [formControl]="maintenanceEditForm.controls.performedAt" /></td>
                         <td><input type="text" [formControl]="maintenanceEditForm.controls.outcome" /></td>
-                        <td><input type="text" [formControl]="maintenanceEditForm.controls.cost" /></td>
+                        <td>
+                          <input
+                            type="number"
+                            inputmode="numeric"
+                            [formControl]="maintenanceEditForm.controls.cost"
+                            step="0.01"
+                          />
+                        </td>
                         <td><textarea rows="2" [formControl]="maintenanceEditForm.controls.notes"></textarea></td>
                         <td class="actions">
                           <button type="button" (click)="saveMaintenanceEdit(record)">Save</button>
@@ -360,6 +296,189 @@
             <p>Choose a vehicle from the list to review its details and maintenance history.</p>
           </section>
         </ng-template>
+      </div>
+
+      <div
+        class="modal-backdrop"
+        *ngIf="showAddVehicleModal()"
+        (click)="closeAddVehicleModal()"
+      >
+        <div
+          class="modal"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="addVehicleModalTitle"
+          (click)="$event.stopPropagation()"
+        >
+          <header class="modal__header">
+            <h3 id="addVehicleModalTitle">Add vehicle</h3>
+            <button
+              type="button"
+              class="modal__close"
+              (click)="closeAddVehicleModal()"
+              aria-label="Close add vehicle form"
+            >
+              ×
+            </button>
+          </header>
+          <form
+            class="panel__form modal__form"
+            [formGroup]="newVehicleForm"
+            (ngSubmit)="addVehicle()"
+          >
+            <div class="form-grid">
+              <label>
+                <span>Vehicle name</span>
+                <input type="text" formControlName="name" placeholder="e.g. Hino Truck" />
+              </label>
+              <label>
+                <span>License plate</span>
+                <input type="text" formControlName="licensePlate" placeholder="e.g. ABC123" />
+              </label>
+              <label>
+                <span>Location</span>
+                <input type="text" formControlName="location" placeholder="e.g. Dunedin" />
+              </label>
+              <label>
+                <span>Purchase date</span>
+                <input type="date" formControlName="purchaseDate" />
+              </label>
+              <label>
+                <span>VIN</span>
+                <input type="text" formControlName="vin" />
+              </label>
+              <label>
+                <span>Engine</span>
+                <input type="text" formControlName="engine" />
+              </label>
+              <label>
+                <span>Chassis</span>
+                <input type="text" formControlName="chassis" />
+              </label>
+              <label>
+                <span>Odometer</span>
+                <input
+                  type="number"
+                  formControlName="odometer"
+                  inputmode="numeric"
+                />
+              </label>
+              <label>
+                <span>Fuel type</span>
+                <input type="text" formControlName="fuelType" />
+              </label>
+              <label>
+                <span>Transmission</span>
+                <select formControlName="transmission">
+                  <option value="">Select transmission</option>
+                  <option value="Automatic">Automatic</option>
+                  <option value="Manual">Manual</option>
+                </select>
+              </label>
+              <label>
+                <span>Gross vehicle mass</span>
+                <input
+                  type="number"
+                  formControlName="grossVehicleMass"
+                  inputmode="numeric"
+                />
+              </label>
+              <label class="wide">
+                <span>Notes</span>
+                <textarea rows="2" formControlName="notes"></textarea>
+              </label>
+              <label>
+                <span>Status</span>
+                <select formControlName="status">
+                  <option value="active">Active</option>
+                  <option value="sold">Sold</option>
+                  <option value="archived">Archived</option>
+                </select>
+              </label>
+            </div>
+            <div class="modal__actions">
+              <button type="submit" class="primary">Add vehicle</button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <div
+        class="modal-backdrop"
+        *ngIf="showAddMaintenanceModal()"
+        (click)="closeAddMaintenanceModal()"
+      >
+        <div
+          class="modal"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="addMaintenanceModalTitle"
+          (click)="$event.stopPropagation()"
+        >
+          <header class="modal__header">
+            <h3 id="addMaintenanceModalTitle">Add maintenance record</h3>
+            <button
+              type="button"
+              class="modal__close"
+              (click)="closeAddMaintenanceModal()"
+              aria-label="Close add maintenance form"
+            >
+              ×
+            </button>
+          </header>
+          <form
+            class="panel__form modal__form"
+            [formGroup]="maintenanceForm"
+            (ngSubmit)="addMaintenance()"
+          >
+            <div class="form-grid">
+              <label>
+                <span>Date</span>
+                <input type="date" formControlName="date" />
+              </label>
+              <label>
+                <span>Entered by</span>
+                <input type="text" formControlName="enteredBy" />
+              </label>
+              <label>
+                <span>Work</span>
+                <input type="text" formControlName="work" />
+              </label>
+              <label>
+                <span>ODO reading</span>
+                <input
+                  type="number"
+                  formControlName="odoReading"
+                  inputmode="numeric"
+                />
+              </label>
+              <label>
+                <span>Where</span>
+                <input type="text" formControlName="performedAt" />
+              </label>
+              <label>
+                <span>Outcome</span>
+                <input type="text" formControlName="outcome" />
+              </label>
+              <label>
+                <span>Cost</span>
+                <input
+                  type="number"
+                  formControlName="cost"
+                  inputmode="numeric"
+                  step="0.01"
+                />
+              </label>
+              <label class="wide">
+                <span>Notes</span>
+                <textarea rows="2" formControlName="notes"></textarea>
+              </label>
+            </div>
+            <div class="modal__actions">
+              <button type="submit" class="primary">Add record</button>
+            </div>
+          </form>
+        </div>
       </div>
     </div>
   </content>
