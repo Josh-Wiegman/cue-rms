@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Injectable, inject } from '@angular/core';
 import { BehaviorSubject, Subscription } from 'rxjs';
 import { environment } from '../../../environments/environment';
@@ -86,19 +87,20 @@ export class VehicleDataService {
 
   private readonly baseUrl: string;
   private readonly orgSlug = 'gravity';
-  private readonly anonKey = environment.supabaseKey ?? ''; // add to env
-  private authLevel: 1 | 2 = 2;
+  private readonly anonKey = environment.supabaseKey ?? '';
+
+  // Will be computed from user on auth changes
+  private authLevel: 1 | 2 = 1;
 
   private authSub?: Subscription;
-
   readonly vehicles$ = this.vehiclesSubject.asObservable();
 
   constructor() {
     this.baseUrl = this.buildBaseUrl();
 
-    // Only fetch when we actually have a logged-in user/session.
-    // Also refetch on login/logout changes.
     this.authSub = this.authService.currentUser$.subscribe(async (user) => {
+      this.authLevel = this.computeAuthLevelFromUser(user);
+
       if (user) {
         await this.refreshVehicles();
       } else {
@@ -107,13 +109,25 @@ export class VehicleDataService {
     });
   }
 
-  setAuthLevel(level: 1 | 2): void {
-    if (this.authLevel === level) return;
-    this.authLevel = level;
-    // Only refresh if logged in
-    if (this.authService.isAuthenticated()) {
-      void this.refreshVehicles();
-    }
+  private computeAuthLevelFromUser(user: any): 1 | 2 {
+    if (!user) return 1;
+
+    // Try several places the app might store it:
+    const lvl =
+      user.permissionLevel ??
+      user.user_metadata?.permissionLevel ??
+      user.app_metadata?.permissionLevel ??
+      user.metadata?.permissionLevel ??
+      null;
+
+    // If you also tag admins by role, this keeps working even without a number:
+    const roles: string[] =
+      user.roles ?? user.app_metadata?.roles ?? user.user_metadata?.roles ?? [];
+
+    const isAdminByNumber = lvl === 1 || lvl === 3;
+    const isAdminByRole = Array.isArray(roles) && roles.includes('admin');
+
+    return isAdminByNumber || isAdminByRole ? 2 : 1;
   }
 
   async addVehicle(payload: VehicleInput): Promise<Vehicle | null> {
@@ -382,15 +396,15 @@ export class VehicleDataService {
       target.searchParams.set(key, String(value));
     }
 
-    // 🔑 Build auth headers
+    // 🔑 Build auth headers (as you did earlier)
     const { data } = await this.supabaseService.client.auth.getSession();
     const accessToken = data.session?.access_token;
 
     const headers: Record<string, string> = {
-      'x-auth-level': String(this.authLevel),
+      'x-auth-level': String(this.authLevel), // ← now auto-derived
       'x-org-slug': this.orgSlug,
-      apikey: this.anonKey, // required by Supabase gateway
-      authorization: `Bearer ${accessToken ?? this.anonKey}`, // required by Supabase gateway & your function
+      apikey: this.anonKey,
+      authorization: `Bearer ${accessToken ?? this.anonKey}`,
     };
 
     let body: string | undefined;

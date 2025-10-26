@@ -4,7 +4,9 @@
       <header class="page-header">
         <div>
           <h1>Vehicle Fleet Portal</h1>
-          <p>Track company vehicles, log maintenance and keep the fleet in sync.</p>
+          <p>
+            Track company vehicles, log maintenance and keep the fleet in sync.
+          </p>
         </div>
         <div class="page-header__controls">
           <div class="stats" *ngIf="authLevel() === 1">
@@ -21,17 +23,6 @@
               <span class="stat__value">{{ archivedVehicles() }}</span>
             </div>
           </div>
-          <div class="auth-selector">
-            <label for="authLevel">Auth level</label>
-            <select
-              id="authLevel"
-              [value]="authLevel()"
-              (change)="handleAuthLevelChange($event)"
-            >
-              <option value="1">Admin (1)</option>
-              <option value="2">Standard (2)</option>
-            </select>
-          </div>
         </div>
       </header>
 
@@ -45,7 +36,9 @@
                 class="panel__header-action panel__header-action--primary"
                 (click)="handleAddVehicleClick()"
               >
-                <span class="panel__header-action-icon" aria-hidden="true">+</span>
+                <span class="panel__header-action-icon" aria-hidden="true"
+                  >+</span
+                >
                 <span class="panel__header-action-label">Add vehicle</span>
               </button>
               <button
@@ -63,12 +56,24 @@
                 role="menu"
                 *ngIf="showAddVehicleMenu()"
               >
-                <button type="button" role="menuitem" (click)="handleVehicleMenuSelect('new')">
-                  <span class="panel__header-menu-icon" aria-hidden="true">+</span>
+                <button
+                  type="button"
+                  role="menuitem"
+                  (click)="handleVehicleMenuSelect('new')"
+                >
+                  <span class="panel__header-menu-icon" aria-hidden="true"
+                    >+</span
+                  >
                   <span class="panel__header-menu-label">Add vehicle</span>
                 </button>
-                <button type="button" role="menuitem" (click)="handleVehicleMenuSelect('import')">
-                  <span class="panel__header-menu-icon" aria-hidden="true">⇪</span>
+                <button
+                  type="button"
+                  role="menuitem"
+                  (click)="handleVehicleMenuSelect('import')"
+                >
+                  <span class="panel__header-menu-icon" aria-hidden="true"
+                    >⇪</span
+                  >
                   <span class="panel__header-menu-label">Import from CSV</span>
                 </button>
               </div>
@@ -98,14 +103,19 @@
                 >
                   <td>
                     <div class="vehicle-name">{{ vehicle.name }}</div>
-                    <div class="vehicle-meta">Added {{ vehicle.details.purchaseDate || '—' }}</div>
+                    <div class="vehicle-meta">
+                      Added {{ vehicle.details.purchaseDate || "—" }}
+                    </div>
                   </td>
                   <td>
                     <span class="plate">{{ vehicle.licensePlate }}</span>
                   </td>
                   <td>{{ vehicle.location }}</td>
                   <td>
-                    <span [ngClass]="['status-pill', 'status-' + vehicle.status]">{{ vehicle.status }}</span>
+                    <span
+                      [ngClass]="['status-pill', 'status-' + vehicle.status]"
+                      >{{ vehicle.status }}</span
+                    >
                   </td>
                   <td class="actions" *ngIf="isAdmin()">
                     <button
@@ -128,29 +138,55 @@
           </div>
         </section>
 
-        <section class="panel vehicle-details" *ngIf="selectedVehicle(); else noSelection">
+        <section
+          class="panel vehicle-details"
+          *ngIf="selectedVehicle(); else noSelection"
+        >
           <header class="panel__header">
             <div>
               <h2>{{ selectedVehicle()?.name }}</h2>
-              <p class="subtitle">{{ selectedVehicle()?.licensePlate }} • {{ selectedVehicle()?.location }}</p>
+              <p class="subtitle">
+                {{ selectedVehicle()?.licensePlate }} •
+                {{ selectedVehicle()?.location }}
+              </p>
             </div>
             <div class="status-actions">
-              <button type="button" (click)="markVehicleStatus('active')" [disabled]="selectedVehicle()?.status === 'active'">
+              <button
+                type="button"
+                (click)="markVehicleStatus('active')"
+                [disabled]="selectedVehicle()?.status === 'active'"
+              >
                 Mark active
               </button>
-              <button type="button" (click)="markVehicleStatus('sold')" [disabled]="selectedVehicle()?.status === 'sold'">
+              <button
+                type="button"
+                (click)="markVehicleStatus('sold')"
+                [disabled]="selectedVehicle()?.status === 'sold'"
+              >
                 Mark sold
               </button>
-              <button type="button" (click)="markVehicleStatus('archived')" [disabled]="selectedVehicle()?.status === 'archived'">
+              <button
+                type="button"
+                (click)="markVehicleStatus('archived')"
+                [disabled]="selectedVehicle()?.status === 'archived'"
+              >
                 Archive
               </button>
-              <button type="button" class="status-actions__export" (click)="exportSelectedVehicle()">
+              <button
+                type="button"
+                class="status-actions__export"
+                (click)="exportSelectedVehicle()"
+              >
                 Export CSV
               </button>
             </div>
           </header>
 
-          <form class="panel__form" [formGroup]="vehicleDetailsForm" (ngSubmit)="saveVehicleDetails()">
+          <form
+            class="panel__form"
+            [formGroup]="vehicleDetailsForm"
+            (ngSubmit)="saveVehicleDetails()"
+          >
             <h3>Vehicle details</h3>
             <div class="form-grid">
               <label>
@@ -159,7 +195,11 @@
               </label>
               <label>
                 <span>License plate</span>
-                <input type="text" formControlName="licensePlate" [readonly]="!canEditCoreDetails()" />
+                <input
+                  type="text"
+                  formControlName="licensePlate"
+                  [readonly]="!canEditCoreDetails()"
+                />
               </label>
               <label>
                 <span>Location</span>
@@ -167,11 +207,19 @@
               </label>
               <label>
                 <span>Purchase date</span>
-                <input type="date" formControlName="purchaseDate" [readonly]="!canEditCoreDetails()" />
+                <input
+                  type="date"
+                  formControlName="purchaseDate"
+                  [readonly]="!canEditCoreDetails()"
+                />
               </label>
               <label>
                 <span>VIN</span>
-                <input type="text" formControlName="vin" [readonly]="!canEditCoreDetails()" />
+                <input
+                  type="text"
+                  formControlName="vin"
+                  [readonly]="!canEditCoreDetails()"
+                />
               </label>
               <label>
                 <span>Engine</span>
@@ -183,7 +231,11 @@
               </label>
               <label>
                 <span>Odometer</span>
-                <input type="number" formControlName="odometer" inputmode="numeric" />
+                <input
+                  type="number"
+                  formControlName="odometer"
+                  inputmode="numeric"
+                />
               </label>
               <label>
                 <span>Fuel type</span>
@@ -224,7 +276,9 @@
                 class="panel__header-action maintenance__add-action"
                 (click)="openAddMaintenanceModal()"
               >
-                <span class="panel__header-action-icon" aria-hidden="true">+</span>
+                <span class="panel__header-action-icon" aria-hidden="true"
+                  >+</span
+                >
                 <span class="panel__header-action-label">Add record</span>
               </button>
             </header>
@@ -251,20 +305,53 @@
                       trackBy: trackByMaintenance
                     "
                   >
-                    <ng-container *ngIf="editingMaintenanceId() === record.id; else viewRow">
+                    <ng-container
+                      *ngIf="editingMaintenanceId() === record.id; else viewRow"
+                    >
                       <tr class="editing">
-                        <td><input type="date" [formControl]="maintenanceEditForm.controls.date" /></td>
-                        <td><input type="text" [formControl]="maintenanceEditForm.controls.enteredBy" /></td>
-                        <td><input type="text" [formControl]="maintenanceEditForm.controls.work" /></td>
+                        <td>
+                          <input
+                            type="date"
+                            [formControl]="maintenanceEditForm.controls.date"
+                          />
+                        </td>
+                        <td>
+                          <input
+                            type="text"
+                            [formControl]="
+                              maintenanceEditForm.controls.enteredBy
+                            "
+                          />
+                        </td>
+                        <td>
+                          <input
+                            type="text"
+                            [formControl]="maintenanceEditForm.controls.work"
+                          />
+                        </td>
                         <td>
                           <input
                             type="number"
                             inputmode="numeric"
-                            [formControl]="maintenanceEditForm.controls.odoReading"
+                            [formControl]="
+                              maintenanceEditForm.controls.odoReading
+                            "
                           />
                         </td>
-                        <td><input type="text" [formControl]="maintenanceEditForm.controls.performedAt" /></td>
-                        <td><input type="text" [formControl]="maintenanceEditForm.controls.outcome" /></td>
+                        <td>
+                          <input
+                            type="text"
+                            [formControl]="
+                              maintenanceEditForm.controls.performedAt
+                            "
+                          />
+                        </td>
+                        <td>
+                          <input
+                            type="text"
+                            [formControl]="maintenanceEditForm.controls.outcome"
+                          />
+                        </td>
                         <td>
                           <input
                             type="number"
@@ -273,10 +360,26 @@
                             step="0.01"
                           />
                         </td>
-                        <td><textarea rows="2" [formControl]="maintenanceEditForm.controls.notes"></textarea></td>
+                        <td>
+                          <textarea
+                            rows="2"
+                            [formControl]="maintenanceEditForm.controls.notes"
+                          ></textarea>
+                        </td>
                         <td class="actions">
-                          <button type="button" (click)="saveMaintenanceEdit(record)">Save</button>
-                          <button type="button" class="ghost" (click)="cancelMaintenanceEdit()">Cancel</button>
+                          <button
+                            type="button"
+                            (click)="saveMaintenanceEdit(record)"
+                          >
+                            Save
+                          </button>
+                          <button
+                            type="button"
+                            class="ghost"
+                            (click)="cancelMaintenanceEdit()"
+                          >
+                            Cancel
+                          </button>
                           <button
                             type="button"
                             class="icon-button icon-button--danger"
@@ -312,7 +415,7 @@
                             *ngIf="isAdmin()"
                             (click)="toggleMaintenanceLock(record)"
                           >
-                            {{ record.locked ? 'Unlock' : 'Lock' }}
+                            {{ record.locked ? "Unlock" : "Lock" }}
                           </button>
                           <button
                             type="button"
@@ -328,7 +431,9 @@
                     </ng-template>
                   </ng-container>
                   <tr *ngIf="!selectedVehicle()?.maintenance?.length">
-                    <td colspan="9" class="empty">No maintenance recorded yet.</td>
+                    <td colspan="9" class="empty">
+                      No maintenance recorded yet.
+                    </td>
                   </tr>
                 </tbody>
               </table>
@@ -341,7 +446,10 @@
             <header class="panel__header">
               <h2>Select a vehicle</h2>
             </header>
-            <p>Choose a vehicle from the list to review its details and maintenance history.</p>
+            <p>
+              Choose a vehicle from the list to review its details and
+              maintenance history.
+            </p>
           </section>
         </ng-template>
       </div>
@@ -377,15 +485,27 @@
             <div class="form-grid">
               <label>
                 <span>Vehicle name</span>
-                <input type="text" formControlName="name" placeholder="e.g. Hino Truck" />
+                <input
+                  type="text"
+                  formControlName="name"
+                  placeholder="e.g. Hino Truck"
+                />
               </label>
               <label>
                 <span>License plate</span>
-                <input type="text" formControlName="licensePlate" placeholder="e.g. ABC123" />
+                <input
+                  type="text"
+                  formControlName="licensePlate"
+                  placeholder="e.g. ABC123"
+                />
               </label>
               <label>
                 <span>Location</span>
-                <input type="text" formControlName="location" placeholder="e.g. Dunedin" />
+                <input
+                  type="text"
+                  formControlName="location"
+                  placeholder="e.g. Dunedin"
+                />
               </label>
               <label>
                 <span>Purchase date</span>
@@ -544,10 +664,13 @@
               ×
             </button>
           </header>
-          <form class="panel__form modal__form" (ngSubmit)="importSelectedCsv()">
+          <form
+            class="panel__form modal__form"
+            (ngSubmit)="importSelectedCsv()"
+          >
             <p class="import-modal__description">
-              Upload the exported fleet spreadsheet (.csv) to add any missing vehicles. Existing
-              vehicles are skipped automatically.
+              Upload the exported fleet spreadsheet (.csv) to add any missing
+              vehicles. Existing vehicles are skipped automatically.
             </p>
             <label class="import-modal__file">
               <span class="import-modal__file-label">Choose spreadsheet</span>
@@ -561,7 +684,9 @@
             <p class="import-modal__filename" *ngIf="selectedCsvFileName()">
               Selected: {{ selectedCsvFileName() }}
             </p>
-            <p class="import__summary" *ngIf="csvImportSummary()">{{ csvImportSummary() }}</p>
+            <p class="import__summary" *ngIf="csvImportSummary()">
+              {{ csvImportSummary() }}
+            </p>
             <ul class="import__errors" *ngIf="csvImportErrors().length">
               <li *ngFor="let error of csvImportErrors()">{{ error }}</li>
             </ul>
