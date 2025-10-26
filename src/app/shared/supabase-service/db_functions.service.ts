@@ -89,12 +89,15 @@ export class dbFunctionsService {
   async getNavigationItems(orgId: string) {
     try {
       const { data, error } =
-        await this.supabaseService.client.functions.invoke('database-access', {
-          headers: {
-            'x-query-type': 'navigation-items',
-            'x-org-id': orgId,
+        await this.supabaseService.client.functions.invoke(
+          'navbar-availability',
+          {
+            headers: {
+              'x-query-type': 'navigation-items',
+              'x-org-id': orgId,
+            },
           },
-        });
+        );
 
       if (error) throw error;
       return data.data;
