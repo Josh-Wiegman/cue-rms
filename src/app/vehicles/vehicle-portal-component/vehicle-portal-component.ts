@@ -51,22 +51,28 @@ export class VehiclePortalComponent implements OnInit {
   selectedCsvFile = signal<File | null>(null);
 
   readonly isAdmin = computed(() => this.authLevel() === 1);
-  readonly selectedVehicle = computed(() =>
-    this.vehicles().find((vehicle) => vehicle.id === this.selectedVehicleId()) ??
-    null,
+  readonly selectedVehicle = computed(
+    () =>
+      this.vehicles().find(
+        (vehicle) => vehicle.id === this.selectedVehicleId(),
+      ) ?? null,
   );
 
-  readonly activeVehicles = computed(() =>
-    this.vehicles().filter((vehicle) => vehicle.status === 'active').length,
+  readonly activeVehicles = computed(
+    () =>
+      this.vehicles().filter((vehicle) => vehicle.status === 'active').length,
   );
-  readonly soldVehicles = computed(() =>
-    this.vehicles().filter((vehicle) => vehicle.status === 'sold').length,
+  readonly soldVehicles = computed(
+    () => this.vehicles().filter((vehicle) => vehicle.status === 'sold').length,
   );
-  readonly archivedVehicles = computed(() =>
-    this.vehicles().filter((vehicle) => vehicle.status === 'archived').length,
+  readonly archivedVehicles = computed(
+    () =>
+      this.vehicles().filter((vehicle) => vehicle.status === 'archived').length,
   );
 
-  readonly selectedCsvFileName = computed(() => this.selectedCsvFile()?.name ?? '');
+  readonly selectedCsvFileName = computed(
+    () => this.selectedCsvFile()?.name ?? '',
+  );
 
   readonly newVehicleForm = this.fb.nonNullable.group({
     location: ['', [Validators.required, Validators.maxLength(60)]],
@@ -124,7 +130,8 @@ export class VehiclePortalComponent implements OnInit {
   csvImportSummary = signal<string>('');
   csvImportErrors = signal<string[]>([]);
 
-  @ViewChild('csvFileInput') private csvFileInput?: ElementRef<HTMLInputElement>;
+  @ViewChild('csvFileInput')
+  private csvFileInput?: ElementRef<HTMLInputElement>;
 
   private readonly syncFormEffect = effect(() => {
     const selected = this.selectedVehicle();
@@ -133,7 +140,9 @@ export class VehiclePortalComponent implements OnInit {
         location: selected.location,
         name: selected.name,
         licensePlate: selected.licensePlate,
-        purchaseDate: selected.details.purchaseDate,
+        purchaseDate: new Date(selected.details.purchaseDate)
+          .toISOString()
+          .split('T')[0],
         vin: selected.details.vin,
         engine: selected.details.engine,
         chassis: selected.details.chassis,
@@ -221,7 +230,10 @@ export class VehiclePortalComponent implements OnInit {
     this.showAddVehicleMenu.update((value) => !value);
   }
 
-  async handleRemoveVehicle(vehicle: Vehicle, event: MouseEvent): Promise<void> {
+  async handleRemoveVehicle(
+    vehicle: Vehicle,
+    event: MouseEvent,
+  ): Promise<void> {
     event.stopPropagation();
     if (!this.isAdmin()) {
       return;
@@ -304,7 +316,9 @@ export class VehiclePortalComponent implements OnInit {
     });
   }
 
-  private normalizeFieldValue(value: string | number | null | undefined): string {
+  private normalizeFieldValue(
+    value: string | number | null | undefined,
+  ): string {
     if (value === null || value === undefined) {
       return '';
     }
@@ -324,7 +338,7 @@ export class VehiclePortalComponent implements OnInit {
       name: value.name,
       licensePlate: value.licensePlate,
       details: {
-        purchaseDate: value.purchaseDate,
+        purchaseDate: new Date(value.purchaseDate).toISOString().split('T')[0],
         vin: value.vin,
         engine: value.engine,
         chassis: value.chassis,
@@ -353,24 +367,29 @@ export class VehiclePortalComponent implements OnInit {
     }
 
     const value = this.vehicleDetailsForm.getRawValue();
-    await this.vehicleData.updateVehicle(this.selectedVehicle()!.id, (vehicle) => ({
-      ...vehicle,
-      location: value.location,
-      name: value.name,
-      licensePlate: value.licensePlate.toUpperCase(),
-      details: {
-        ...vehicle.details,
-        purchaseDate: value.purchaseDate,
-        vin: value.vin,
-        engine: value.engine,
-        chassis: value.chassis,
-        odometer: this.normalizeFieldValue(value.odometer),
-        fuelType: value.fuelType,
-        transmission: value.transmission,
-        grossVehicleMass: this.normalizeFieldValue(value.grossVehicleMass),
-        notes: value.notes,
-      },
-    }));
+    await this.vehicleData.updateVehicle(
+      this.selectedVehicle()!.id,
+      (vehicle) => ({
+        ...vehicle,
+        location: value.location,
+        name: value.name,
+        licensePlate: value.licensePlate.toUpperCase(),
+        details: {
+          ...vehicle.details,
+          purchaseDate: new Date(value.purchaseDate)
+            .toISOString()
+            .split('T')[0],
+          vin: value.vin,
+          engine: value.engine,
+          chassis: value.chassis,
+          odometer: this.normalizeFieldValue(value.odometer),
+          fuelType: value.fuelType,
+          transmission: value.transmission,
+          grossVehicleMass: this.normalizeFieldValue(value.grossVehicleMass),
+          notes: value.notes,
+        },
+      }),
+    );
   }
 
   async markVehicleStatus(status: VehicleStatus): Promise<void> {
@@ -383,7 +402,11 @@ export class VehiclePortalComponent implements OnInit {
 
   exportSelectedVehicle(): void {
     const vehicle = this.selectedVehicle();
-    if (!vehicle || typeof window === 'undefined' || typeof document === 'undefined') {
+    if (
+      !vehicle ||
+      typeof window === 'undefined' ||
+      typeof document === 'undefined'
+    ) {
       return;
     }
 
@@ -410,7 +433,17 @@ export class VehiclePortalComponent implements OnInit {
 
     lines.push('');
     append(['Maintenance Records']);
-    append(['Date', 'Entered by', 'Work', 'ODO', 'Performed at', 'Outcome', 'Cost', 'Notes', 'Locked']);
+    append([
+      'Date',
+      'Entered by',
+      'Work',
+      'ODO',
+      'Performed at',
+      'Outcome',
+      'Cost',
+      'Notes',
+      'Locked',
+    ]);
 
     if (vehicle.maintenance.length === 0) {
       append(['None', '', '', '', '', '', '', '', '']);
@@ -455,7 +488,7 @@ export class VehiclePortalComponent implements OnInit {
 
     const value = this.maintenanceForm.getRawValue();
     await this.vehicleData.addMaintenanceRecord(vehicle.id, {
-      date: value.date,
+      date: new Date(value.date).toISOString().split('T')[0],
       enteredBy: value.enteredBy,
       work: value.work,
       odoReading: this.normalizeFieldValue(value.odoReading),
@@ -476,7 +509,7 @@ export class VehiclePortalComponent implements OnInit {
     }
     this.editingMaintenanceId.set(record.id);
     this.maintenanceEditForm.setValue({
-      date: record.date,
+      date: new Date(record.date).toISOString().split('T')[0],
       enteredBy: record.enteredBy,
       work: record.work,
       odoReading: record.odoReading,
@@ -503,7 +536,7 @@ export class VehiclePortalComponent implements OnInit {
       record.id,
       () => ({
         ...record,
-        date: value.date,
+        date: new Date(value.date).toISOString().split('T')[0],
         enteredBy: value.enteredBy,
         work: value.work,
         odoReading: this.normalizeFieldValue(value.odoReading),
