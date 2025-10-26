@@ -1,0 +1,595 @@
+<ui-shell>
+  <content>
+    <div class="vehicle-portal">
+      <header class="page-header">
+        <div>
+          <h1>Vehicle Fleet Portal</h1>
+          <p>Track company vehicles, log maintenance and keep the fleet in sync.</p>
+        </div>
+        <div class="page-header__controls">
+          <div class="stats" *ngIf="authLevel() === 1">
+            <div class="stat">
+              <span class="stat__label">Active</span>
+              <span class="stat__value">{{ activeVehicles() }}</span>
+            </div>
+            <div class="stat">
+              <span class="stat__label">Sold</span>
+              <span class="stat__value">{{ soldVehicles() }}</span>
+            </div>
+            <div class="stat">
+              <span class="stat__label">Archived</span>
+              <span class="stat__value">{{ archivedVehicles() }}</span>
+            </div>
+          </div>
+          <div class="auth-selector">
+            <label for="authLevel">Auth level</label>
+            <select
+              id="authLevel"
+              [value]="authLevel()"
+              (change)="handleAuthLevelChange($event)"
+            >
+              <option value="1">Admin (1)</option>
+              <option value="2">Standard (2)</option>
+            </select>
+          </div>
+        </div>
+      </header>
+
+      <div class="portal-grid">
+        <section class="panel vehicle-list">
+          <header class="panel__header">
+            <h2>Vehicles</h2>
+            <div class="panel__header-action-group">
+              <button
+                type="button"
+                class="panel__header-action panel__header-action--primary"
+                (click)="handleAddVehicleClick()"
+              >
+                <span class="panel__header-action-icon" aria-hidden="true">+</span>
+                <span class="panel__header-action-label">Add vehicle</span>
+              </button>
+              <button
+                type="button"
+                class="panel__header-action panel__header-action--caret"
+                aria-label="Open vehicle actions"
+                aria-haspopup="menu"
+                [attr.aria-expanded]="showAddVehicleMenu()"
+                (click)="toggleAddVehicleMenu($event)"
+              >
+                <span aria-hidden="true">▾</span>
+              </button>
+              <div
+                class="panel__header-menu"
+                role="menu"
+                *ngIf="showAddVehicleMenu()"
+              >
+                <button type="button" role="menuitem" (click)="handleVehicleMenuSelect('new')">
+                  <span aria-hidden="true">+</span>
+                  Add vehicle
+                </button>
+                <button type="button" role="menuitem" (click)="handleVehicleMenuSelect('import')">
+                  <span aria-hidden="true">⇪</span>
+                  Import from CSV
+                </button>
+              </div>
+            </div>
+          </header>
+          <div class="table-wrapper">
+            <table class="vehicle-table">
+              <thead>
+                <tr>
+                  <th>Vehicle</th>
+                  <th>Plate</th>
+                  <th>Location</th>
+                  <th>Status</th>
+                  <th
+                    *ngIf="isAdmin()"
+                    class="actions-column"
+                    scope="col"
+                    aria-label="Vehicle actions"
+                  ></th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr
+                  *ngFor="let vehicle of vehicles(); trackBy: trackByVehicleId"
+                  (click)="selectVehicle(vehicle)"
+                  [class.selected]="selectedVehicle()?.id === vehicle.id"
+                >
+                  <td>
+                    <div class="vehicle-name">{{ vehicle.name }}</div>
+                    <div class="vehicle-meta">Added {{ vehicle.details.purchaseDate || '—' }}</div>
+                  </td>
+                  <td>
+                    <span class="plate">{{ vehicle.licensePlate }}</span>
+                  </td>
+                  <td>{{ vehicle.location }}</td>
+                  <td>
+                    <span [ngClass]="['status-pill', 'status-' + vehicle.status]">{{ vehicle.status }}</span>
+                  </td>
+                  <td class="actions" *ngIf="isAdmin()">
+                    <button
+                      type="button"
+                      class="icon-button icon-button--danger"
+                      aria-label="Delete vehicle"
+                      (click)="handleRemoveVehicle(vehicle, $event)"
+                    >
+                      <span aria-hidden="true">🗑</span>
+                    </button>
+                  </td>
+                </tr>
+                <tr *ngIf="!vehicles().length">
+                  <td [attr.colspan]="isAdmin() ? 5 : 4" class="empty">
+                    No vehicles loaded yet.
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="panel vehicle-details" *ngIf="selectedVehicle(); else noSelection">
+          <header class="panel__header">
+            <div>
+              <h2>{{ selectedVehicle()?.name }}</h2>
+              <p class="subtitle">{{ selectedVehicle()?.licensePlate }} • {{ selectedVehicle()?.location }}</p>
+            </div>
+            <div class="status-actions">
+              <button type="button" (click)="markVehicleStatus('active')" [disabled]="selectedVehicle()?.status === 'active'">
+                Mark active
+              </button>
+              <button type="button" (click)="markVehicleStatus('sold')" [disabled]="selectedVehicle()?.status === 'sold'">
+                Mark sold
+              </button>
+              <button type="button" (click)="markVehicleStatus('archived')" [disabled]="selectedVehicle()?.status === 'archived'">
+                Archive
+              </button>
+            </div>
+          </header>
+
+          <form class="panel__form" [formGroup]="vehicleDetailsForm" (ngSubmit)="saveVehicleDetails()">
+            <h3>Vehicle details</h3>
+            <div class="form-grid">
+              <label>
+                <span>Vehicle name</span>
+                <input type="text" formControlName="name" />
+              </label>
+              <label>
+                <span>License plate</span>
+                <input type="text" formControlName="licensePlate" [readonly]="!canEditCoreDetails()" />
+              </label>
+              <label>
+                <span>Location</span>
+                <input type="text" formControlName="location" />
+              </label>
+              <label>
+                <span>Purchase date</span>
+                <input type="date" formControlName="purchaseDate" [readonly]="!canEditCoreDetails()" />
+              </label>
+              <label>
+                <span>VIN</span>
+                <input type="text" formControlName="vin" [readonly]="!canEditCoreDetails()" />
+              </label>
+              <label>
+                <span>Engine</span>
+                <input type="text" formControlName="engine" />
+              </label>
+              <label>
+                <span>Chassis</span>
+                <input type="text" formControlName="chassis" />
+              </label>
+              <label>
+                <span>Odometer</span>
+                <input type="number" formControlName="odometer" inputmode="numeric" />
+              </label>
+              <label>
+                <span>Fuel type</span>
+                <input type="text" formControlName="fuelType" />
+              </label>
+              <label>
+                <span>Transmission</span>
+                <select formControlName="transmission">
+                  <option value="">Select transmission</option>
+                  <option value="Automatic">Automatic</option>
+                  <option value="Manual">Manual</option>
+                </select>
+              </label>
+              <label>
+                <span>Gross vehicle mass</span>
+                <input
+                  type="number"
+                  formControlName="grossVehicleMass"
+                  inputmode="numeric"
+                />
+              </label>
+              <label class="wide">
+                <span>Notes</span>
+                <textarea rows="3" formControlName="notes"></textarea>
+              </label>
+              <label>
+                <span>Status</span>
+                <select formControlName="status">
+                  <option value="active">Active</option>
+                  <option value="sold">Sold</option>
+                  <option value="archived">Archived</option>
+                </select>
+              </label>
+            </div>
+            <button type="submit" class="primary">Save changes</button>
+          </form>
+
+          <section class="maintenance">
+            <header class="maintenance__header">
+              <div>
+                <h3>Maintenance log</h3>
+                <p>Lock entries to prevent non-admin edits.</p>
+              </div>
+              <button
+                type="button"
+                class="panel__header-action maintenance__add-action"
+                (click)="openAddMaintenanceModal()"
+              >
+                <span class="panel__header-action-icon" aria-hidden="true">+</span>
+                <span class="panel__header-action-label">Add record</span>
+              </button>
+            </header>
+
+            <div class="table-wrapper">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Date</th>
+                    <th>Entered by</th>
+                    <th>Work</th>
+                    <th>ODO</th>
+                    <th>Where</th>
+                    <th>Outcome</th>
+                    <th>Cost</th>
+                    <th>Notes</th>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <ng-container
+                    *ngFor="
+                      let record of selectedVehicle()?.maintenance;
+                      trackBy: trackByMaintenance
+                    "
+                  >
+                    <ng-container *ngIf="editingMaintenanceId() === record.id; else viewRow">
+                      <tr class="editing">
+                        <td><input type="date" [formControl]="maintenanceEditForm.controls.date" /></td>
+                        <td><input type="text" [formControl]="maintenanceEditForm.controls.enteredBy" /></td>
+                        <td><input type="text" [formControl]="maintenanceEditForm.controls.work" /></td>
+                        <td>
+                          <input
+                            type="number"
+                            inputmode="numeric"
+                            [formControl]="maintenanceEditForm.controls.odoReading"
+                          />
+                        </td>
+                        <td><input type="text" [formControl]="maintenanceEditForm.controls.performedAt" /></td>
+                        <td><input type="text" [formControl]="maintenanceEditForm.controls.outcome" /></td>
+                        <td>
+                          <input
+                            type="number"
+                            inputmode="numeric"
+                            [formControl]="maintenanceEditForm.controls.cost"
+                            step="0.01"
+                          />
+                        </td>
+                        <td><textarea rows="2" [formControl]="maintenanceEditForm.controls.notes"></textarea></td>
+                        <td class="actions">
+                          <button type="button" (click)="saveMaintenanceEdit(record)">Save</button>
+                          <button type="button" class="ghost" (click)="cancelMaintenanceEdit()">Cancel</button>
+                          <button
+                            type="button"
+                            class="icon-button icon-button--danger"
+                            *ngIf="isAdmin()"
+                            aria-label="Delete maintenance record"
+                            (click)="handleDeleteMaintenance(record, $event)"
+                          >
+                            <span aria-hidden="true">🗑</span>
+                          </button>
+                        </td>
+                      </tr>
+                    </ng-container>
+                    <ng-template #viewRow>
+                      <tr [ngClass]="maintenanceRowClass(record)">
+                        <td>{{ record.date }}</td>
+                        <td>{{ record.enteredBy }}</td>
+                        <td>{{ record.work }}</td>
+                        <td>{{ record.odoReading }}</td>
+                        <td>{{ record.performedAt }}</td>
+                        <td>{{ record.outcome }}</td>
+                        <td>{{ record.cost }}</td>
+                        <td>{{ record.notes }}</td>
+                        <td class="actions">
+                          <button
+                            type="button"
+                            (click)="startEditMaintenance(record)"
+                            [disabled]="!canEditMaintenance(record)"
+                          >
+                            Edit
+                          </button>
+                          <button
+                            type="button"
+                            *ngIf="isAdmin()"
+                            (click)="toggleMaintenanceLock(record)"
+                          >
+                            {{ record.locked ? 'Unlock' : 'Lock' }}
+                          </button>
+                          <button
+                            type="button"
+                            class="icon-button icon-button--danger"
+                            *ngIf="isAdmin()"
+                            aria-label="Delete maintenance record"
+                            (click)="handleDeleteMaintenance(record, $event)"
+                          >
+                            <span aria-hidden="true">🗑</span>
+                          </button>
+                        </td>
+                      </tr>
+                    </ng-template>
+                  </ng-container>
+                  <tr *ngIf="!selectedVehicle()?.maintenance?.length">
+                    <td colspan="9" class="empty">No maintenance recorded yet.</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </section>
+        </section>
+
+        <ng-template #noSelection>
+          <section class="panel vehicle-details empty-state">
+            <header class="panel__header">
+              <h2>Select a vehicle</h2>
+            </header>
+            <p>Choose a vehicle from the list to review its details and maintenance history.</p>
+          </section>
+        </ng-template>
+      </div>
+
+      <div
+        class="modal-backdrop"
+        *ngIf="showAddVehicleModal()"
+        (click)="closeAddVehicleModal()"
+      >
+        <div
+          class="modal"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="addVehicleModalTitle"
+          (click)="$event.stopPropagation()"
+        >
+          <header class="modal__header">
+            <h3 id="addVehicleModalTitle">Add vehicle</h3>
+            <button
+              type="button"
+              class="modal__close"
+              (click)="closeAddVehicleModal()"
+              aria-label="Close add vehicle form"
+            >
+              ×
+            </button>
+          </header>
+          <form
+            class="panel__form modal__form"
+            [formGroup]="newVehicleForm"
+            (ngSubmit)="addVehicle()"
+          >
+            <div class="form-grid">
+              <label>
+                <span>Vehicle name</span>
+                <input type="text" formControlName="name" placeholder="e.g. Hino Truck" />
+              </label>
+              <label>
+                <span>License plate</span>
+                <input type="text" formControlName="licensePlate" placeholder="e.g. ABC123" />
+              </label>
+              <label>
+                <span>Location</span>
+                <input type="text" formControlName="location" placeholder="e.g. Dunedin" />
+              </label>
+              <label>
+                <span>Purchase date</span>
+                <input type="date" formControlName="purchaseDate" />
+              </label>
+              <label>
+                <span>VIN</span>
+                <input type="text" formControlName="vin" />
+              </label>
+              <label>
+                <span>Engine</span>
+                <input type="text" formControlName="engine" />
+              </label>
+              <label>
+                <span>Chassis</span>
+                <input type="text" formControlName="chassis" />
+              </label>
+              <label>
+                <span>Odometer</span>
+                <input
+                  type="number"
+                  formControlName="odometer"
+                  inputmode="numeric"
+                />
+              </label>
+              <label>
+                <span>Fuel type</span>
+                <input type="text" formControlName="fuelType" />
+              </label>
+              <label>
+                <span>Transmission</span>
+                <select formControlName="transmission">
+                  <option value="">Select transmission</option>
+                  <option value="Automatic">Automatic</option>
+                  <option value="Manual">Manual</option>
+                </select>
+              </label>
+              <label>
+                <span>Gross vehicle mass</span>
+                <input
+                  type="number"
+                  formControlName="grossVehicleMass"
+                  inputmode="numeric"
+                />
+              </label>
+              <label class="wide">
+                <span>Notes</span>
+                <textarea rows="2" formControlName="notes"></textarea>
+              </label>
+              <label>
+                <span>Status</span>
+                <select formControlName="status">
+                  <option value="active">Active</option>
+                  <option value="sold">Sold</option>
+                  <option value="archived">Archived</option>
+                </select>
+              </label>
+            </div>
+            <div class="modal__actions">
+              <button type="submit" class="primary">Add vehicle</button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <div
+        class="modal-backdrop"
+        *ngIf="showAddMaintenanceModal()"
+        (click)="closeAddMaintenanceModal()"
+      >
+        <div
+          class="modal"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="addMaintenanceModalTitle"
+          (click)="$event.stopPropagation()"
+        >
+          <header class="modal__header">
+            <h3 id="addMaintenanceModalTitle">Add maintenance record</h3>
+            <button
+              type="button"
+              class="modal__close"
+              (click)="closeAddMaintenanceModal()"
+              aria-label="Close add maintenance form"
+            >
+              ×
+            </button>
+          </header>
+          <form
+            class="panel__form modal__form"
+            [formGroup]="maintenanceForm"
+            (ngSubmit)="addMaintenance()"
+          >
+            <div class="form-grid">
+              <label>
+                <span>Date</span>
+                <input type="date" formControlName="date" />
+              </label>
+              <label>
+                <span>Entered by</span>
+                <input type="text" formControlName="enteredBy" />
+              </label>
+              <label>
+                <span>Work</span>
+                <input type="text" formControlName="work" />
+              </label>
+              <label>
+                <span>ODO reading</span>
+                <input
+                  type="number"
+                  formControlName="odoReading"
+                  inputmode="numeric"
+                />
+              </label>
+              <label>
+                <span>Where</span>
+                <input type="text" formControlName="performedAt" />
+              </label>
+              <label>
+                <span>Outcome</span>
+                <input type="text" formControlName="outcome" />
+              </label>
+              <label>
+                <span>Cost</span>
+                <input
+                  type="number"
+                  formControlName="cost"
+                  inputmode="numeric"
+                  step="0.01"
+                />
+              </label>
+              <label class="wide">
+                <span>Notes</span>
+                <textarea rows="2" formControlName="notes"></textarea>
+              </label>
+            </div>
+            <div class="modal__actions">
+              <button type="submit" class="primary">Add record</button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <div
+        class="modal-backdrop"
+        *ngIf="showImportCsvModal()"
+        (click)="closeImportCsvModal()"
+      >
+        <div
+          class="modal"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="importCsvModalTitle"
+          (click)="$event.stopPropagation()"
+        >
+          <header class="modal__header">
+            <h3 id="importCsvModalTitle">Import vehicles from CSV</h3>
+            <button
+              type="button"
+              class="modal__close"
+              (click)="closeImportCsvModal()"
+              aria-label="Close import vehicles dialog"
+            >
+              ×
+            </button>
+          </header>
+          <form class="panel__form modal__form" (ngSubmit)="importSelectedCsv()">
+            <p class="import-modal__description">
+              Upload the exported fleet spreadsheet (.csv) to add any missing vehicles. Existing
+              vehicles are skipped automatically.
+            </p>
+            <label class="import-modal__file">
+              <span class="import-modal__file-label">Choose spreadsheet</span>
+              <input
+                type="file"
+                accept=".csv"
+                #csvFileInput
+                (change)="handleCsvFileSelection($event)"
+              />
+            </label>
+            <p class="import-modal__filename" *ngIf="selectedCsvFileName()">
+              Selected: {{ selectedCsvFileName() }}
+            </p>
+            <p class="import__summary" *ngIf="csvImportSummary()">{{ csvImportSummary() }}</p>
+            <ul class="import__errors" *ngIf="csvImportErrors().length">
+              <li *ngFor="let error of csvImportErrors()">{{ error }}</li>
+            </ul>
+            <div class="modal__actions">
+              <button
+                type="submit"
+                class="primary"
+                [disabled]="!selectedCsvFile()"
+              >
+                Import vehicles
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </content>
+</ui-shell>
