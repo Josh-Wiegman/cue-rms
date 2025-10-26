@@ -2,34 +2,87 @@
 
 nav {
   background-color: $primary-color;
+  color: $off-white;
   height: 100%;
   display: flex;
-  flex-wrap: wrap;
   flex-direction: column;
-  padding-top: 1rem;
+  gap: 1.5rem;
+  padding: 1.5rem 1.75rem;
 }
 
-h1 a {
+.nav__brand h1 {
+  margin: 0;
+  font-size: 1.5rem;
+}
+
+.nav__brand a {
   color: $off-white;
   text-decoration: none;
-  padding: 20px;
 }
 
-nav li {
+.nav__links {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.nav__links li {
   width: 100%;
 }
 
-nav li a {
-  padding: 20px;
+.nav__links a {
+  padding: 0.9rem 1rem;
   color: $off-white;
   text-decoration: none;
-  list-style-type: none;
-  display: inline-block;
-  width: 100%;
-  height: 100%;
-  transition: background-color 0.4s ease-in-out 0s;
+  display: block;
+  border-radius: 0.75rem;
+  transition: background-color 0.2s ease;
 }
 
-nav li a:hover {
-  background-color: $secondary-color;
+.nav__links a.active,
+.nav__links a:hover {
+  background-color: rgba(255, 255, 255, 0.12);
+}
+
+.nav__actions {
+  margin-top: auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  background: rgba(15, 23, 42, 0.35);
+  padding: 0.75rem 1rem;
+  border-radius: 0.75rem;
+}
+
+.nav__user {
+  font-weight: 600;
+}
+
+.nav__actions button {
+  background: rgba(255, 255, 255, 0.14);
+  color: $off-white;
+  border: none;
+  border-radius: 999px;
+  padding: 0.45rem 1.1rem;
+  cursor: pointer;
+  font-weight: 600;
+  transition: background-color 0.2s ease;
+}
+
+.nav__actions button:hover {
+  background: rgba(255, 255, 255, 0.25);
+}
+
+.nav__login {
+  color: $off-white;
+  text-decoration: none;
+  background: rgba(255, 255, 255, 0.14);
+  padding: 0.6rem 1.2rem;
+  border-radius: 999px;
+  font-weight: 600;
+  align-self: flex-start;
 }
