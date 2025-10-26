@@ -433,7 +433,7 @@ export class VehicleDataService {
 
   private buildBaseUrl(): string {
     const trimmed = environment.supabaseDataUrl.replace(/\/+$/, '');
-    return `${trimmed}/functions/v1/vehicle-portal/`;
+    return `${trimmed}/functions/v1/vehicles/`;
   }
 
   private async request<T extends { ok: boolean; error?: string }>(
