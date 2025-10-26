@@ -5,4 +5,5 @@ export const environment = {
   supabaseDataUrl: 'https://haletmjesqynrjecjfie.supabase.co/',
   supabaseDataUrl_2:
     'https://haletmjesqynrjecjfie.supabase.co/functions/v1/database-access',
+  vehiclePortalAdminSecret: 'development-admin-secret',
 };
