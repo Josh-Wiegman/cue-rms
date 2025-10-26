@@ -80,7 +80,6 @@ export class AuthService {
       'user-management',
       {
         body: { action: 'login', payload: { email, password } },
-        headers: { 'x-org-slug': this.getOrgFromHost() ?? '' }, // <— add this
       },
     );
 
@@ -118,23 +117,11 @@ export class AuthService {
       'user-management',
       {
         body: { action: 'register', payload },
-        headers: { 'x-org-slug': this.getOrgFromHost() ?? '' }, // <— add this
       },
     );
 
     if (error) throw new Error(error.message ?? 'Failed to create the user.');
     return data;
-  }
-
-  // Helper to derive the org from the subdomain (acme.cue-rms.co.nz → "acme")
-  // Safe to no-op on SSR
-  private getOrgFromHost(): string | undefined {
-    if (!this.isBrowser) return undefined;
-    const host = window.location.host; // e.g., acme.localhost:4200 or acme.cue-rms.co.nz
-    const hostname = host.split(':')[0] ?? '';
-    // localhost pattern: acme.localhost
-    const m = hostname.match(/^([a-z0-9-]+)\./i);
-    return m?.[1]; // returns first label or undefined
   }
 
   async logout(): Promise<void> {
