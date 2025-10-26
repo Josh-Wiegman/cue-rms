@@ -77,7 +77,7 @@ export class AuthService {
 
   async login(email: string, password: string): Promise<AuthUser> {
     const { data, error } = await this.supabaseService.client.functions.invoke(
-      'vehicles',
+      'user-management',
       {
         body: { action: 'login', payload: { email, password } },
         headers: { 'x-org-slug': this.getOrgFromHost() ?? '' }, // <— add this

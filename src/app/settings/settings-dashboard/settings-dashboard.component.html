@@ -30,13 +30,6 @@
         >
           Add user
         </button>
-        <button
-          type="button"
-          [class.active]="activeSection === 'logout'"
-          (click)="logout()"
-        >
-          Logout
-        </button>
       </nav>
 
       <section class="settings__panel" *ngIf="activeSection === 'profile'">
