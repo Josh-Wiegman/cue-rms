@@ -81,7 +81,6 @@ export class VehiclePortalComponent implements OnInit {
     transmission: [''],
     grossVehicleMass: [''],
     notes: [''],
-    status: this.fb.nonNullable.control<VehicleStatus>('active'),
   });
 
   readonly vehicleDetailsForm = this.fb.nonNullable.group({
@@ -97,7 +96,6 @@ export class VehiclePortalComponent implements OnInit {
     transmission: [''],
     grossVehicleMass: [''],
     notes: [''],
-    status: this.fb.nonNullable.control<VehicleStatus>('active'),
   });
 
   readonly maintenanceForm = this.fb.nonNullable.group({
@@ -144,7 +142,6 @@ export class VehiclePortalComponent implements OnInit {
         transmission: selected.details.transmission,
         grossVehicleMass: selected.details.grossVehicleMass,
         notes: selected.details.notes,
-        status: selected.status,
       });
     }
   });
@@ -289,7 +286,6 @@ export class VehiclePortalComponent implements OnInit {
       transmission: '',
       grossVehicleMass: '',
       notes: '',
-      status: 'active',
     });
   }
 
@@ -325,7 +321,6 @@ export class VehiclePortalComponent implements OnInit {
       location: value.location,
       name: value.name,
       licensePlate: value.licensePlate,
-      status: value.status,
       details: {
         purchaseDate: value.purchaseDate,
         vin: value.vin,
@@ -359,7 +354,6 @@ export class VehiclePortalComponent implements OnInit {
       location: value.location,
       name: value.name,
       licensePlate: value.licensePlate.toUpperCase(),
-      status: value.status,
       details: {
         ...vehicle.details,
         purchaseDate: value.purchaseDate,
@@ -381,6 +375,68 @@ export class VehiclePortalComponent implements OnInit {
       return;
     }
     this.vehicleData.markVehicleStatus(vehicle.id, status);
+  }
+
+  exportSelectedVehicle(): void {
+    const vehicle = this.selectedVehicle();
+    if (!vehicle || typeof window === 'undefined' || typeof document === 'undefined') {
+      return;
+    }
+
+    const lines: string[] = [];
+    const append = (fields: string[]): void => {
+      lines.push(fields.map((field) => this.escapeCsvValue(field)).join(','));
+    };
+
+    append(['Vehicle Details']);
+    append(['Field', 'Value']);
+    append(['Name', vehicle.name]);
+    append(['License plate', vehicle.licensePlate]);
+    append(['Location', vehicle.location]);
+    append(['Status', vehicle.status]);
+    append(['Purchase date', vehicle.details.purchaseDate]);
+    append(['VIN', vehicle.details.vin]);
+    append(['Engine', vehicle.details.engine]);
+    append(['Chassis', vehicle.details.chassis]);
+    append(['Odometer', vehicle.details.odometer]);
+    append(['Fuel type', vehicle.details.fuelType]);
+    append(['Transmission', vehicle.details.transmission]);
+    append(['Gross vehicle mass', vehicle.details.grossVehicleMass]);
+    append(['Notes', vehicle.details.notes]);
+
+    lines.push('');
+    append(['Maintenance Records']);
+    append(['Date', 'Entered by', 'Work', 'ODO', 'Performed at', 'Outcome', 'Cost', 'Notes', 'Locked']);
+
+    if (vehicle.maintenance.length === 0) {
+      append(['None', '', '', '', '', '', '', '', '']);
+    } else {
+      vehicle.maintenance.forEach((record) => {
+        append([
+          record.date,
+          record.enteredBy,
+          record.work,
+          record.odoReading,
+          record.performedAt,
+          record.outcome,
+          record.cost,
+          record.notes,
+          record.locked ? 'Yes' : 'No',
+        ]);
+      });
+    }
+
+    const blob = new Blob([lines.join('\r\n')], {
+      type: 'text/csv;charset=utf-8;',
+    });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `vehicle-${vehicle.licensePlate}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
   }
 
   addMaintenance(): void {
@@ -520,6 +576,14 @@ export class VehiclePortalComponent implements OnInit {
       classes.push('failed');
     }
     return classes.join(' ');
+  }
+
+  private escapeCsvValue(value: string): string {
+    const safeValue = value ?? '';
+    if (/[",\r\n]/.test(safeValue)) {
+      return `"${safeValue.replace(/"/g, '""')}"`;
+    }
+    return safeValue;
   }
 
   @HostListener('document:click', ['$event'])

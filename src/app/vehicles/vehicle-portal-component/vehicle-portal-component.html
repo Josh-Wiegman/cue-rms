@@ -64,12 +64,12 @@
                 *ngIf="showAddVehicleMenu()"
               >
                 <button type="button" role="menuitem" (click)="handleVehicleMenuSelect('new')">
-                  <span aria-hidden="true">+</span>
-                  Add vehicle
+                  <span class="panel__header-menu-icon" aria-hidden="true">+</span>
+                  <span class="panel__header-menu-label">Add vehicle</span>
                 </button>
                 <button type="button" role="menuitem" (click)="handleVehicleMenuSelect('import')">
-                  <span aria-hidden="true">⇪</span>
-                  Import from CSV
+                  <span class="panel__header-menu-icon" aria-hidden="true">⇪</span>
+                  <span class="panel__header-menu-label">Import from CSV</span>
                 </button>
               </div>
             </div>
@@ -144,6 +144,9 @@
               <button type="button" (click)="markVehicleStatus('archived')" [disabled]="selectedVehicle()?.status === 'archived'">
                 Archive
               </button>
+              <button type="button" class="status-actions__export" (click)="exportSelectedVehicle()">
+                Export CSV
+              </button>
             </div>
           </header>
 
@@ -205,14 +208,6 @@
               <label class="wide">
                 <span>Notes</span>
                 <textarea rows="3" formControlName="notes"></textarea>
-              </label>
-              <label>
-                <span>Status</span>
-                <select formControlName="status">
-                  <option value="active">Active</option>
-                  <option value="sold">Sold</option>
-                  <option value="archived">Archived</option>
-                </select>
               </label>
             </div>
             <button type="submit" class="primary">Save changes</button>
@@ -439,14 +434,6 @@
               <label class="wide">
                 <span>Notes</span>
                 <textarea rows="2" formControlName="notes"></textarea>
-              </label>
-              <label>
-                <span>Status</span>
-                <select formControlName="status">
-                  <option value="active">Active</option>
-                  <option value="sold">Sold</option>
-                  <option value="archived">Archived</option>
-                </select>
               </label>
             </div>
             <div class="modal__actions">

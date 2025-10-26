@@ -1,6 +1,11 @@
 import { Injectable } from '@angular/core';
 import { BehaviorSubject } from 'rxjs';
-import { MaintenanceRecord, Vehicle, VehicleStatus } from '../models/vehicle.model';
+import {
+  MaintenanceRecord,
+  Vehicle,
+  VehicleDetails,
+  VehicleStatus,
+} from '../models/vehicle.model';
 
 export interface VehicleInput {
   location: string;
@@ -120,8 +125,26 @@ export class VehicleDataService {
     }
 
     const existing = this.cloneVehicles();
-    this.updateVehicles([...existing, ...vehicles]);
-    return { added: vehicles.length, skipped, errors };
+    const existingByPlate = new Map(
+      existing.map((vehicle) => [vehicle.licensePlate.toUpperCase(), vehicle]),
+    );
+
+    let added = 0;
+    for (const vehicle of vehicles) {
+      const key = vehicle.licensePlate.toUpperCase();
+      const current = existingByPlate.get(key);
+      if (current) {
+        this.mergeVehicle(current, vehicle);
+        continue;
+      }
+
+      existing.push(vehicle);
+      existingByPlate.set(key, vehicle);
+      added += 1;
+    }
+
+    this.updateVehicles(existing);
+    return { added, skipped, errors };
   }
 
   toggleMaintenanceLock(vehicleId: string, recordId: string): void {
@@ -179,64 +202,116 @@ export class VehicleDataService {
     skipped: number;
     errors: string[];
   } {
-    const lines = text
-      .split(/\r?\n/)
-      .map((line) => line.trim())
-      .filter((line) => line.length > 0);
+    const rawLines = text.split(/\r?\n/);
+    const lines = rawLines.filter((line) => line.trim().length > 0);
 
     if (lines.length < 2) {
       return { vehicles: [], skipped: 0, errors: ['No data rows found.'] };
     }
 
     const headers = this.normaliseHeaderLine(lines.shift()!);
-    const vehicles: Vehicle[] = [];
+    const vehiclesByPlate = new Map<string, Vehicle>();
     const errors: string[] = [];
     let skipped = 0;
 
-    for (const [index, line] of lines.entries()) {
+    lines.forEach((line, index) => {
       const values = this.splitCsvLine(line);
-      if (values.length !== headers.length) {
+      if (values.length < headers.length) {
+        values.push(...Array(headers.length - values.length).fill(''));
+      } else if (values.length > headers.length) {
         errors.push(
           `Row ${index + 2} skipped: expected ${headers.length} columns but received ${values.length}.`,
         );
         skipped += 1;
-        continue;
+        return;
       }
 
-      const row = Object.fromEntries(
-        headers.map((header, headerIndex) => [header, values[headerIndex]]),
-      );
+      const row: Record<string, string> = {};
+      headers.forEach((header, headerIndex) => {
+        row[header] = values[headerIndex] ?? '';
+      });
 
-      const name = row['vehicle']?.trim();
-      const licensePlate = row['license_plate']?.trim() || row['plate']?.trim();
-      if (!name || !licensePlate) {
+      const name = this.getRowValue(row, [
+        'vehicle',
+        'vehicle_name',
+        'name',
+        'vehicle_description',
+        'vehicle_make_model',
+      ]);
+      const licensePlateRaw = this.getRowValue(row, [
+        'license_plate',
+        'plate',
+        'registration',
+        'rego',
+        'license',
+        'licence_plate',
+        'registration_plate',
+        'rego_number',
+        'registration_number',
+        'license_number',
+        'licence_number',
+      ]);
+
+      if (!name || !licensePlateRaw) {
         errors.push(`Row ${index + 2} skipped: vehicle and license plate are required.`);
         skipped += 1;
-        continue;
+        return;
       }
 
-      const status = this.parseStatus(row['status']);
+      const licensePlate = licensePlateRaw.toUpperCase();
+      const status = this.parseStatus(
+        this.getRowValue(row, ['status', 'vehicle_status', 'current_status']),
+      );
 
-      vehicles.push({
+      const candidate: Vehicle = {
         id: this.createId(),
-        location: row['location']?.trim() ?? 'Unassigned',
+        location:
+          this.getRowValue(row, [
+            'location',
+            'branch',
+            'site',
+            'depot',
+            'base',
+            'branch_location',
+            'region',
+          ]) || 'Unassigned',
         name,
-        licensePlate: licensePlate.toUpperCase(),
+        licensePlate,
         status,
         details: {
-          purchaseDate: row['purchase_date']?.trim() ?? '',
-          vin: row['vin']?.trim() ?? '',
-          engine: row['engine']?.trim() ?? '',
-          chassis: row['chassis']?.trim() ?? '',
-          odometer: row['odometer']?.trim() ?? '',
-          fuelType: row['fuel_type']?.trim() ?? '',
-          transmission: row['transmission']?.trim() ?? '',
-          grossVehicleMass: row['gross_vehicle_mass']?.trim() ?? row['gvm']?.trim() ?? '',
-          notes: row['notes']?.trim() ?? '',
+          purchaseDate: this.getRowValue(row, [
+            'purchase_date',
+            'purchased',
+            'purchase',
+            'date_purchased',
+          ]),
+          vin: this.getRowValue(row, ['vin', 'vehicle_identification_number']),
+          engine: this.getRowValue(row, ['engine', 'engine_type']),
+          chassis: this.getRowValue(row, ['chassis', 'chassis_number', 'frame_number']),
+          odometer: this.getRowValue(row, ['odometer', 'odometer_reading', 'odo', 'mileage']),
+          fuelType: this.getRowValue(row, ['fuel_type', 'fuel']),
+          transmission: this.getRowValue(row, ['transmission', 'gearbox']),
+          grossVehicleMass: this.getRowValue(row, [
+            'gross_vehicle_mass',
+            'gvm',
+            'gvw',
+            'gvm_kg',
+            'gross_vehicle_weight',
+          ]),
+          notes: this.getRowValue(row, ['vehicle_notes', 'notes', 'comments', 'vehicle_comments']),
         },
-        maintenance: [],
-      });
-    }
+        maintenance: this.extractMaintenanceRecords(row),
+      };
+
+      const existing = vehiclesByPlate.get(licensePlate);
+      if (existing) {
+        this.mergeVehicle(existing, candidate);
+      } else {
+        vehiclesByPlate.set(licensePlate, candidate);
+      }
+    });
+
+    const vehicles = Array.from(vehiclesByPlate.values());
 
     return { vehicles, skipped, errors };
   }
@@ -244,6 +319,7 @@ export class VehicleDataService {
   private normaliseHeaderLine(line: string): string[] {
     return this.splitCsvLine(line).map((header) =>
       header
+        .replace(/^\ufeff/, '')
         .toLowerCase()
         .replace(/[^a-z0-9]+/g, ' ')
         .trim()
@@ -279,6 +355,243 @@ export class VehicleDataService {
 
     values.push(current.trim());
     return values;
+  }
+
+  private getRowValue(row: Record<string, string>, keys: string[]): string {
+    for (const key of keys) {
+      const value = row[key];
+      if (value && value.trim().length > 0) {
+        return value.trim();
+      }
+    }
+    return '';
+  }
+
+  private mergeVehicle(target: Vehicle, source: Vehicle): void {
+    if (source.name && source.name.length > target.name.length) {
+      target.name = source.name;
+    }
+
+    if (source.location && source.location !== 'Unassigned') {
+      const shouldUpdate =
+        !target.location ||
+        target.location === 'Unassigned' ||
+        source.location.length > target.location.length;
+      if (shouldUpdate) {
+        target.location = source.location;
+      }
+    }
+
+    if (source.status !== target.status) {
+      const priority = (status: VehicleStatus): number => {
+        switch (status) {
+          case 'archived':
+            return 2;
+          case 'sold':
+            return 1;
+          default:
+            return 0;
+        }
+      };
+      if (priority(source.status) >= priority(target.status)) {
+        target.status = source.status;
+      }
+    }
+
+    target.details = this.mergeVehicleDetails(target.details, source.details);
+    target.maintenance = this.mergeMaintenanceRecords(target.maintenance, source.maintenance);
+  }
+
+  private mergeVehicleDetails(
+    target: VehicleDetails,
+    source: VehicleDetails,
+  ): VehicleDetails {
+    const merged: VehicleDetails = { ...target };
+    (Object.keys(source) as (keyof VehicleDetails)[]).forEach((key) => {
+      const targetValue = merged[key]?.trim() ?? '';
+      const sourceValue = source[key]?.trim() ?? '';
+      if (!targetValue && sourceValue) {
+        merged[key] = sourceValue;
+      }
+    });
+    return merged;
+  }
+
+  private mergeMaintenanceRecords(
+    existing: MaintenanceRecord[],
+    incoming: MaintenanceRecord[],
+  ): MaintenanceRecord[] {
+    if (!incoming.length) {
+      return existing;
+    }
+
+    const merged = [...existing];
+    incoming.forEach((record) => {
+      const hasDuplicate = merged.some((existingRecord) =>
+        this.maintenanceRecordsEqual(existingRecord, record),
+      );
+      if (!hasDuplicate) {
+        merged.push(record);
+      }
+    });
+    return merged;
+  }
+
+  private maintenanceRecordsEqual(
+    a: MaintenanceRecord,
+    b: MaintenanceRecord,
+  ): boolean {
+    const normalise = (value: string) => value.trim().toLowerCase();
+    return (
+      normalise(a.date) === normalise(b.date) &&
+      normalise(a.enteredBy) === normalise(b.enteredBy) &&
+      normalise(a.work) === normalise(b.work) &&
+      normalise(a.odoReading) === normalise(b.odoReading) &&
+      normalise(a.performedAt) === normalise(b.performedAt) &&
+      normalise(a.outcome) === normalise(b.outcome) &&
+      normalise(a.cost) === normalise(b.cost) &&
+      normalise(a.notes) === normalise(b.notes)
+    );
+  }
+
+  private extractMaintenanceRecords(row: Record<string, string>): MaintenanceRecord[] {
+    const groups = new Map<string, Partial<MaintenanceRecord> & { locked?: boolean }>();
+
+    Object.entries(row).forEach(([key, value]) => {
+      if (!value) {
+        return;
+      }
+
+      const prefixMatch = key.match(/^(maintenance|service|log)_(.+)$/);
+      if (!prefixMatch) {
+        return;
+      }
+
+      let remainder = prefixMatch[2];
+      if (/^(next|upcoming|future)_/.test(remainder) || /_next$/.test(remainder)) {
+        return;
+      }
+      if (remainder.includes('interval') || remainder.includes('due')) {
+        return;
+      }
+
+      const leadingIndex = remainder.match(/^(\d+)_/);
+      const trailingIndex = remainder.match(/_(\d+)$/);
+      let index = '0';
+      if (leadingIndex) {
+        index = leadingIndex[1];
+        remainder = remainder.slice(leadingIndex[0].length);
+      } else if (trailingIndex) {
+        index = trailingIndex[1];
+        remainder = remainder.slice(0, -trailingIndex[0].length);
+      }
+
+      remainder = remainder.replace(/^(log|entry|record)_/, '');
+      const field = this.mapMaintenanceField(remainder);
+      if (!field) {
+        return;
+      }
+
+      const group =
+        groups.get(index) ?? ({} as Partial<MaintenanceRecord> & { locked?: boolean });
+      if (field === 'locked') {
+        (group as { locked?: boolean }).locked = this.parseLockedValue(value);
+      } else {
+        (group as Partial<MaintenanceRecord>)[field] = value;
+      }
+      groups.set(index, group);
+    });
+
+    const records: MaintenanceRecord[] = [];
+    Array.from(groups.entries())
+      .sort((a, b) => Number(a[0]) - Number(b[0]))
+      .forEach(([, partial]) => {
+        const record = this.toMaintenanceRecord(partial);
+        if (record) {
+          records.push(record);
+        }
+      });
+
+    return records;
+  }
+
+  private mapMaintenanceField(segment: string): keyof MaintenanceRecord | null {
+    const cleaned = segment.replace(/__+/g, '_');
+    if (cleaned.includes('update')) {
+      return null;
+    }
+
+    const matches = (pattern: RegExp) => pattern.test(cleaned);
+
+    if (matches(/(?:^|_)(date|performed|completed|inspection)(?:_|$)/)) {
+      return 'date';
+    }
+    if (matches(/(?:^|_)(entered|recorded|logged|author|mechanic|technician)(?:_|$)/)) {
+      return 'enteredBy';
+    }
+    if (matches(/(?:^|_)(work|description|task|scope|type|service|activity|job)(?:_|$)/)) {
+      return 'work';
+    }
+    if (matches(/(?:^|_)(odo|odometer|km|kms|mileage)(?:_|$)/)) {
+      return 'odoReading';
+    }
+    if (matches(/(?:^|_)(performed_at|location|where|provider|supplier|workshop|service_centre|service_center|garage|centre|center)(?:_|$)/)) {
+      return 'performedAt';
+    }
+    if (matches(/(?:^|_)(outcome|result|status|inspection_result)(?:_|$)/)) {
+      return 'outcome';
+    }
+    if (matches(/(?:^|_)(cost|amount|price|total_cost|expense|spend|value)(?:_|$)/)) {
+      return 'cost';
+    }
+    if (matches(/(?:^|_)(notes|comment|remark|detail|summary|observation)(?:_|$)/)) {
+      return 'notes';
+    }
+    if (matches(/(?:^|_)(locked|lock|is_locked)(?:_|$)/)) {
+      return 'locked';
+    }
+    return null;
+  }
+
+  private parseLockedValue(raw: string): boolean {
+    const value = raw.trim().toLowerCase();
+    return value === 'true' || value === 'yes' || value === 'locked' || value === '1';
+  }
+
+  private toMaintenanceRecord(
+    source: Partial<MaintenanceRecord> & { locked?: boolean },
+  ): MaintenanceRecord | null {
+    const record: MaintenanceRecord = {
+      id: this.createId(),
+      date: source.date?.trim() ?? '',
+      enteredBy: source.enteredBy?.trim() ?? '',
+      work: source.work?.trim() ?? '',
+      odoReading: source.odoReading?.trim() ?? '',
+      performedAt: source.performedAt?.trim() ?? '',
+      outcome: source.outcome?.trim() ?? '',
+      cost: source.cost?.trim() ?? '',
+      notes: source.notes?.trim() ?? '',
+      locked: source.locked ?? false,
+    };
+
+    if (!this.hasMaintenanceContent(record)) {
+      return null;
+    }
+
+    return record;
+  }
+
+  private hasMaintenanceContent(record: MaintenanceRecord): boolean {
+    return [
+      record.date,
+      record.enteredBy,
+      record.work,
+      record.odoReading,
+      record.performedAt,
+      record.outcome,
+      record.cost,
+      record.notes,
+    ].some((value) => value.trim().length > 0);
   }
 
   private parseStatus(raw: string | undefined): VehicleStatus {

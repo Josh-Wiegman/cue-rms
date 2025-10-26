@@ -209,16 +209,26 @@
     color: colors.$off-black;
     cursor: pointer;
 
-    span {
-      font-weight: 600;
-      font-size: 1.1rem;
-      color: colors.$secondary-color;
-    }
-
     &:hover {
       background: rgba(colors.$secondary-color, 0.08);
     }
   }
+}
+
+.panel__header-menu-icon {
+  font-weight: 600;
+  font-size: 1.1rem;
+  color: colors.$secondary-color;
+  width: 1.75rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.panel__header-menu-label {
+  font-weight: 500;
+  flex: 1;
+  text-align: left;
 }
 
 @keyframes menu-pop {
@@ -492,6 +502,17 @@ table {
     &:disabled {
       opacity: 0.5;
       cursor: not-allowed;
+    }
+  }
+
+  .status-actions__export {
+    background: colors.$secondary-color;
+    border-color: colors.$secondary-color;
+    color: colors.$off-white;
+    margin-left: 0.5rem;
+
+    &:hover:not(:disabled) {
+      background: darken(colors.$secondary-color, 6%);
     }
   }
 }
