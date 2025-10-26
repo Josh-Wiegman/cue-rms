@@ -77,34 +77,6 @@
   }
 }
 
-.import {
-  background: white;
-  padding: 1.5rem;
-  border-radius: 1rem;
-  @include effects.box-shadow;
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-
-  input[type='file'] {
-    padding: 0.5rem;
-    border: 1px dashed rgba(colors.$primary-color, 0.3);
-    border-radius: 0.75rem;
-  }
-
-  .import__summary {
-    font-size: 0.9rem;
-    color: colors.$secondary-color;
-  }
-
-  .import__errors {
-    list-style: disc;
-    padding-left: 1.5rem;
-    color: #c93131;
-    font-size: 0.85rem;
-  }
-}
-
 .portal-grid {
   display: grid;
   grid-template-columns: minmax(320px, 1.05fr) minmax(400px, 1.5fr);
@@ -132,6 +104,129 @@
     font-size: 0.95rem;
     margin-top: 0.35rem;
   }
+}
+
+.panel__header-action {
+  @include buttons.primary-button;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.65rem 1.2rem;
+  font-size: 0.95rem;
+  cursor: pointer;
+  line-height: 1;
+  white-space: nowrap;
+  border: none;
+  border-radius: 0.75rem;
+  background: linear-gradient(135deg, #13b5d4, colors.$secondary-color);
+  box-shadow: 0 12px 28px rgba(9, 149, 176, 0.25);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+
+  &:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 16px 32px rgba(9, 149, 176, 0.32);
+  }
+
+  &:active {
+    transform: translateY(1px);
+  }
+}
+
+.panel__header-action-group {
+  position: relative;
+  display: inline-flex;
+  align-items: stretch;
+  border-radius: 0.85rem;
+  overflow: hidden;
+  background: linear-gradient(135deg, #13b5d4, colors.$secondary-color);
+  box-shadow: 0 16px 30px rgba(9, 149, 176, 0.28);
+
+  .panel__header-action {
+    background: transparent;
+    box-shadow: none;
+    border-radius: 0;
+    padding: 0.65rem 1.25rem;
+    color: colors.$off-white;
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.12);
+      transform: none;
+    }
+
+    &:active {
+      transform: none;
+      background: rgba(255, 255, 255, 0.18);
+    }
+  }
+
+  .panel__header-action--caret {
+    padding: 0 1.2rem;
+    font-size: 1.1rem;
+    border-left: 1px solid rgba(255, 255, 255, 0.25);
+    display: inline-flex;
+    justify-content: center;
+  }
+}
+
+.panel__header-menu {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 0.75rem);
+  background: white;
+  border-radius: 0.85rem;
+  padding: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  min-width: 200px;
+  @include effects.box-shadow;
+  z-index: 1200;
+  animation: menu-pop 0.18s ease;
+
+  button {
+    background: transparent;
+    border: none;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.65rem 0.85rem;
+    font-size: 0.95rem;
+    border-radius: 0.65rem;
+    color: colors.$off-black;
+    cursor: pointer;
+
+    span {
+      font-weight: 600;
+      font-size: 1.1rem;
+      color: colors.$secondary-color;
+    }
+
+    &:hover {
+      background: rgba(colors.$secondary-color, 0.08);
+    }
+  }
+}
+
+@keyframes menu-pop {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.panel__header-action-icon {
+  font-size: 1.3rem;
+  line-height: 1;
+}
+
+.panel__header-action-label {
+  font-weight: 600;
+  letter-spacing: 0.02em;
 }
 
 .panel__form {
@@ -343,13 +438,146 @@ table {
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
+}
 
-  .maintenance__form {
-    button {
-      align-self: flex-start;
-      @include buttons.secondary-button;
-    }
+.maintenance__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+
+  p {
+    margin-top: 0.35rem;
+    color: rgba(colors.$off-black, 0.65);
   }
+}
+
+.maintenance__add-action {
+  margin-left: auto;
+  background: linear-gradient(135deg, #ff9f43, #ff6f61);
+  box-shadow: 0 14px 30px rgba(255, 111, 97, 0.28);
+
+  &:hover {
+    box-shadow: 0 18px 34px rgba(255, 111, 97, 0.34);
+  }
+}
+
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(colors.$off-black, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  z-index: 1100;
+}
+
+.modal {
+  background: white;
+  border-radius: 1rem;
+  width: min(760px, 100%);
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  @include effects.box-shadow;
+}
+
+.modal__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid rgba(colors.$primary-color, 0.08);
+
+  h3 {
+    margin: 0;
+  }
+}
+
+.modal__close {
+  background: transparent;
+  border: none;
+  font-size: 1.5rem;
+  line-height: 1;
+  cursor: pointer;
+  color: rgba(colors.$off-black, 0.6);
+
+  &:hover {
+    color: colors.$primary-color;
+  }
+}
+
+.modal__form {
+  border-top: none;
+  padding: 1.5rem;
+  overflow-y: auto;
+}
+
+.modal__actions {
+  display: flex;
+  justify-content: flex-end;
+  padding-top: 0.5rem;
+
+  button {
+    align-self: auto;
+    margin-left: auto;
+  }
+}
+
+.import__summary {
+  font-size: 0.9rem;
+  color: colors.$secondary-color;
+  margin-top: 0.75rem;
+}
+
+.import__errors {
+  list-style: disc;
+  padding-left: 1.5rem;
+  color: #c93131;
+  font-size: 0.85rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.import-modal__description {
+  margin: 0 0 1rem;
+  color: rgba(colors.$off-black, 0.7);
+  font-size: 0.95rem;
+}
+
+.import-modal__file {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.4rem;
+  padding: 1rem 1.25rem;
+  border-radius: 0.9rem;
+  border: 1px dashed rgba(colors.$primary-color, 0.2);
+  background: rgba(colors.$off-white, 0.7);
+  transition: border-color 0.2s ease, background 0.2s ease;
+
+  &:hover {
+    border-color: rgba(colors.$secondary-color, 0.35);
+    background: rgba(colors.$off-white, 0.9);
+  }
+
+  input[type='file'] {
+    cursor: pointer;
+  }
+}
+
+.import-modal__file-label {
+  font-weight: 600;
+  color: colors.$primary-color;
+}
+
+.import-modal__filename {
+  font-size: 0.9rem;
+  margin: 0.5rem 0 0;
+  color: rgba(colors.$off-black, 0.75);
 }
 
 .empty-state {
@@ -383,5 +611,14 @@ table {
   .page-header__controls {
     width: 100%;
     justify-content: space-between;
+  }
+
+  .panel__header-action-label {
+    display: none;
+  }
+
+  .maintenance__header {
+    flex-direction: column;
+    align-items: flex-start;
   }
 }

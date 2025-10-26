@@ -2,7 +2,10 @@ import { CommonModule } from '@angular/common';
 import {
   Component,
   DestroyRef,
+  ElementRef,
+  HostListener,
   OnInit,
+  ViewChild,
   computed,
   effect,
   inject,
@@ -43,6 +46,9 @@ export class VehiclePortalComponent implements OnInit {
   authLevel = signal<1 | 2>(2);
   showAddVehicleModal = signal(false);
   showAddMaintenanceModal = signal(false);
+  showAddVehicleMenu = signal(false);
+  showImportCsvModal = signal(false);
+  selectedCsvFile = signal<File | null>(null);
 
   readonly selectedVehicle = computed(() =>
     this.vehicles().find((vehicle) => vehicle.id === this.selectedVehicleId()) ??
@@ -58,6 +64,8 @@ export class VehiclePortalComponent implements OnInit {
   readonly archivedVehicles = computed(() =>
     this.vehicles().filter((vehicle) => vehicle.status === 'archived').length,
   );
+
+  readonly selectedCsvFileName = computed(() => this.selectedCsvFile()?.name ?? '');
 
   readonly newVehicleForm = this.fb.nonNullable.group({
     location: ['', [Validators.required, Validators.maxLength(60)]],
@@ -116,6 +124,8 @@ export class VehiclePortalComponent implements OnInit {
 
   csvImportSummary = signal<string>('');
   csvImportErrors = signal<string[]>([]);
+
+  @ViewChild('csvFileInput') private csvFileInput?: ElementRef<HTMLInputElement>;
 
   private readonly syncFormEffect = effect(() => {
     const selected = this.selectedVehicle();
@@ -195,10 +205,29 @@ export class VehiclePortalComponent implements OnInit {
   openAddVehicleModal(): void {
     this.resetNewVehicleForm();
     this.showAddVehicleModal.set(true);
+    this.showAddVehicleMenu.set(false);
   }
 
   closeAddVehicleModal(): void {
     this.showAddVehicleModal.set(false);
+  }
+
+  handleAddVehicleClick(): void {
+    this.openAddVehicleModal();
+  }
+
+  toggleAddVehicleMenu(event: MouseEvent): void {
+    event.stopPropagation();
+    this.showAddVehicleMenu.update((value) => !value);
+  }
+
+  handleVehicleMenuSelect(action: 'new' | 'import'): void {
+    this.showAddVehicleMenu.set(false);
+    if (action === 'new') {
+      this.openAddVehicleModal();
+      return;
+    }
+    this.openImportCsvModal();
   }
 
   openAddMaintenanceModal(): void {
@@ -211,6 +240,24 @@ export class VehiclePortalComponent implements OnInit {
 
   closeAddMaintenanceModal(): void {
     this.showAddMaintenanceModal.set(false);
+  }
+
+  openImportCsvModal(): void {
+    this.csvImportSummary.set('');
+    this.csvImportErrors.set([]);
+    this.selectedCsvFile.set(null);
+    if (this.csvFileInput) {
+      this.csvFileInput.nativeElement.value = '';
+    }
+    this.showImportCsvModal.set(true);
+  }
+
+  closeImportCsvModal(): void {
+    this.showImportCsvModal.set(false);
+    this.selectedCsvFile.set(null);
+    if (this.csvFileInput) {
+      this.csvFileInput.nativeElement.value = '';
+    }
   }
 
   private resetNewVehicleForm(): void {
@@ -405,10 +452,18 @@ export class VehiclePortalComponent implements OnInit {
     this.vehicleData.toggleMaintenanceLock(vehicle.id, record.id);
   }
 
-  async importCsv(event: Event): Promise<void> {
-    const input = event.target as HTMLInputElement;
-    const file = input.files?.[0];
+  handleCsvFileSelection(event: Event): void {
+    const input = event.target as HTMLInputElement | null;
+    const file = input?.files?.[0] ?? null;
+    this.selectedCsvFile.set(file);
+    this.csvImportSummary.set('');
+    this.csvImportErrors.set([]);
+  }
+
+  async importSelectedCsv(): Promise<void> {
+    const file = this.selectedCsvFile();
     if (!file) {
+      this.csvImportErrors.set(['Please choose a CSV file to import.']);
       return;
     }
 
@@ -418,7 +473,13 @@ export class VehiclePortalComponent implements OnInit {
       `${result.added} vehicle${result.added === 1 ? '' : 's'} imported${skippedText}`,
     );
     this.csvImportErrors.set(result.errors);
-    input.value = '';
+
+    if (result.errors.length === 0) {
+      this.selectedCsvFile.set(null);
+      if (this.csvFileInput) {
+        this.csvFileInput.nativeElement.value = '';
+      }
+    }
   }
 
   maintenanceRowClass(record: MaintenanceRecord): string {
@@ -430,5 +491,17 @@ export class VehiclePortalComponent implements OnInit {
       classes.push('failed');
     }
     return classes.join(' ');
+  }
+
+  @HostListener('document:click', ['$event'])
+  closeMenuOnOutsideClick(event: MouseEvent): void {
+    if (!this.showAddVehicleMenu()) {
+      return;
+    }
+    const target = event.target as HTMLElement | null;
+    if (target?.closest('.panel__header-action-group')) {
+      return;
+    }
+    this.showAddVehicleMenu.set(false);
   }
 }
