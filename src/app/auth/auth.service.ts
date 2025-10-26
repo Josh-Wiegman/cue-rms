@@ -78,7 +78,7 @@ export class AuthService {
   async login(email: string, password: string): Promise<AuthUser> {
     // Call Edge Function that: verifies subdomain -> org, checks membership, signs in server-side
     const { data, error } = await this.supabaseService.client.functions.invoke(
-      'auth',
+      'user-management',
       {
         body: { action: 'login', payload: { email, password } },
       },
@@ -131,7 +131,7 @@ export class AuthService {
     }
 
     const { data, error } = await this.supabaseService.client.functions.invoke(
-      'auth',
+      'user-management',
       {
         body: { action: 'register', payload },
       },
