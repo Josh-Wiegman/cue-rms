@@ -5,10 +5,7 @@ import { BehaviorSubject } from 'rxjs';
 import { User } from '@supabase/supabase-js';
 
 import { SupabaseService } from '../shared/supabase-service/supabase.service';
-import {
-  AuthUser,
-  CreateUserRequest,
-} from './models/auth-user.model';
+import { AuthUser, CreateUserRequest } from './models/auth-user.model';
 import {
   isPermissionLevel,
   PermissionLevel,
@@ -49,7 +46,8 @@ export class AuthService {
         return;
       }
 
-      const { data, error } = await this.supabaseService.client.auth.getSession();
+      const { data, error } =
+        await this.supabaseService.client.auth.getSession();
       if (error) {
         console.error('Failed to restore Supabase session', error);
         return;
@@ -78,22 +76,37 @@ export class AuthService {
   }
 
   async login(email: string, password: string): Promise<AuthUser> {
-    const { data, error } =
-      await this.supabaseService.client.auth.signInWithPassword({
-        email,
-        password,
-      });
+    // Call Edge Function that: verifies subdomain -> org, checks membership, signs in server-side
+    const { data, error } = await this.supabaseService.client.functions.invoke(
+      'auth',
+      {
+        body: { action: 'login', payload: { email, password } },
+      },
+    );
 
-    if (error) {
-      throw new Error(error.message);
+    if (error) throw new Error(error.message ?? 'Login failed');
+
+    // If function returns a session, apply it to the client so Supabase-js is “logged in”
+    if (data?.session) {
+      const { access_token, refresh_token } = data.session;
+      const { error: setErr } =
+        await this.supabaseService.client.auth.setSession({
+          access_token,
+          refresh_token,
+        });
+      if (setErr) throw new Error(setErr.message);
     }
 
-    const supabaseUser = data.user;
-    if (!supabaseUser) {
-      throw new Error('No user information returned from Supabase.');
-    }
+    // Build the user payload the same way you did before (but we already have basics in data.user)
+    const user: AuthUser = {
+      id: data.user.id,
+      email: data.user.email ?? '',
+      displayName: data.user.displayName ?? data.user.email ?? 'Unknown user',
+      permissionLevel: data.user.permissionLevel,
+    };
 
-    const user = await this.loadUserProfile(supabaseUser);
+    this.persistUser(user);
+    this.currentUserSubject.next(user);
     return user;
   }
 
@@ -118,19 +131,13 @@ export class AuthService {
     }
 
     const { data, error } = await this.supabaseService.client.functions.invoke(
-      'user-management',
+      'auth',
       {
-        body: {
-          action: 'create-user',
-          payload,
-        },
+        body: { action: 'register', payload },
       },
     );
 
-    if (error) {
-      throw new Error(error.message ?? 'Failed to create the user.');
-    }
-
+    if (error) throw new Error(error.message ?? 'Failed to create the user.');
     return data;
   }
 
@@ -162,9 +169,7 @@ export class AuthService {
       console.error('Failed to fetch user profile from Supabase', error);
     }
 
-    const permissionLevel = this.parsePermissionLevel(
-      data?.permission_level,
-    );
+    const permissionLevel = this.parsePermissionLevel(data?.permission_level);
 
     const user: AuthUser = {
       id: supabaseUser.id,
