@@ -123,6 +123,7 @@ export class AuthService {
       'user-management',
       {
         body: { action: 'register', payload },
+        headers: { 'x-org-slug': this.org }, // belt + braces
       },
     );
 
