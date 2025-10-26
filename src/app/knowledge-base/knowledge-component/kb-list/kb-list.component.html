@@ -11,8 +11,8 @@
             <p class="kb-card-excerpt">{{ a.excerpt }}</p>
             <div class="kb-card-meta">
               <small *ngIf="a.tags?.length">{{ a.tags?.join(" • ") }}</small>
-              <small *ngIf="a.updatedAt">
-                — {{ a.updatedAt | date: "mediumDate" }}</small
+              <small *ngIf="a.updated_at">
+                — {{ a.updated_at | date: "mediumDate" }}</small
               >
             </div>
           </a>

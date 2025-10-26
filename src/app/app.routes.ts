@@ -46,6 +46,14 @@ export const routes: Routes = [
     title: 'Inventory | Cue RMS',
   },
   {
+    path: 'vehicles',
+    loadComponent: () =>
+      import(
+        './vehicles/vehicle-portal-component/vehicle-portal-component'
+      ).then((m) => m.VehiclePortalComponent),
+    title: 'Vehicles | Cue RMS',
+  },
+  {
     path: 'clashes',
     loadComponent: () =>
       import('./clashes/clashes-component/clashes-component').then(
