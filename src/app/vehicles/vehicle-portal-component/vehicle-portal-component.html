@@ -82,6 +82,12 @@
                   <th>Plate</th>
                   <th>Location</th>
                   <th>Status</th>
+                  <th
+                    *ngIf="isAdmin()"
+                    class="actions-column"
+                    scope="col"
+                    aria-label="Vehicle actions"
+                  ></th>
                 </tr>
               </thead>
               <tbody>
@@ -101,9 +107,21 @@
                   <td>
                     <span [ngClass]="['status-pill', 'status-' + vehicle.status]">{{ vehicle.status }}</span>
                   </td>
+                  <td class="actions" *ngIf="isAdmin()">
+                    <button
+                      type="button"
+                      class="icon-button icon-button--danger"
+                      aria-label="Delete vehicle"
+                      (click)="handleRemoveVehicle(vehicle, $event)"
+                    >
+                      <span aria-hidden="true">🗑</span>
+                    </button>
+                  </td>
                 </tr>
                 <tr *ngIf="!vehicles().length">
-                  <td colspan="4" class="empty">No vehicles loaded yet.</td>
+                  <td [attr.colspan]="isAdmin() ? 5 : 4" class="empty">
+                    No vehicles loaded yet.
+                  </td>
                 </tr>
               </tbody>
             </table>
@@ -264,6 +282,15 @@
                         <td class="actions">
                           <button type="button" (click)="saveMaintenanceEdit(record)">Save</button>
                           <button type="button" class="ghost" (click)="cancelMaintenanceEdit()">Cancel</button>
+                          <button
+                            type="button"
+                            class="icon-button icon-button--danger"
+                            *ngIf="isAdmin()"
+                            aria-label="Delete maintenance record"
+                            (click)="handleDeleteMaintenance(record, $event)"
+                          >
+                            <span aria-hidden="true">🗑</span>
+                          </button>
                         </td>
                       </tr>
                     </ng-container>
@@ -287,10 +314,19 @@
                           </button>
                           <button
                             type="button"
-                            *ngIf="authLevel() === 1"
+                            *ngIf="isAdmin()"
                             (click)="toggleMaintenanceLock(record)"
                           >
                             {{ record.locked ? 'Unlock' : 'Lock' }}
+                          </button>
+                          <button
+                            type="button"
+                            class="icon-button icon-button--danger"
+                            *ngIf="isAdmin()"
+                            aria-label="Delete maintenance record"
+                            (click)="handleDeleteMaintenance(record, $event)"
+                          >
+                            <span aria-hidden="true">🗑</span>
                           </button>
                         </td>
                       </tr>

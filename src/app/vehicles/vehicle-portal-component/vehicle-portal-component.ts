@@ -50,6 +50,7 @@ export class VehiclePortalComponent implements OnInit {
   showImportCsvModal = signal(false);
   selectedCsvFile = signal<File | null>(null);
 
+  readonly isAdmin = computed(() => this.authLevel() === 1);
   readonly selectedVehicle = computed(() =>
     this.vehicles().find((vehicle) => vehicle.id === this.selectedVehicleId()) ??
     null,
@@ -179,11 +180,11 @@ export class VehiclePortalComponent implements OnInit {
   }
 
   canEditCoreDetails(): boolean {
-    return this.authLevel() === 1;
+    return this.isAdmin();
   }
 
   canEditMaintenance(record: MaintenanceRecord): boolean {
-    if (this.authLevel() === 1) {
+    if (this.isAdmin()) {
       return true;
     }
     return !record.locked;
@@ -219,6 +220,20 @@ export class VehiclePortalComponent implements OnInit {
   toggleAddVehicleMenu(event: MouseEvent): void {
     event.stopPropagation();
     this.showAddVehicleMenu.update((value) => !value);
+  }
+
+  handleRemoveVehicle(vehicle: Vehicle, event: MouseEvent): void {
+    event.stopPropagation();
+    if (!this.isAdmin()) {
+      return;
+    }
+
+    const isSelected = this.selectedVehicleId() === vehicle.id;
+    if (isSelected) {
+      this.selectedVehicleId.set(null);
+    }
+
+    this.vehicleData.removeVehicle(vehicle.id);
   }
 
   handleVehicleMenuSelect(action: 'new' | 'import'): void {
@@ -446,10 +461,24 @@ export class VehiclePortalComponent implements OnInit {
     if (!vehicle) {
       return;
     }
-    if (this.authLevel() !== 1) {
+    if (!this.isAdmin()) {
       return;
     }
     this.vehicleData.toggleMaintenanceLock(vehicle.id, record.id);
+  }
+
+  handleDeleteMaintenance(record: MaintenanceRecord, event: MouseEvent): void {
+    event.stopPropagation();
+    const vehicle = this.selectedVehicle();
+    if (!vehicle || !this.isAdmin()) {
+      return;
+    }
+
+    if (this.editingMaintenanceId() === record.id) {
+      this.cancelMaintenanceEdit();
+    }
+
+    this.vehicleData.removeMaintenanceRecord(vehicle.id, record.id);
   }
 
   handleCsvFileSelection(event: Event): void {

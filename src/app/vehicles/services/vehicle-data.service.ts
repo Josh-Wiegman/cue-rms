@@ -101,6 +101,13 @@ export class VehicleDataService {
     }));
   }
 
+  removeMaintenanceRecord(vehicleId: string, recordId: string): void {
+    this.updateVehicle(vehicleId, (vehicle) => ({
+      ...vehicle,
+      maintenance: vehicle.maintenance.filter((record) => record.id !== recordId),
+    }));
+  }
+
   replaceAll(vehicles: Vehicle[]): void {
     this.updateVehicles(this.clone(vehicles));
   }
