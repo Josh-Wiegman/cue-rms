@@ -219,7 +219,7 @@ export class VehiclePortalComponent implements OnInit {
     this.showAddVehicleMenu.update((value) => !value);
   }
 
-  handleRemoveVehicle(vehicle: Vehicle, event: MouseEvent): void {
+  async handleRemoveVehicle(vehicle: Vehicle, event: MouseEvent): Promise<void> {
     event.stopPropagation();
     if (!this.isAdmin()) {
       return;
@@ -230,7 +230,7 @@ export class VehiclePortalComponent implements OnInit {
       this.selectedVehicleId.set(null);
     }
 
-    this.vehicleData.removeVehicle(vehicle.id);
+    await this.vehicleData.removeVehicle(vehicle.id);
   }
 
   handleVehicleMenuSelect(action: 'new' | 'import'): void {
@@ -310,14 +310,14 @@ export class VehiclePortalComponent implements OnInit {
     return normalized;
   }
 
-  addVehicle(): void {
+  async addVehicle(): Promise<void> {
     if (this.newVehicleForm.invalid) {
       this.newVehicleForm.markAllAsTouched();
       return;
     }
 
     const value = this.newVehicleForm.getRawValue();
-    const vehicle = this.vehicleData.addVehicle({
+    const vehicle = await this.vehicleData.addVehicle({
       location: value.location,
       name: value.name,
       licensePlate: value.licensePlate,
@@ -335,11 +335,13 @@ export class VehiclePortalComponent implements OnInit {
     });
 
     this.resetNewVehicleForm();
-    this.selectedVehicleId.set(vehicle.id);
+    if (vehicle) {
+      this.selectedVehicleId.set(vehicle.id);
+    }
     this.closeAddVehicleModal();
   }
 
-  saveVehicleDetails(): void {
+  async saveVehicleDetails(): Promise<void> {
     if (!this.selectedVehicle()) {
       return;
     }
@@ -349,7 +351,7 @@ export class VehiclePortalComponent implements OnInit {
     }
 
     const value = this.vehicleDetailsForm.getRawValue();
-    this.vehicleData.updateVehicle(this.selectedVehicle()!.id, (vehicle) => ({
+    await this.vehicleData.updateVehicle(this.selectedVehicle()!.id, (vehicle) => ({
       ...vehicle,
       location: value.location,
       name: value.name,
@@ -369,12 +371,12 @@ export class VehiclePortalComponent implements OnInit {
     }));
   }
 
-  markVehicleStatus(status: VehicleStatus): void {
+  async markVehicleStatus(status: VehicleStatus): Promise<void> {
     const vehicle = this.selectedVehicle();
     if (!vehicle) {
       return;
     }
-    this.vehicleData.markVehicleStatus(vehicle.id, status);
+    await this.vehicleData.markVehicleStatus(vehicle.id, status);
   }
 
   exportSelectedVehicle(): void {
@@ -439,7 +441,7 @@ export class VehiclePortalComponent implements OnInit {
     URL.revokeObjectURL(url);
   }
 
-  addMaintenance(): void {
+  async addMaintenance(): Promise<void> {
     const vehicle = this.selectedVehicle();
     if (!vehicle) {
       return;
@@ -450,7 +452,7 @@ export class VehiclePortalComponent implements OnInit {
     }
 
     const value = this.maintenanceForm.getRawValue();
-    this.vehicleData.addMaintenanceRecord(vehicle.id, {
+    await this.vehicleData.addMaintenanceRecord(vehicle.id, {
       date: value.date,
       enteredBy: value.enteredBy,
       work: value.work,
@@ -487,14 +489,14 @@ export class VehiclePortalComponent implements OnInit {
     this.editingMaintenanceId.set(null);
   }
 
-  saveMaintenanceEdit(record: MaintenanceRecord): void {
+  async saveMaintenanceEdit(record: MaintenanceRecord): Promise<void> {
     if (this.maintenanceEditForm.invalid) {
       this.maintenanceEditForm.markAllAsTouched();
       return;
     }
 
     const value = this.maintenanceEditForm.getRawValue();
-    this.vehicleData.updateMaintenanceRecord(
+    await this.vehicleData.updateMaintenanceRecord(
       this.selectedVehicle()!.id,
       record.id,
       () => ({
@@ -512,7 +514,7 @@ export class VehiclePortalComponent implements OnInit {
     this.editingMaintenanceId.set(null);
   }
 
-  toggleMaintenanceLock(record: MaintenanceRecord): void {
+  async toggleMaintenanceLock(record: MaintenanceRecord): Promise<void> {
     const vehicle = this.selectedVehicle();
     if (!vehicle) {
       return;
@@ -520,10 +522,13 @@ export class VehiclePortalComponent implements OnInit {
     if (!this.isAdmin()) {
       return;
     }
-    this.vehicleData.toggleMaintenanceLock(vehicle.id, record.id);
+    await this.vehicleData.toggleMaintenanceLock(vehicle.id, record.id);
   }
 
-  handleDeleteMaintenance(record: MaintenanceRecord, event: MouseEvent): void {
+  async handleDeleteMaintenance(
+    record: MaintenanceRecord,
+    event: MouseEvent,
+  ): Promise<void> {
     event.stopPropagation();
     const vehicle = this.selectedVehicle();
     if (!vehicle || !this.isAdmin()) {
@@ -534,7 +539,7 @@ export class VehiclePortalComponent implements OnInit {
       this.cancelMaintenanceEdit();
     }
 
-    this.vehicleData.removeMaintenanceRecord(vehicle.id, record.id);
+    await this.vehicleData.removeMaintenanceRecord(vehicle.id, record.id);
   }
 
   handleCsvFileSelection(event: Event): void {

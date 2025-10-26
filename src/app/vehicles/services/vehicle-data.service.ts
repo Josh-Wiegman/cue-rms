@@ -1,5 +1,7 @@
 import { Injectable } from '@angular/core';
+import { SupabaseClient } from '@supabase/supabase-js';
 import { BehaviorSubject } from 'rxjs';
+import { SupabaseService } from '../../shared/supabase-service/supabase.service';
 import {
   MaintenanceRecord,
   Vehicle,
@@ -22,99 +24,235 @@ export interface CsvImportResult {
   errors: string[];
 }
 
+type VehicleRow = {
+  id: string;
+  location: string | null;
+  name: string | null;
+  license_plate: string;
+  status: string | null;
+  purchase_date: string | null;
+  vin: string | null;
+  engine: string | null;
+  chassis: string | null;
+  odometer: string | null;
+  fuel_type: string | null;
+  transmission: string | null;
+  gross_vehicle_mass: string | null;
+  notes: string | null;
+  maintenance: MaintenanceRow[] | null;
+};
+
+type MaintenanceRow = {
+  id: string;
+  vehicle_id: string;
+  date: string | null;
+  entered_by: string | null;
+  work: string | null;
+  odo_reading: string | null;
+  performed_at: string | null;
+  outcome: string | null;
+  cost: string | null;
+  notes: string | null;
+  locked: boolean | null;
+};
+
 @Injectable({ providedIn: 'root' })
 export class VehicleDataService {
-  private readonly storageKey = 'vehicle-portal-data';
-  private readonly vehiclesSubject = new BehaviorSubject<Vehicle[]>(
-    this.loadFromStorage(),
-  );
+  private readonly vehiclesSubject = new BehaviorSubject<Vehicle[]>([]);
+  private readonly supabaseClient: SupabaseClient;
+  private readonly vehicleSelect =
+    'id, location, name, license_plate, status, purchase_date, vin, engine, chassis, odometer, fuel_type, transmission, gross_vehicle_mass, notes, maintenance:vehicle_maintenance_records(id, vehicle_id, date, entered_by, work, odo_reading, performed_at, outcome, cost, notes, locked)';
 
   readonly vehicles$ = this.vehiclesSubject.asObservable();
 
-  addVehicle(payload: VehicleInput): Vehicle {
-    const vehicles = this.cloneVehicles();
-    const vehicle: Vehicle = {
-      id: this.createId(),
+  constructor(private readonly supabaseService: SupabaseService) {
+    this.supabaseClient = this.supabaseService.client;
+    void this.refreshVehicles();
+  }
+
+  async addVehicle(payload: VehicleInput): Promise<Vehicle | null> {
+    const columns = this.buildVehicleColumns({
       location: payload.location.trim(),
       name: payload.name.trim(),
       licensePlate: payload.licensePlate.trim().toUpperCase(),
       status: payload.status ?? 'active',
-      details: {
-        purchaseDate: payload.details?.purchaseDate ?? '',
-        vin: payload.details?.vin ?? '',
-        engine: payload.details?.engine ?? '',
-        chassis: payload.details?.chassis ?? '',
-        odometer: payload.details?.odometer ?? '',
-        fuelType: payload.details?.fuelType ?? '',
-        transmission: payload.details?.transmission ?? '',
-        grossVehicleMass: payload.details?.grossVehicleMass ?? '',
-        notes: payload.details?.notes ?? '',
-      },
-      maintenance: payload.maintenance ?? [],
-    };
+      details: this.buildVehicleDetails(payload.details ?? {}),
+    });
 
-    vehicles.push(vehicle);
-    this.updateVehicles(vehicles);
-    return vehicle;
+    const { data, error } = await this.supabaseClient
+      .from('vehicles')
+      .insert(columns)
+      .select('id')
+      .single();
+
+    if (error || !data) {
+      console.error('Failed to add vehicle', error);
+      return null;
+    }
+
+    if (payload.maintenance?.length) {
+      const maintenancePayload = payload.maintenance
+        .filter((record) => this.hasMaintenanceContent(record))
+        .map((record) => this.buildMaintenanceColumns(data.id, record));
+      if (maintenancePayload.length > 0) {
+        const { error: maintenanceError } = await this.supabaseClient
+          .from('vehicle_maintenance_records')
+          .insert(maintenancePayload);
+        if (maintenanceError) {
+          console.error('Failed to save maintenance records', maintenanceError);
+        }
+      }
+    }
+
+    await this.refreshVehicles();
+    return this.vehiclesSubject.value.find((vehicle) => vehicle.id === data.id) ?? null;
   }
 
-  updateVehicle(id: string, updater: (vehicle: Vehicle) => Vehicle): void {
-    const vehicles = this.cloneVehicles();
-    const index = vehicles.findIndex((vehicle) => vehicle.id === id);
-    if (index === -1) {
+  async updateVehicle(
+    id: string,
+    updater: (vehicle: Vehicle) => Vehicle,
+  ): Promise<Vehicle | null> {
+    const existing = this.vehiclesSubject.value.find((vehicle) => vehicle.id === id);
+    if (!existing) {
+      return null;
+    }
+
+    const updated = updater(this.clone(existing));
+    const columns = this.buildVehicleColumns({
+      location: updated.location.trim(),
+      name: updated.name.trim(),
+      licensePlate: updated.licensePlate.trim().toUpperCase(),
+      status: updated.status,
+      details: updated.details,
+    });
+
+    const { error } = await this.supabaseClient
+      .from('vehicles')
+      .update({ ...columns, updated_at: new Date().toISOString() })
+      .eq('id', id);
+
+    if (error) {
+      console.error('Failed to update vehicle', error);
+      return null;
+    }
+
+    await this.refreshVehicles();
+    return this.vehiclesSubject.value.find((vehicle) => vehicle.id === id) ?? null;
+  }
+
+  async removeVehicle(id: string): Promise<void> {
+    const { error } = await this.supabaseClient
+      .from('vehicles')
+      .delete()
+      .eq('id', id);
+
+    if (error) {
+      console.error('Failed to remove vehicle', error);
       return;
     }
 
-    vehicles[index] = updater(vehicles[index]);
-    this.updateVehicles(vehicles);
+    await this.refreshVehicles();
   }
 
-  removeVehicle(id: string): void {
-    const vehicles = this.cloneVehicles().filter((vehicle) => vehicle.id !== id);
-    this.updateVehicles(vehicles);
+  async markVehicleStatus(id: string, status: VehicleStatus): Promise<void> {
+    const { error } = await this.supabaseClient
+      .from('vehicles')
+      .update({ status, updated_at: new Date().toISOString() })
+      .eq('id', id);
+
+    if (error) {
+      console.error('Failed to update vehicle status', error);
+      return;
+    }
+
+    await this.refreshVehicles();
   }
 
-  markVehicleStatus(id: string, status: VehicleStatus): void {
-    this.updateVehicle(id, (vehicle) => ({
-      ...vehicle,
-      status,
-    }));
+  async addMaintenanceRecord(
+    vehicleId: string,
+    record: Omit<MaintenanceRecord, 'id'>,
+  ): Promise<MaintenanceRecord | null> {
+    const payload = this.buildMaintenanceColumns(vehicleId, record);
+    const { data, error } = await this.supabaseClient
+      .from('vehicle_maintenance_records')
+      .insert(payload)
+      .select('*')
+      .single();
+
+    if (error || !data) {
+      console.error('Failed to add maintenance record', error);
+      return null;
+    }
+
+    await this.refreshVehicles();
+    const vehicle = this.vehiclesSubject.value.find((item) => item.id === vehicleId);
+    return vehicle?.maintenance.find((item) => item.id === data.id) ?? null;
   }
 
-  addMaintenanceRecord(id: string, record: Omit<MaintenanceRecord, 'id'>): void {
-    const newRecord: MaintenanceRecord = {
-      ...record,
-      id: this.createId(),
-    };
-
-    this.updateVehicle(id, (vehicle) => ({
-      ...vehicle,
-      maintenance: [newRecord, ...vehicle.maintenance],
-    }));
-  }
-
-  updateMaintenanceRecord(
+  async updateMaintenanceRecord(
     vehicleId: string,
     recordId: string,
     updater: (record: MaintenanceRecord) => MaintenanceRecord,
-  ): void {
-    this.updateVehicle(vehicleId, (vehicle) => ({
-      ...vehicle,
-      maintenance: vehicle.maintenance.map((record) =>
-        record.id === recordId ? updater(record) : record,
-      ),
-    }));
+  ): Promise<MaintenanceRecord | null> {
+    const vehicle = this.vehiclesSubject.value.find((item) => item.id === vehicleId);
+    const existing = vehicle?.maintenance.find((record) => record.id === recordId);
+    if (!vehicle || !existing) {
+      return null;
+    }
+
+    const updated = updater(this.clone(existing));
+    const payload = this.buildMaintenanceColumns(vehicleId, updated);
+    delete (payload as { vehicle_id?: string }).vehicle_id;
+
+    const { error } = await this.supabaseClient
+      .from('vehicle_maintenance_records')
+      .update(payload)
+      .eq('id', recordId);
+
+    if (error) {
+      console.error('Failed to update maintenance record', error);
+      return null;
+    }
+
+    await this.refreshVehicles();
+    const refreshed = this.vehiclesSubject.value
+      .find((item) => item.id === vehicleId)
+      ?.maintenance.find((record) => record.id === recordId);
+    return refreshed ?? null;
   }
 
-  removeMaintenanceRecord(vehicleId: string, recordId: string): void {
-    this.updateVehicle(vehicleId, (vehicle) => ({
-      ...vehicle,
-      maintenance: vehicle.maintenance.filter((record) => record.id !== recordId),
-    }));
+  async removeMaintenanceRecord(vehicleId: string, recordId: string): Promise<void> {
+    const { error } = await this.supabaseClient
+      .from('vehicle_maintenance_records')
+      .delete()
+      .eq('id', recordId);
+
+    if (error) {
+      console.error('Failed to remove maintenance record', error);
+      return;
+    }
+
+    await this.refreshVehicles();
   }
 
-  replaceAll(vehicles: Vehicle[]): void {
-    this.updateVehicles(this.clone(vehicles));
+  async toggleMaintenanceLock(vehicleId: string, recordId: string): Promise<void> {
+    const vehicle = this.vehiclesSubject.value.find((item) => item.id === vehicleId);
+    const record = vehicle?.maintenance.find((item) => item.id === recordId);
+    if (!record) {
+      return;
+    }
+
+    const { error } = await this.supabaseClient
+      .from('vehicle_maintenance_records')
+      .update({ locked: !record.locked })
+      .eq('id', recordId);
+
+    if (error) {
+      console.error('Failed to toggle maintenance lock', error);
+      return;
+    }
+
+    await this.refreshVehicles();
   }
 
   async importCsv(file: File): Promise<CsvImportResult> {
@@ -124,9 +262,8 @@ export class VehicleDataService {
       return { added: 0, skipped, errors };
     }
 
-    const existing = this.cloneVehicles();
     const existingByPlate = new Map(
-      existing.map((vehicle) => [vehicle.licensePlate.toUpperCase(), vehicle]),
+      this.vehiclesSubject.value.map((vehicle) => [vehicle.licensePlate.toUpperCase(), vehicle]),
     );
 
     let added = 0;
@@ -134,67 +271,218 @@ export class VehicleDataService {
       const key = vehicle.licensePlate.toUpperCase();
       const current = existingByPlate.get(key);
       if (current) {
-        this.mergeVehicle(current, vehicle);
-        continue;
-      }
+        const merged = this.clone(current);
+        this.mergeVehicle(merged, vehicle);
+        const updateColumns = this.buildVehicleColumns({
+          location: merged.location.trim(),
+          name: merged.name.trim(),
+          licensePlate: merged.licensePlate,
+          status: merged.status,
+          details: merged.details,
+        });
+        const { error } = await this.supabaseClient
+          .from('vehicles')
+          .update({ ...updateColumns, updated_at: new Date().toISOString() })
+          .eq('id', current.id);
+        if (error) {
+          console.error('Failed to merge vehicle during import', error);
+          continue;
+        }
 
-      existing.push(vehicle);
-      existingByPlate.set(key, vehicle);
-      added += 1;
+        const newMaintenance = vehicle.maintenance.filter(
+          (record) =>
+            !current.maintenance.some((existing) =>
+              this.maintenanceRecordsEqual(existing, record),
+            ),
+        );
+        if (newMaintenance.length > 0) {
+          const maintenancePayload = newMaintenance.map((record) =>
+            this.buildMaintenanceColumns(current.id, record),
+          );
+          const { error: maintenanceError } = await this.supabaseClient
+            .from('vehicle_maintenance_records')
+            .insert(maintenancePayload);
+          if (maintenanceError) {
+            console.error('Failed to import maintenance record', maintenanceError);
+          }
+        }
+      } else {
+        const columns = this.buildVehicleColumns({
+          location: vehicle.location,
+          name: vehicle.name,
+          licensePlate: vehicle.licensePlate,
+          status: vehicle.status,
+          details: vehicle.details,
+        });
+        const { data, error } = await this.supabaseClient
+          .from('vehicles')
+          .insert(columns)
+          .select('id, license_plate')
+          .single();
+        if (error || !data) {
+          console.error('Failed to insert vehicle during import', error);
+          continue;
+        }
+        added += 1;
+        existingByPlate.set(data.license_plate.toUpperCase(), {
+          ...vehicle,
+          id: data.id,
+          licensePlate: data.license_plate.toUpperCase(),
+        });
+        if (vehicle.maintenance.length > 0) {
+          const maintenancePayload = vehicle.maintenance.map((record) =>
+            this.buildMaintenanceColumns(data.id, record),
+          );
+          const { error: maintenanceError } = await this.supabaseClient
+            .from('vehicle_maintenance_records')
+            .insert(maintenancePayload);
+          if (maintenanceError) {
+            console.error('Failed to insert imported maintenance record', maintenanceError);
+          }
+        }
+      }
     }
 
-    this.updateVehicles(existing);
+    await this.refreshVehicles();
     return { added, skipped, errors };
   }
 
-  toggleMaintenanceLock(vehicleId: string, recordId: string): void {
-    this.updateMaintenanceRecord(vehicleId, recordId, (record) => ({
-      ...record,
-      locked: !record.locked,
-    }));
-  }
+  private async refreshVehicles(): Promise<void> {
+    const { data, error } = await this.supabaseClient
+      .from('vehicles')
+      .select(this.vehicleSelect)
+      .order('name', { ascending: true })
+      .order('date', { foreignTable: 'vehicle_maintenance_records', ascending: false });
 
-  private cloneVehicles(): Vehicle[] {
-    return this.clone(this.vehiclesSubject.value);
-  }
+    if (error) {
+      console.error('Failed to load vehicles from Supabase', error);
+      return;
+    }
 
-  private updateVehicles(vehicles: Vehicle[]): void {
+    const vehicles = (data ?? []).map((row) => this.mapVehicle(row));
     this.vehiclesSubject.next(vehicles);
-    this.persistToStorage(vehicles);
+  }
+
+  private mapVehicle(row: VehicleRow): Vehicle {
+    const maintenance = (row.maintenance ?? []).map((record) => this.mapMaintenance(record));
+    return {
+      id: row.id,
+      location: this.stringOrEmpty(row.location),
+      name: this.stringOrEmpty(row.name),
+      licensePlate: this.stringOrEmpty(row.license_plate).toUpperCase(),
+      status: this.normaliseStatus(row.status),
+      details: {
+        purchaseDate: this.stringOrEmpty(row.purchase_date),
+        vin: this.stringOrEmpty(row.vin),
+        engine: this.stringOrEmpty(row.engine),
+        chassis: this.stringOrEmpty(row.chassis),
+        odometer: this.stringOrEmpty(row.odometer),
+        fuelType: this.stringOrEmpty(row.fuel_type),
+        transmission: this.stringOrEmpty(row.transmission),
+        grossVehicleMass: this.stringOrEmpty(row.gross_vehicle_mass),
+        notes: this.stringOrEmpty(row.notes),
+      },
+      maintenance: this.sortMaintenance(maintenance),
+    };
+  }
+
+  private mapMaintenance(record: MaintenanceRow): MaintenanceRecord {
+    return {
+      id: record.id,
+      date: this.stringOrEmpty(record.date),
+      enteredBy: this.stringOrEmpty(record.entered_by),
+      work: this.stringOrEmpty(record.work),
+      odoReading: this.stringOrEmpty(record.odo_reading),
+      performedAt: this.stringOrEmpty(record.performed_at),
+      outcome: this.stringOrEmpty(record.outcome),
+      cost: this.stringOrEmpty(record.cost),
+      notes: this.stringOrEmpty(record.notes),
+      locked: Boolean(record.locked),
+    };
+  }
+
+  private buildVehicleColumns(data: {
+    location: string;
+    name: string;
+    licensePlate: string;
+    status: VehicleStatus;
+    details: VehicleDetails;
+  }): Record<string, unknown> {
+    return {
+      location: data.location,
+      name: data.name,
+      license_plate: data.licensePlate,
+      status: data.status,
+      purchase_date: this.nullIfEmpty(data.details.purchaseDate),
+      vin: this.nullIfEmpty(data.details.vin),
+      engine: this.nullIfEmpty(data.details.engine),
+      chassis: this.nullIfEmpty(data.details.chassis),
+      odometer: this.nullIfEmpty(data.details.odometer),
+      fuel_type: this.nullIfEmpty(data.details.fuelType),
+      transmission: this.nullIfEmpty(data.details.transmission),
+      gross_vehicle_mass: this.nullIfEmpty(data.details.grossVehicleMass),
+      notes: this.nullIfEmpty(data.details.notes),
+    };
+  }
+
+  private buildVehicleDetails(partial: Partial<VehicleDetails>): VehicleDetails {
+    return {
+      purchaseDate: partial.purchaseDate ?? '',
+      vin: partial.vin ?? '',
+      engine: partial.engine ?? '',
+      chassis: partial.chassis ?? '',
+      odometer: partial.odometer ?? '',
+      fuelType: partial.fuelType ?? '',
+      transmission: partial.transmission ?? '',
+      grossVehicleMass: partial.grossVehicleMass ?? '',
+      notes: partial.notes ?? '',
+    };
+  }
+
+  private buildMaintenanceColumns(
+    vehicleId: string,
+    record: Omit<MaintenanceRecord, 'id'> | MaintenanceRecord,
+  ): Record<string, unknown> {
+    return {
+      vehicle_id: vehicleId,
+      date: this.nullIfEmpty(record.date),
+      entered_by: this.nullIfEmpty(record.enteredBy),
+      work: this.nullIfEmpty(record.work),
+      odo_reading: this.nullIfEmpty(record.odoReading),
+      performed_at: this.nullIfEmpty(record.performedAt),
+      outcome: this.nullIfEmpty(record.outcome),
+      cost: this.nullIfEmpty(record.cost),
+      notes: this.nullIfEmpty(record.notes),
+      locked: record.locked ?? false,
+    };
+  }
+
+  private normaliseStatus(value: string | null): VehicleStatus {
+    switch (value) {
+      case 'sold':
+        return 'sold';
+      case 'archived':
+        return 'archived';
+      default:
+        return 'active';
+    }
+  }
+
+  private sortMaintenance(records: MaintenanceRecord[]): MaintenanceRecord[] {
+    return [...records].sort((a, b) => b.date.localeCompare(a.date));
+  }
+
+  private stringOrEmpty(value: string | null | undefined): string {
+    return value?.trim() ?? '';
+  }
+
+  private nullIfEmpty(value: string | null | undefined): string | null {
+    const trimmed = value?.trim() ?? '';
+    return trimmed.length > 0 ? trimmed : null;
   }
 
   private clone<T>(value: T): T {
     return JSON.parse(JSON.stringify(value)) as T;
-  }
-
-  private loadFromStorage(): Vehicle[] {
-    if (typeof window === 'undefined' || !window.localStorage) {
-      return this.sampleVehicles();
-    }
-
-    const raw = window.localStorage.getItem(this.storageKey);
-    if (!raw) {
-      return this.sampleVehicles();
-    }
-
-    try {
-      const parsed = JSON.parse(raw) as Vehicle[];
-      if (!Array.isArray(parsed)) {
-        return this.sampleVehicles();
-      }
-      return parsed;
-    } catch (error) {
-      console.warn('Failed to parse stored vehicles', error);
-      return this.sampleVehicles();
-    }
-  }
-
-  private persistToStorage(vehicles: Vehicle[]): void {
-    if (typeof window === 'undefined' || !window.localStorage) {
-      return;
-    }
-
-    window.localStorage.setItem(this.storageKey, JSON.stringify(vehicles));
   }
 
   private parseCsv(text: string): {
@@ -522,29 +810,28 @@ export class VehicleDataService {
     }
 
     const matches = (pattern: RegExp) => pattern.test(cleaned);
-
-    if (matches(/(?:^|_)(date|performed|completed|inspection)(?:_|$)/)) {
+    if (matches(/(?:^|_)(date|performed|completed)(?:_|$)/)) {
       return 'date';
     }
-    if (matches(/(?:^|_)(entered|recorded|logged|author|mechanic|technician)(?:_|$)/)) {
+    if (matches(/(?:^|_)(entered_by|enteredby|author|user)(?:_|$)/)) {
       return 'enteredBy';
     }
-    if (matches(/(?:^|_)(work|description|task|scope|type|service|activity|job)(?:_|$)/)) {
+    if (matches(/(?:^|_)(work|description|summary|task)(?:_|$)/)) {
       return 'work';
     }
-    if (matches(/(?:^|_)(odo|odometer|km|kms|mileage)(?:_|$)/)) {
+    if (matches(/(?:^|_)(odo|odometer|mileage|km)(?:_|$)/)) {
       return 'odoReading';
     }
-    if (matches(/(?:^|_)(performed_at|location|where|provider|supplier|workshop|service_centre|service_center|garage|centre|center)(?:_|$)/)) {
+    if (matches(/(?:^|_)(performed_at|provider|vendor|mechanic|location)(?:_|$)/)) {
       return 'performedAt';
     }
-    if (matches(/(?:^|_)(outcome|result|status|inspection_result)(?:_|$)/)) {
+    if (matches(/(?:^|_)(outcome|result|status)(?:_|$)/)) {
       return 'outcome';
     }
-    if (matches(/(?:^|_)(cost|amount|price|total_cost|expense|spend|value)(?:_|$)/)) {
+    if (matches(/(?:^|_)(cost|amount|price|total)(?:_|$)/)) {
       return 'cost';
     }
-    if (matches(/(?:^|_)(notes|comment|remark|detail|summary|observation)(?:_|$)/)) {
+    if (matches(/(?:^|_)(note|comment|remark)(?:_|$)/)) {
       return 'notes';
     }
     if (matches(/(?:^|_)(locked|lock|is_locked)(?:_|$)/)) {
@@ -610,62 +897,5 @@ export class VehicleDataService {
       return crypto.randomUUID();
     }
     return Math.random().toString(36).slice(2, 11);
-  }
-
-  private sampleVehicles(): Vehicle[] {
-    const now = new Date().toISOString().split('T')[0];
-    return [
-      {
-        id: this.createId(),
-        location: 'Dunedin',
-        name: 'Hino Truck (Class 2)',
-        licensePlate: 'APQ960',
-        status: 'active',
-        details: {
-          purchaseDate: now,
-          vin: 'JN1WY26U5XM123456',
-          engine: 'Hino J08E',
-          chassis: 'TRK1234567',
-          odometer: '205,418 km',
-          fuelType: 'Diesel',
-          transmission: 'Automatic',
-          grossVehicleMass: '12,000 kg',
-          notes: 'Tail lift serviced in 2024.',
-        },
-        maintenance: [
-          {
-            id: this.createId(),
-            date: '2025-02-20',
-            enteredBy: 'Hollie Walsh',
-            work: 'COF & maintenance',
-            odoReading: '205,000',
-            performedAt: 'Vinz',
-            outcome: 'Passed',
-            cost: '$650.00',
-            notes: 'Replaced wiper blades and adjusted brake bias.',
-            locked: false,
-          },
-        ],
-      },
-      {
-        id: this.createId(),
-        location: 'Christchurch',
-        name: 'Corolla',
-        licensePlate: 'FTN850',
-        status: 'active',
-        details: {
-          purchaseDate: '2022-10-12',
-          vin: 'JTDBR32E330076543',
-          engine: '1.8L Petrol',
-          chassis: 'BR32E330076543',
-          odometer: '98,214 km',
-          fuelType: 'Petrol',
-          transmission: 'Automatic',
-          grossVehicleMass: '1,600 kg',
-          notes: 'Assigned to Christchurch operations team.',
-        },
-        maintenance: [],
-      },
-    ];
   }
 }
