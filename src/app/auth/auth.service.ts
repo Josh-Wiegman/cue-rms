@@ -75,11 +75,17 @@ export class AuthService {
     return this.currentUserSubject.value;
   }
 
+  org = 'gravity'; // TODO: Make dynamic based on deployment
+
   async login(email: string, password: string): Promise<AuthUser> {
     const { data, error } = await this.supabaseService.client.functions.invoke(
       'user-management',
       {
-        body: { action: 'login', payload: { email, password } },
+        body: {
+          action: 'login',
+          payload: { email, password, orgSlug: this.org },
+        },
+        headers: { 'x-org-slug': this.org }, // belt + braces
       },
     );
 

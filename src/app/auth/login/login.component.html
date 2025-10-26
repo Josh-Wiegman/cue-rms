@@ -13,7 +13,10 @@
           required
         />
       </label>
-      <div class="validation" *ngIf="form.controls.email.invalid && form.controls.email.touched">
+      <div
+        class="validation"
+        *ngIf="form.controls.email.invalid && form.controls.email.touched"
+      >
         A valid email address is required.
       </div>
 
@@ -36,7 +39,7 @@
       <div class="error" *ngIf="errorMessage">{{ errorMessage }}</div>
 
       <button type="submit" [disabled]="isSubmitting">
-        {{ isSubmitting ? 'Signing in…' : 'Sign in' }}
+        {{ isSubmitting ? "Signing in…" : "Sign in" }}
       </button>
     </form>
 
