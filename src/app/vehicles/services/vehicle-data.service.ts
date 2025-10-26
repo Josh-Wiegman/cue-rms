@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { BehaviorSubject } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import {
@@ -7,6 +7,7 @@ import {
   VehicleDetails,
   VehicleStatus,
 } from '../models/vehicle.model';
+import { SupabaseService } from '../../shared/supabase-service/supabase.service'; // adjust path if needed
 
 export interface VehicleInput {
   location: string;
@@ -79,8 +80,9 @@ interface MaintenanceMutationApiResponse {
 @Injectable({ providedIn: 'root' })
 export class VehicleDataService {
   private readonly vehiclesSubject = new BehaviorSubject<Vehicle[]>([]);
+  private readonly supabaseService = inject(SupabaseService);
+
   private readonly baseUrl: string;
-  private readonly adminSecret = environment.vehiclePortalAdminSecret ?? '';
   private authLevel: 1 | 2 = 2;
 
   readonly vehicles$ = this.vehiclesSubject.asObservable();
@@ -91,9 +93,7 @@ export class VehicleDataService {
   }
 
   setAuthLevel(level: 1 | 2): void {
-    if (this.authLevel === level) {
-      return;
-    }
+    if (this.authLevel === level) return;
     this.authLevel = level;
     void this.refreshVehicles();
   }
@@ -114,36 +114,22 @@ export class VehicleDataService {
     const response = await this.request<VehicleMutationApiResponse>(
       'POST',
       '',
-      {
-        body: {
-          ...columns,
-          maintenance: maintenancePayload,
-        },
-      },
+      { body: { ...columns, maintenance: maintenancePayload } },
     );
 
     const createdId = response?.vehicle?.id;
-    if (!response?.ok || !createdId) {
-      return null;
-    }
+    if (!response?.ok || !createdId) return null;
 
     await this.refreshVehicles();
-    return (
-      this.vehiclesSubject.value.find((vehicle) => vehicle.id === createdId) ??
-      null
-    );
+    return this.vehiclesSubject.value.find((v) => v.id === createdId) ?? null;
   }
 
   async updateVehicle(
     id: string,
     updater: (vehicle: Vehicle) => Vehicle,
   ): Promise<Vehicle | null> {
-    const existing = this.vehiclesSubject.value.find(
-      (vehicle) => vehicle.id === id,
-    );
-    if (!existing) {
-      return null;
-    }
+    const existing = this.vehiclesSubject.value.find((v) => v.id === id);
+    if (!existing) return null;
 
     const updated = updater(this.clone(existing));
     const columns = this.buildVehicleColumns({
@@ -155,50 +141,29 @@ export class VehicleDataService {
     });
 
     const response = await this.request<VehicleMutationApiResponse>('PUT', '', {
-      body: {
-        id,
-        ...columns,
-      },
+      body: { id, ...columns },
     });
-
-    if (!response?.ok) {
-      return null;
-    }
+    if (!response?.ok) return null;
 
     await this.refreshVehicles();
-    return (
-      this.vehiclesSubject.value.find((vehicle) => vehicle.id === id) ?? null
-    );
+    return this.vehiclesSubject.value.find((v) => v.id === id) ?? null;
   }
 
   async removeVehicle(id: string): Promise<void> {
     const response = await this.request<VehicleMutationApiResponse>(
       'DELETE',
       '',
-      {
-        body: { id },
-      },
+      { body: { id } },
     );
-
-    if (!response?.ok) {
-      return;
-    }
-
+    if (!response?.ok) return;
     await this.refreshVehicles();
   }
 
   async markVehicleStatus(id: string, status: VehicleStatus): Promise<void> {
     const response = await this.request<VehicleMutationApiResponse>('PUT', '', {
-      body: {
-        id,
-        status,
-      },
+      body: { id, status },
     });
-
-    if (!response?.ok) {
-      return;
-    }
-
+    if (!response?.ok) return;
     await this.refreshVehicles();
   }
 
@@ -210,21 +175,14 @@ export class VehicleDataService {
     const response = await this.request<MaintenanceMutationApiResponse>(
       'POST',
       'maintenance',
-      {
-        body: payload,
-      },
+      { body: payload },
     );
-
-    if (!response?.ok) {
-      return null;
-    }
+    if (!response?.ok) return null;
 
     await this.refreshVehicles();
-    const vehicle = this.vehiclesSubject.value.find(
-      (item) => item.id === vehicleId,
-    );
+    const vehicle = this.vehiclesSubject.value.find((x) => x.id === vehicleId);
     const insertedId = response.record?.id ?? response.id;
-    return vehicle?.maintenance.find((item) => item.id === insertedId) ?? null;
+    return vehicle?.maintenance.find((m) => m.id === insertedId) ?? null;
   }
 
   async updateMaintenanceRecord(
@@ -232,38 +190,25 @@ export class VehicleDataService {
     recordId: string,
     updater: (record: MaintenanceRecord) => MaintenanceRecord,
   ): Promise<MaintenanceRecord | null> {
-    const vehicle = this.vehiclesSubject.value.find(
-      (item) => item.id === vehicleId,
-    );
-    const existing = vehicle?.maintenance.find(
-      (record) => record.id === recordId,
-    );
-    if (!vehicle || !existing) {
-      return null;
-    }
+    const vehicle = this.vehiclesSubject.value.find((x) => x.id === vehicleId);
+    const existing = vehicle?.maintenance.find((m) => m.id === recordId);
+    if (!vehicle || !existing) return null;
 
     const updated = updater(this.clone(existing));
     const payload = this.buildMaintenanceColumns(undefined, updated);
     const response = await this.request<MaintenanceMutationApiResponse>(
       'PUT',
       'maintenance',
-      {
-        body: {
-          id: recordId,
-          ...payload,
-        },
-      },
+      { body: { id: recordId, ...payload } },
     );
-
-    if (!response?.ok) {
-      return null;
-    }
+    if (!response?.ok) return null;
 
     await this.refreshVehicles();
-    const refreshed = this.vehiclesSubject.value
-      .find((item) => item.id === vehicleId)
-      ?.maintenance.find((record) => record.id === recordId);
-    return refreshed ?? null;
+    return (
+      this.vehiclesSubject.value
+        .find((x) => x.id === vehicleId)
+        ?.maintenance.find((m) => m.id === recordId) ?? null
+    );
   }
 
   async removeMaintenanceRecord(
@@ -273,14 +218,9 @@ export class VehicleDataService {
     const response = await this.request<MaintenanceMutationApiResponse>(
       'DELETE',
       'maintenance',
-      {
-        body: { id: recordId },
-      },
+      { body: { id: recordId } },
     );
-    if (!response?.ok) {
-      return;
-    }
-
+    if (!response?.ok) return;
     await this.refreshVehicles();
   }
 
@@ -288,27 +228,16 @@ export class VehicleDataService {
     vehicleId: string,
     recordId: string,
   ): Promise<void> {
-    const vehicle = this.vehiclesSubject.value.find(
-      (item) => item.id === vehicleId,
-    );
-    const record = vehicle?.maintenance.find((item) => item.id === recordId);
-    if (!record) {
-      return;
-    }
+    const vehicle = this.vehiclesSubject.value.find((x) => x.id === vehicleId);
+    const record = vehicle?.maintenance.find((m) => m.id === recordId);
+    if (!record) return;
 
     const response = await this.request<MaintenanceMutationApiResponse>(
       'PUT',
       'maintenance',
-      {
-        body: {
-          id: recordId,
-          locked: !record.locked,
-        },
-      },
+      { body: { id: recordId, locked: !record.locked } },
     );
-    if (!response?.ok) {
-      return;
-    }
+    if (!response?.ok) return;
 
     await this.refreshVehicles();
   }
@@ -316,15 +245,10 @@ export class VehicleDataService {
   async importCsv(file: File): Promise<CsvImportResult> {
     const text = await file.text();
     const { vehicles, skipped, errors } = this.parseCsv(text);
-    if (vehicles.length === 0) {
-      return { added: 0, skipped, errors };
-    }
+    if (vehicles.length === 0) return { added: 0, skipped, errors };
 
     const existingByPlate = new Map(
-      this.vehiclesSubject.value.map((vehicle) => [
-        vehicle.licensePlate.toUpperCase(),
-        vehicle,
-      ]),
+      this.vehiclesSubject.value.map((v) => [v.licensePlate.toUpperCase(), v]),
     );
 
     let added = 0;
@@ -344,12 +268,7 @@ export class VehicleDataService {
         const updateResponse = await this.request<VehicleMutationApiResponse>(
           'PUT',
           '',
-          {
-            body: {
-              id: current.id,
-              ...updateColumns,
-            },
-          },
+          { body: { id: current.id, ...updateColumns } },
         );
         if (!updateResponse?.ok) {
           console.error('Failed to merge vehicle during import');
@@ -357,26 +276,24 @@ export class VehicleDataService {
         }
 
         const newMaintenance = vehicle.maintenance.filter(
-          (record) =>
-            !current.maintenance.some((existing) =>
-              this.maintenanceRecordsEqual(existing, record),
+          (r) =>
+            !current.maintenance.some((e) =>
+              this.maintenanceRecordsEqual(e, r),
             ),
         );
-        if (newMaintenance.length > 0) {
-          for (const record of newMaintenance) {
-            const maintenancePayload = this.buildMaintenanceColumns(
-              current.id,
-              record,
+        for (const record of newMaintenance) {
+          const maintenancePayload = this.buildMaintenanceColumns(
+            current.id,
+            record,
+          );
+          const maintenanceResponse =
+            await this.request<MaintenanceMutationApiResponse>(
+              'POST',
+              'maintenance',
+              { body: maintenancePayload },
             );
-            const maintenanceResponse =
-              await this.request<MaintenanceMutationApiResponse>(
-                'POST',
-                'maintenance',
-                { body: maintenancePayload },
-              );
-            if (!maintenanceResponse?.ok) {
-              console.error('Failed to import maintenance record');
-            }
+          if (!maintenanceResponse?.ok) {
+            console.error('Failed to import maintenance record');
           }
         }
       } else {
@@ -387,18 +304,13 @@ export class VehicleDataService {
           status: vehicle.status,
           details: vehicle.details,
         });
-        const maintenancePayload = vehicle.maintenance.map((record) =>
-          this.buildMaintenanceColumns(undefined, record),
+        const maintenancePayload = vehicle.maintenance.map((r) =>
+          this.buildMaintenanceColumns(undefined, r),
         );
         const response = await this.request<VehicleMutationApiResponse>(
           'POST',
           '',
-          {
-            body: {
-              ...columns,
-              maintenance: maintenancePayload,
-            },
-          },
+          { body: { ...columns, maintenance: maintenancePayload } },
         );
         if (!response?.ok || !response.vehicle?.id) {
           console.error('Failed to insert vehicle during import');
@@ -421,10 +333,7 @@ export class VehicleDataService {
     const response = await this.request<VehicleListApiResponse>('GET', '', {
       query: { include: 'maintenance' },
     });
-
-    if (!response?.ok) {
-      return;
-    }
+    if (!response?.ok) return;
 
     const rows = response.items ?? (response.vehicle ? [response.vehicle] : []);
     const vehicles = rows.map((row) => this.mapVehicle(row));
@@ -432,8 +341,9 @@ export class VehicleDataService {
   }
 
   private buildBaseUrl(): string {
-    const trimmed = environment.supabaseDataUrl.replace(/\/+$/, '');
-    return `${trimmed}/functions/v1/vehicles/`;
+    const root = environment.supabaseDataUrl.replace(/\/+$/, '');
+    // no trailing slash; we’ll append path segments explicitly
+    return `${root}/functions/v1/vehicles`;
   }
 
   private async request<T extends { ok: boolean; error?: string }>(
@@ -441,24 +351,29 @@ export class VehicleDataService {
     path: string,
     options?: { query?: Record<string, unknown>; body?: unknown },
   ): Promise<T | null> {
-    if (!this.adminSecret) {
-      console.error('Vehicle portal admin secret is not configured.');
-      return null;
-    }
+    // Construct target URL safely: base (no trailing slash) + optional "/path"
+    const target = new URL(
+      path ? `/${path}` : '',
+      this.baseUrl + (this.baseUrl.endsWith('/') ? '' : '/'),
+    );
 
-    const target = new URL(path ?? '', this.baseUrl);
     const query = options?.query ?? {};
     for (const [key, value] of Object.entries(query)) {
-      if (value === undefined || value === null) {
-        continue;
-      }
+      if (value === undefined || value === null) continue;
       target.searchParams.set(key, String(value));
     }
 
+    // Grab the current access token from Supabase
+    const { data } = await this.supabaseService.client.auth.getSession();
+    const accessToken = data.session?.access_token ?? '';
+
     const headers: Record<string, string> = {
-      'x-admin-secret': this.adminSecret,
       'x-auth-level': String(this.authLevel),
     };
+
+    if (accessToken) {
+      headers['authorization'] = `Bearer ${accessToken}`;
+    }
 
     let body: string | undefined;
     if (options?.body !== undefined) {
@@ -479,7 +394,7 @@ export class VehicleDataService {
           const problem = (await response.json()) as { error?: string };
           errorDetails = problem?.error;
         } catch {
-          // Ignore body parse issues for non-JSON responses
+          // ignore non-JSON error bodies
         }
         console.error(
           `Vehicle API ${method} ${target.pathname} failed`,
@@ -492,16 +407,16 @@ export class VehicleDataService {
         return { ok: true } as T;
       }
 
-      const data = (await response.json()) as T;
-      if (!data.ok) {
+      const dataJson = (await response.json()) as T;
+      if (!dataJson.ok) {
         console.error(
           `Vehicle API ${method} ${target.pathname} returned error`,
-          data.error,
+          dataJson.error,
         );
         return null;
       }
 
-      return data;
+      return dataJson;
     } catch (error) {
       console.error(
         `Vehicle API ${method} ${target.pathname} exception`,
@@ -512,8 +427,8 @@ export class VehicleDataService {
   }
 
   private mapVehicle(row: VehicleRow): Vehicle {
-    const maintenance = (row.maintenance ?? []).map((record) =>
-      this.mapMaintenance(record),
+    const maintenance = (row.maintenance ?? []).map((r) =>
+      this.mapMaintenance(r),
     );
     return {
       id: row.id,
@@ -606,11 +521,7 @@ export class VehicleDataService {
       notes: this.nullIfEmpty(record.notes),
       locked: record.locked ?? false,
     };
-
-    if (vehicleId) {
-      payload['vehicle_id'] = vehicleId;
-    }
-
+    if (vehicleId) payload['vehicle_id'] = vehicleId;
     return payload;
   }
 
@@ -773,7 +684,6 @@ export class VehicleDataService {
     });
 
     const vehicles = Array.from(vehiclesByPlate.values());
-
     return { vehicles, skipped, errors };
   }
 
@@ -804,16 +714,13 @@ export class VehicleDataService {
         inQuotes = !inQuotes;
         continue;
       }
-
       if (char === ',' && !inQuotes) {
         values.push(current.trim());
         current = '';
         continue;
       }
-
       current += char;
     }
-
     values.push(current.trim());
     return values;
   }
@@ -821,9 +728,7 @@ export class VehicleDataService {
   private getRowValue(row: Record<string, string>, keys: string[]): string {
     for (const key of keys) {
       const value = row[key];
-      if (value && value.trim().length > 0) {
-        return value.trim();
-      }
+      if (value && value.trim().length > 0) return value.trim();
     }
     return '';
   }
@@ -838,9 +743,7 @@ export class VehicleDataService {
         !target.location ||
         target.location === 'Unassigned' ||
         source.location.length > target.location.length;
-      if (shouldUpdate) {
-        target.location = source.location;
-      }
+      if (shouldUpdate) target.location = source.location;
     }
 
     if (source.status !== target.status) {
@@ -874,9 +777,7 @@ export class VehicleDataService {
     (Object.keys(source) as (keyof VehicleDetails)[]).forEach((key) => {
       const targetValue = merged[key]?.trim() ?? '';
       const sourceValue = source[key]?.trim() ?? '';
-      if (!targetValue && sourceValue) {
-        merged[key] = sourceValue;
-      }
+      if (!targetValue && sourceValue) merged[key] = sourceValue;
     });
     return merged;
   }
@@ -885,18 +786,13 @@ export class VehicleDataService {
     existing: MaintenanceRecord[],
     incoming: MaintenanceRecord[],
   ): MaintenanceRecord[] {
-    if (!incoming.length) {
-      return existing;
-    }
-
+    if (!incoming.length) return existing;
     const merged = [...existing];
     incoming.forEach((record) => {
-      const hasDuplicate = merged.some((existingRecord) =>
-        this.maintenanceRecordsEqual(existingRecord, record),
+      const hasDuplicate = merged.some((e) =>
+        this.maintenanceRecordsEqual(e, record),
       );
-      if (!hasDuplicate) {
-        merged.push(record);
-      }
+      if (!hasDuplicate) merged.push(record);
     });
     return merged;
   }
@@ -905,7 +801,7 @@ export class VehicleDataService {
     a: MaintenanceRecord,
     b: MaintenanceRecord,
   ): boolean {
-    const normalise = (value: string) => value.trim().toLowerCase();
+    const normalise = (v: string) => v.trim().toLowerCase();
     return (
       normalise(a.date) === normalise(b.date) &&
       normalise(a.enteredBy) === normalise(b.enteredBy) &&
@@ -927,25 +823,18 @@ export class VehicleDataService {
     >();
 
     Object.entries(row).forEach(([key, value]) => {
-      if (!value) {
-        return;
-      }
+      if (!value) return;
 
       const prefixMatch = key.match(/^(maintenance|service|log)_(.+)$/);
-      if (!prefixMatch) {
-        return;
-      }
+      if (!prefixMatch) return;
 
       let remainder = prefixMatch[2];
       if (
         /^(next|upcoming|future)_/.test(remainder) ||
         /_next$/.test(remainder)
-      ) {
+      )
         return;
-      }
-      if (remainder.includes('interval') || remainder.includes('due')) {
-        return;
-      }
+      if (remainder.includes('interval') || remainder.includes('due')) return;
 
       const leadingIndex = remainder.match(/^(\d+)_/);
       const trailingIndex = remainder.match(/_(\d+)$/);
@@ -960,9 +849,7 @@ export class VehicleDataService {
 
       remainder = remainder.replace(/^(log|entry|record)_/, '');
       const field = this.mapMaintenanceField(remainder);
-      if (!field) {
-        return;
-      }
+      if (!field) return;
 
       const group =
         groups.get(index) ??
@@ -980,9 +867,7 @@ export class VehicleDataService {
       .sort((a, b) => Number(a[0]) - Number(b[0]))
       .forEach(([, partial]) => {
         const record = this.toMaintenanceRecord(partial);
-        if (record) {
-          records.push(record);
-        }
+        if (record) records.push(record);
       });
 
     return records;
@@ -990,40 +875,22 @@ export class VehicleDataService {
 
   private mapMaintenanceField(segment: string): keyof MaintenanceRecord | null {
     const cleaned = segment.replace(/__+/g, '_');
-    if (cleaned.includes('update')) {
-      return null;
-    }
+    if (cleaned.includes('update')) return null;
 
     const matches = (pattern: RegExp) => pattern.test(cleaned);
-    if (matches(/(?:^|_)(date|performed|completed)(?:_|$)/)) {
-      return 'date';
-    }
-    if (matches(/(?:^|_)(entered_by|enteredby|author|user)(?:_|$)/)) {
+    if (matches(/(?:^|_)(date|performed|completed)(?:_|$)/)) return 'date';
+    if (matches(/(?:^|_)(entered_by|enteredby|author|user)(?:_|$)/))
       return 'enteredBy';
-    }
-    if (matches(/(?:^|_)(work|description|summary|task)(?:_|$)/)) {
-      return 'work';
-    }
-    if (matches(/(?:^|_)(odo|odometer|mileage|km)(?:_|$)/)) {
-      return 'odoReading';
-    }
+    if (matches(/(?:^|_)(work|description|summary|task)(?:_|$)/)) return 'work';
+    if (matches(/(?:^|_)(odo|odometer|mileage|km)(?:_|$)/)) return 'odoReading';
     if (
       matches(/(?:^|_)(performed_at|provider|vendor|mechanic|location)(?:_|$)/)
-    ) {
+    )
       return 'performedAt';
-    }
-    if (matches(/(?:^|_)(outcome|result|status)(?:_|$)/)) {
-      return 'outcome';
-    }
-    if (matches(/(?:^|_)(cost|amount|price|total)(?:_|$)/)) {
-      return 'cost';
-    }
-    if (matches(/(?:^|_)(note|comment|remark)(?:_|$)/)) {
-      return 'notes';
-    }
-    if (matches(/(?:^|_)(locked|lock|is_locked)(?:_|$)/)) {
-      return 'locked';
-    }
+    if (matches(/(?:^|_)(outcome|result|status)(?:_|$)/)) return 'outcome';
+    if (matches(/(?:^|_)(cost|amount|price|total)(?:_|$)/)) return 'cost';
+    if (matches(/(?:^|_)(note|comment|remark)(?:_|$)/)) return 'notes';
+    if (matches(/(?:^|_)(locked|lock|is_locked)(?:_|$)/)) return 'locked';
     return null;
   }
 
@@ -1050,10 +917,7 @@ export class VehicleDataService {
       locked: source.locked ?? false,
     };
 
-    if (!this.hasMaintenanceContent(record)) {
-      return null;
-    }
-
+    if (!this.hasMaintenanceContent(record)) return null;
     return record;
   }
 
@@ -1067,17 +931,13 @@ export class VehicleDataService {
       record.outcome,
       record.cost,
       record.notes,
-    ].some((value) => value.trim().length > 0);
+    ].some((v) => v.trim().length > 0);
   }
 
   private parseStatus(raw: string | undefined): VehicleStatus {
     const value = raw?.toLowerCase() ?? '';
-    if (value === 'sold') {
-      return 'sold';
-    }
-    if (value === 'archived') {
-      return 'archived';
-    }
+    if (value === 'sold') return 'sold';
+    if (value === 'archived') return 'archived';
     return 'active';
   }
 
