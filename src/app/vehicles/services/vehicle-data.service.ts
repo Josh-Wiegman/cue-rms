@@ -111,12 +111,16 @@ export class VehicleDataService {
       details: this.buildVehicleDetails(payload.details ?? {}),
     });
 
-    const response = await this.request<VehicleMutationApiResponse>('POST', '', {
-      body: {
-        ...columns,
-        maintenance: maintenancePayload,
+    const response = await this.request<VehicleMutationApiResponse>(
+      'POST',
+      '',
+      {
+        body: {
+          ...columns,
+          maintenance: maintenancePayload,
+        },
       },
-    });
+    );
 
     const createdId = response?.vehicle?.id;
     if (!response?.ok || !createdId) {
@@ -124,14 +128,19 @@ export class VehicleDataService {
     }
 
     await this.refreshVehicles();
-    return this.vehiclesSubject.value.find((vehicle) => vehicle.id === createdId) ?? null;
+    return (
+      this.vehiclesSubject.value.find((vehicle) => vehicle.id === createdId) ??
+      null
+    );
   }
 
   async updateVehicle(
     id: string,
     updater: (vehicle: Vehicle) => Vehicle,
   ): Promise<Vehicle | null> {
-    const existing = this.vehiclesSubject.value.find((vehicle) => vehicle.id === id);
+    const existing = this.vehiclesSubject.value.find(
+      (vehicle) => vehicle.id === id,
+    );
     if (!existing) {
       return null;
     }
@@ -157,13 +166,19 @@ export class VehicleDataService {
     }
 
     await this.refreshVehicles();
-    return this.vehiclesSubject.value.find((vehicle) => vehicle.id === id) ?? null;
+    return (
+      this.vehiclesSubject.value.find((vehicle) => vehicle.id === id) ?? null
+    );
   }
 
   async removeVehicle(id: string): Promise<void> {
-    const response = await this.request<VehicleMutationApiResponse>('DELETE', '', {
-      body: { id },
-    });
+    const response = await this.request<VehicleMutationApiResponse>(
+      'DELETE',
+      '',
+      {
+        body: { id },
+      },
+    );
 
     if (!response?.ok) {
       return;
@@ -192,16 +207,22 @@ export class VehicleDataService {
     record: Omit<MaintenanceRecord, 'id'>,
   ): Promise<MaintenanceRecord | null> {
     const payload = this.buildMaintenanceColumns(vehicleId, record);
-    const response = await this.request<MaintenanceMutationApiResponse>('POST', 'maintenance', {
-      body: payload,
-    });
+    const response = await this.request<MaintenanceMutationApiResponse>(
+      'POST',
+      'maintenance',
+      {
+        body: payload,
+      },
+    );
 
     if (!response?.ok) {
       return null;
     }
 
     await this.refreshVehicles();
-    const vehicle = this.vehiclesSubject.value.find((item) => item.id === vehicleId);
+    const vehicle = this.vehiclesSubject.value.find(
+      (item) => item.id === vehicleId,
+    );
     const insertedId = response.record?.id ?? response.id;
     return vehicle?.maintenance.find((item) => item.id === insertedId) ?? null;
   }
@@ -211,20 +232,28 @@ export class VehicleDataService {
     recordId: string,
     updater: (record: MaintenanceRecord) => MaintenanceRecord,
   ): Promise<MaintenanceRecord | null> {
-    const vehicle = this.vehiclesSubject.value.find((item) => item.id === vehicleId);
-    const existing = vehicle?.maintenance.find((record) => record.id === recordId);
+    const vehicle = this.vehiclesSubject.value.find(
+      (item) => item.id === vehicleId,
+    );
+    const existing = vehicle?.maintenance.find(
+      (record) => record.id === recordId,
+    );
     if (!vehicle || !existing) {
       return null;
     }
 
     const updated = updater(this.clone(existing));
     const payload = this.buildMaintenanceColumns(undefined, updated);
-    const response = await this.request<MaintenanceMutationApiResponse>('PUT', 'maintenance', {
-      body: {
-        id: recordId,
-        ...payload,
+    const response = await this.request<MaintenanceMutationApiResponse>(
+      'PUT',
+      'maintenance',
+      {
+        body: {
+          id: recordId,
+          ...payload,
+        },
       },
-    });
+    );
 
     if (!response?.ok) {
       return null;
@@ -237,10 +266,17 @@ export class VehicleDataService {
     return refreshed ?? null;
   }
 
-  async removeMaintenanceRecord(vehicleId: string, recordId: string): Promise<void> {
-    const response = await this.request<MaintenanceMutationApiResponse>('DELETE', 'maintenance', {
-      body: { id: recordId },
-    });
+  async removeMaintenanceRecord(
+    vehicleId: string,
+    recordId: string,
+  ): Promise<void> {
+    const response = await this.request<MaintenanceMutationApiResponse>(
+      'DELETE',
+      'maintenance',
+      {
+        body: { id: recordId },
+      },
+    );
     if (!response?.ok) {
       return;
     }
@@ -248,19 +284,28 @@ export class VehicleDataService {
     await this.refreshVehicles();
   }
 
-  async toggleMaintenanceLock(vehicleId: string, recordId: string): Promise<void> {
-    const vehicle = this.vehiclesSubject.value.find((item) => item.id === vehicleId);
+  async toggleMaintenanceLock(
+    vehicleId: string,
+    recordId: string,
+  ): Promise<void> {
+    const vehicle = this.vehiclesSubject.value.find(
+      (item) => item.id === vehicleId,
+    );
     const record = vehicle?.maintenance.find((item) => item.id === recordId);
     if (!record) {
       return;
     }
 
-    const response = await this.request<MaintenanceMutationApiResponse>('PUT', 'maintenance', {
-      body: {
-        id: recordId,
-        locked: !record.locked,
+    const response = await this.request<MaintenanceMutationApiResponse>(
+      'PUT',
+      'maintenance',
+      {
+        body: {
+          id: recordId,
+          locked: !record.locked,
+        },
       },
-    });
+    );
     if (!response?.ok) {
       return;
     }
@@ -276,7 +321,10 @@ export class VehicleDataService {
     }
 
     const existingByPlate = new Map(
-      this.vehiclesSubject.value.map((vehicle) => [vehicle.licensePlate.toUpperCase(), vehicle]),
+      this.vehiclesSubject.value.map((vehicle) => [
+        vehicle.licensePlate.toUpperCase(),
+        vehicle,
+      ]),
     );
 
     let added = 0;
@@ -293,12 +341,16 @@ export class VehicleDataService {
           status: merged.status,
           details: merged.details,
         });
-        const updateResponse = await this.request<VehicleMutationApiResponse>('PUT', '', {
-          body: {
-            id: current.id,
-            ...updateColumns,
+        const updateResponse = await this.request<VehicleMutationApiResponse>(
+          'PUT',
+          '',
+          {
+            body: {
+              id: current.id,
+              ...updateColumns,
+            },
           },
-        });
+        );
         if (!updateResponse?.ok) {
           console.error('Failed to merge vehicle during import');
           continue;
@@ -312,12 +364,16 @@ export class VehicleDataService {
         );
         if (newMaintenance.length > 0) {
           for (const record of newMaintenance) {
-            const maintenancePayload = this.buildMaintenanceColumns(current.id, record);
-            const maintenanceResponse = await this.request<MaintenanceMutationApiResponse>(
-              'POST',
-              'maintenance',
-              { body: maintenancePayload },
+            const maintenancePayload = this.buildMaintenanceColumns(
+              current.id,
+              record,
             );
+            const maintenanceResponse =
+              await this.request<MaintenanceMutationApiResponse>(
+                'POST',
+                'maintenance',
+                { body: maintenancePayload },
+              );
             if (!maintenanceResponse?.ok) {
               console.error('Failed to import maintenance record');
             }
@@ -334,12 +390,16 @@ export class VehicleDataService {
         const maintenancePayload = vehicle.maintenance.map((record) =>
           this.buildMaintenanceColumns(undefined, record),
         );
-        const response = await this.request<VehicleMutationApiResponse>('POST', '', {
-          body: {
-            ...columns,
-            maintenance: maintenancePayload,
+        const response = await this.request<VehicleMutationApiResponse>(
+          'POST',
+          '',
+          {
+            body: {
+              ...columns,
+              maintenance: maintenancePayload,
+            },
           },
-        });
+        );
         if (!response?.ok || !response.vehicle?.id) {
           console.error('Failed to insert vehicle during import');
           continue;
@@ -443,13 +503,18 @@ export class VehicleDataService {
 
       return data;
     } catch (error) {
-      console.error(`Vehicle API ${method} ${target.pathname} exception`, error);
+      console.error(
+        `Vehicle API ${method} ${target.pathname} exception`,
+        error,
+      );
       return null;
     }
   }
 
   private mapVehicle(row: VehicleRow): Vehicle {
-    const maintenance = (row.maintenance ?? []).map((record) => this.mapMaintenance(record));
+    const maintenance = (row.maintenance ?? []).map((record) =>
+      this.mapMaintenance(record),
+    );
     return {
       id: row.id,
       location: this.stringOrEmpty(row.location),
@@ -510,7 +575,9 @@ export class VehicleDataService {
     };
   }
 
-  private buildVehicleDetails(partial: Partial<VehicleDetails>): VehicleDetails {
+  private buildVehicleDetails(
+    partial: Partial<VehicleDetails>,
+  ): VehicleDetails {
     return {
       purchaseDate: partial.purchaseDate ?? '',
       vin: partial.vin ?? '',
@@ -541,7 +608,7 @@ export class VehicleDataService {
     };
 
     if (vehicleId) {
-      payload.vehicle_id = vehicleId;
+      payload['vehicle_id'] = vehicleId;
     }
 
     return payload;
@@ -631,7 +698,9 @@ export class VehicleDataService {
       ]);
 
       if (!name || !licensePlateRaw) {
-        errors.push(`Row ${index + 2} skipped: vehicle and license plate are required.`);
+        errors.push(
+          `Row ${index + 2} skipped: vehicle and license plate are required.`,
+        );
         skipped += 1;
         return;
       }
@@ -665,8 +734,17 @@ export class VehicleDataService {
           ]),
           vin: this.getRowValue(row, ['vin', 'vehicle_identification_number']),
           engine: this.getRowValue(row, ['engine', 'engine_type']),
-          chassis: this.getRowValue(row, ['chassis', 'chassis_number', 'frame_number']),
-          odometer: this.getRowValue(row, ['odometer', 'odometer_reading', 'odo', 'mileage']),
+          chassis: this.getRowValue(row, [
+            'chassis',
+            'chassis_number',
+            'frame_number',
+          ]),
+          odometer: this.getRowValue(row, [
+            'odometer',
+            'odometer_reading',
+            'odo',
+            'mileage',
+          ]),
           fuelType: this.getRowValue(row, ['fuel_type', 'fuel']),
           transmission: this.getRowValue(row, ['transmission', 'gearbox']),
           grossVehicleMass: this.getRowValue(row, [
@@ -676,7 +754,12 @@ export class VehicleDataService {
             'gvm_kg',
             'gross_vehicle_weight',
           ]),
-          notes: this.getRowValue(row, ['vehicle_notes', 'notes', 'comments', 'vehicle_comments']),
+          notes: this.getRowValue(row, [
+            'vehicle_notes',
+            'notes',
+            'comments',
+            'vehicle_comments',
+          ]),
         },
         maintenance: this.extractMaintenanceRecords(row),
       };
@@ -777,7 +860,10 @@ export class VehicleDataService {
     }
 
     target.details = this.mergeVehicleDetails(target.details, source.details);
-    target.maintenance = this.mergeMaintenanceRecords(target.maintenance, source.maintenance);
+    target.maintenance = this.mergeMaintenanceRecords(
+      target.maintenance,
+      source.maintenance,
+    );
   }
 
   private mergeVehicleDetails(
@@ -832,8 +918,13 @@ export class VehicleDataService {
     );
   }
 
-  private extractMaintenanceRecords(row: Record<string, string>): MaintenanceRecord[] {
-    const groups = new Map<string, Partial<MaintenanceRecord> & { locked?: boolean }>();
+  private extractMaintenanceRecords(
+    row: Record<string, string>,
+  ): MaintenanceRecord[] {
+    const groups = new Map<
+      string,
+      Partial<MaintenanceRecord> & { locked?: boolean }
+    >();
 
     Object.entries(row).forEach(([key, value]) => {
       if (!value) {
@@ -846,7 +937,10 @@ export class VehicleDataService {
       }
 
       let remainder = prefixMatch[2];
-      if (/^(next|upcoming|future)_/.test(remainder) || /_next$/.test(remainder)) {
+      if (
+        /^(next|upcoming|future)_/.test(remainder) ||
+        /_next$/.test(remainder)
+      ) {
         return;
       }
       if (remainder.includes('interval') || remainder.includes('due')) {
@@ -871,7 +965,8 @@ export class VehicleDataService {
       }
 
       const group =
-        groups.get(index) ?? ({} as Partial<MaintenanceRecord> & { locked?: boolean });
+        groups.get(index) ??
+        ({} as Partial<MaintenanceRecord> & { locked?: boolean });
       if (field === 'locked') {
         (group as { locked?: boolean }).locked = this.parseLockedValue(value);
       } else {
@@ -912,7 +1007,9 @@ export class VehicleDataService {
     if (matches(/(?:^|_)(odo|odometer|mileage|km)(?:_|$)/)) {
       return 'odoReading';
     }
-    if (matches(/(?:^|_)(performed_at|provider|vendor|mechanic|location)(?:_|$)/)) {
+    if (
+      matches(/(?:^|_)(performed_at|provider|vendor|mechanic|location)(?:_|$)/)
+    ) {
       return 'performedAt';
     }
     if (matches(/(?:^|_)(outcome|result|status)(?:_|$)/)) {
@@ -932,7 +1029,9 @@ export class VehicleDataService {
 
   private parseLockedValue(raw: string): boolean {
     const value = raw.trim().toLowerCase();
-    return value === 'true' || value === 'yes' || value === 'locked' || value === '1';
+    return (
+      value === 'true' || value === 'yes' || value === 'locked' || value === '1'
+    );
   }
 
   private toMaintenanceRecord(
