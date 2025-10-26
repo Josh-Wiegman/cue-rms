@@ -382,25 +382,10 @@ export class VehicleDataService {
       target.searchParams.set(key, String(value));
     }
 
-    // pull session token each request (covers refreshes)
-    const { data } = await this.supabaseService.client.auth.getSession();
-    const accessToken = data.session?.access_token ?? '';
-
     const headers: Record<string, string> = {
       'x-auth-level': String(this.authLevel),
       'x-org-slug': this.orgSlug,
-      // Supabase Functions commonly expect both:
-      apikey: this.anonKey,
     };
-    if (accessToken) {
-      headers['authorization'] = `Bearer ${accessToken}`;
-    } else {
-      // If no session, don’t hit a protected function; return null quietly.
-      console.warn(
-        'Vehicle request skipped: no Supabase access token available.',
-      );
-      return null;
-    }
 
     let body: string | undefined;
     if (options?.body !== undefined) {
