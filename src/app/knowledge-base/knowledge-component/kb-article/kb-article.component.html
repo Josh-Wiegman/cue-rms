@@ -5,7 +5,9 @@
 
       <article *ngIf="article">
         <h1 class="title">{{ article.title }}</h1>
-        <div class="meta">Updated {{ article.updated_at | date: "medium" }}</div>
+        <div class="meta">
+          Updated {{ article.updated_at | date: "medium" }}
+        </div>
 
         <!-- For simplicity, article.body is markdown-ish raw text. Replace with markdown renderer if desired -->
         <div class="body" [innerHTML]="article.body"></div>
