@@ -1,0 +1,366 @@
+<ui-shell>
+  <content>
+    <div class="vehicle-portal">
+      <header class="page-header">
+        <div>
+          <h1>Vehicle Fleet Portal</h1>
+          <p>Track company vehicles, log maintenance and keep the fleet in sync.</p>
+        </div>
+        <div class="page-header__controls">
+          <div class="stats">
+            <div class="stat">
+              <span class="stat__label">Active</span>
+              <span class="stat__value">{{ activeVehicles() }}</span>
+            </div>
+            <div class="stat">
+              <span class="stat__label">Sold</span>
+              <span class="stat__value">{{ soldVehicles() }}</span>
+            </div>
+            <div class="stat">
+              <span class="stat__label">Archived</span>
+              <span class="stat__value">{{ archivedVehicles() }}</span>
+            </div>
+          </div>
+          <div class="auth-selector">
+            <label for="authLevel">Auth level</label>
+            <select
+              id="authLevel"
+              [value]="authLevel()"
+              (change)="handleAuthLevelChange($event)"
+            >
+              <option value="1">Admin (1)</option>
+              <option value="2">Standard (2)</option>
+            </select>
+          </div>
+        </div>
+      </header>
+
+      <section class="import">
+        <label class="import__label" for="vehicleCsv">Import vehicle spreadsheet (CSV)</label>
+        <input id="vehicleCsv" type="file" accept=".csv" (change)="importCsv($event)" />
+        <p class="import__summary" *ngIf="csvImportSummary()">{{ csvImportSummary() }}</p>
+        <ul class="import__errors" *ngIf="csvImportErrors().length">
+          <li *ngFor="let error of csvImportErrors()">{{ error }}</li>
+        </ul>
+      </section>
+
+      <div class="portal-grid">
+        <section class="panel vehicle-list">
+          <header class="panel__header">
+            <h2>Vehicles</h2>
+          </header>
+          <div class="table-wrapper">
+            <table class="vehicle-table">
+              <thead>
+                <tr>
+                  <th>Vehicle</th>
+                  <th>Plate</th>
+                  <th>Location</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr
+                  *ngFor="let vehicle of vehicles(); trackBy: trackByVehicleId"
+                  (click)="selectVehicle(vehicle)"
+                  [class.selected]="selectedVehicle()?.id === vehicle.id"
+                >
+                  <td>
+                    <div class="vehicle-name">{{ vehicle.name }}</div>
+                    <div class="vehicle-meta">Added {{ vehicle.details.purchaseDate || '—' }}</div>
+                  </td>
+                  <td>
+                    <span class="plate">{{ vehicle.licensePlate }}</span>
+                  </td>
+                  <td>{{ vehicle.location }}</td>
+                  <td>
+                    <span [ngClass]="['status-pill', 'status-' + vehicle.status]">{{ vehicle.status }}</span>
+                  </td>
+                </tr>
+                <tr *ngIf="!vehicles().length">
+                  <td colspan="4" class="empty">No vehicles loaded yet.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <form class="panel__form" [formGroup]="newVehicleForm" (ngSubmit)="addVehicle()">
+            <h3>Add a vehicle</h3>
+            <div class="form-grid">
+              <label>
+                <span>Vehicle name</span>
+                <input type="text" formControlName="name" placeholder="e.g. Hino Truck" />
+              </label>
+              <label>
+                <span>License plate</span>
+                <input type="text" formControlName="licensePlate" placeholder="e.g. ABC123" />
+              </label>
+              <label>
+                <span>Location</span>
+                <input type="text" formControlName="location" placeholder="e.g. Dunedin" />
+              </label>
+              <label>
+                <span>Purchase date</span>
+                <input type="date" formControlName="purchaseDate" />
+              </label>
+              <label>
+                <span>VIN</span>
+                <input type="text" formControlName="vin" />
+              </label>
+              <label>
+                <span>Engine</span>
+                <input type="text" formControlName="engine" />
+              </label>
+              <label>
+                <span>Chassis</span>
+                <input type="text" formControlName="chassis" />
+              </label>
+              <label>
+                <span>Odometer</span>
+                <input type="text" formControlName="odometer" />
+              </label>
+              <label>
+                <span>Fuel type</span>
+                <input type="text" formControlName="fuelType" />
+              </label>
+              <label>
+                <span>Transmission</span>
+                <input type="text" formControlName="transmission" />
+              </label>
+              <label>
+                <span>Gross vehicle mass</span>
+                <input type="text" formControlName="grossVehicleMass" />
+              </label>
+              <label class="wide">
+                <span>Notes</span>
+                <textarea rows="2" formControlName="notes"></textarea>
+              </label>
+              <label>
+                <span>Status</span>
+                <select formControlName="status">
+                  <option value="active">Active</option>
+                  <option value="sold">Sold</option>
+                  <option value="archived">Archived</option>
+                </select>
+              </label>
+            </div>
+            <button type="submit" class="primary">Add vehicle</button>
+          </form>
+        </section>
+
+        <section class="panel vehicle-details" *ngIf="selectedVehicle(); else noSelection">
+          <header class="panel__header">
+            <div>
+              <h2>{{ selectedVehicle()?.name }}</h2>
+              <p class="subtitle">{{ selectedVehicle()?.licensePlate }} • {{ selectedVehicle()?.location }}</p>
+            </div>
+            <div class="status-actions">
+              <button type="button" (click)="markVehicleStatus('active')" [disabled]="selectedVehicle()?.status === 'active'">
+                Mark active
+              </button>
+              <button type="button" (click)="markVehicleStatus('sold')" [disabled]="selectedVehicle()?.status === 'sold'">
+                Mark sold
+              </button>
+              <button type="button" (click)="markVehicleStatus('archived')" [disabled]="selectedVehicle()?.status === 'archived'">
+                Archive
+              </button>
+            </div>
+          </header>
+
+          <form class="panel__form" [formGroup]="vehicleDetailsForm" (ngSubmit)="saveVehicleDetails()">
+            <h3>Vehicle details</h3>
+            <div class="form-grid">
+              <label>
+                <span>Vehicle name</span>
+                <input type="text" formControlName="name" />
+              </label>
+              <label>
+                <span>License plate</span>
+                <input type="text" formControlName="licensePlate" [readonly]="!canEditCoreDetails()" />
+              </label>
+              <label>
+                <span>Location</span>
+                <input type="text" formControlName="location" />
+              </label>
+              <label>
+                <span>Purchase date</span>
+                <input type="date" formControlName="purchaseDate" [readonly]="!canEditCoreDetails()" />
+              </label>
+              <label>
+                <span>VIN</span>
+                <input type="text" formControlName="vin" [readonly]="!canEditCoreDetails()" />
+              </label>
+              <label>
+                <span>Engine</span>
+                <input type="text" formControlName="engine" />
+              </label>
+              <label>
+                <span>Chassis</span>
+                <input type="text" formControlName="chassis" />
+              </label>
+              <label>
+                <span>Odometer</span>
+                <input type="text" formControlName="odometer" />
+              </label>
+              <label>
+                <span>Fuel type</span>
+                <input type="text" formControlName="fuelType" />
+              </label>
+              <label>
+                <span>Transmission</span>
+                <input type="text" formControlName="transmission" />
+              </label>
+              <label>
+                <span>Gross vehicle mass</span>
+                <input type="text" formControlName="grossVehicleMass" />
+              </label>
+              <label class="wide">
+                <span>Notes</span>
+                <textarea rows="3" formControlName="notes"></textarea>
+              </label>
+              <label>
+                <span>Status</span>
+                <select formControlName="status">
+                  <option value="active">Active</option>
+                  <option value="sold">Sold</option>
+                  <option value="archived">Archived</option>
+                </select>
+              </label>
+            </div>
+            <button type="submit" class="primary">Save changes</button>
+          </form>
+
+          <section class="maintenance">
+            <header class="maintenance__header">
+              <div>
+                <h3>Maintenance log</h3>
+                <p>Lock entries to prevent non-admin edits.</p>
+              </div>
+            </header>
+
+            <form class="maintenance__form" [formGroup]="maintenanceForm" (ngSubmit)="addMaintenance()">
+              <div class="form-grid">
+                <label>
+                  <span>Date</span>
+                  <input type="date" formControlName="date" />
+                </label>
+                <label>
+                  <span>Entered by</span>
+                  <input type="text" formControlName="enteredBy" />
+                </label>
+                <label>
+                  <span>Work</span>
+                  <input type="text" formControlName="work" />
+                </label>
+                <label>
+                  <span>ODO reading</span>
+                  <input type="text" formControlName="odoReading" />
+                </label>
+                <label>
+                  <span>Where</span>
+                  <input type="text" formControlName="performedAt" />
+                </label>
+                <label>
+                  <span>Outcome</span>
+                  <input type="text" formControlName="outcome" />
+                </label>
+                <label>
+                  <span>Cost</span>
+                  <input type="text" formControlName="cost" />
+                </label>
+                <label class="wide">
+                  <span>Notes</span>
+                  <textarea rows="2" formControlName="notes"></textarea>
+                </label>
+              </div>
+              <button type="submit">Add maintenance record</button>
+            </form>
+
+            <div class="table-wrapper">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Date</th>
+                    <th>Entered by</th>
+                    <th>Work</th>
+                    <th>ODO</th>
+                    <th>Where</th>
+                    <th>Outcome</th>
+                    <th>Cost</th>
+                    <th>Notes</th>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <ng-container
+                    *ngFor="
+                      let record of selectedVehicle()?.maintenance;
+                      trackBy: trackByMaintenance
+                    "
+                  >
+                    <ng-container *ngIf="editingMaintenanceId() === record.id; else viewRow">
+                      <tr class="editing">
+                        <td><input type="date" [formControl]="maintenanceEditForm.controls.date" /></td>
+                        <td><input type="text" [formControl]="maintenanceEditForm.controls.enteredBy" /></td>
+                        <td><input type="text" [formControl]="maintenanceEditForm.controls.work" /></td>
+                        <td><input type="text" [formControl]="maintenanceEditForm.controls.odoReading" /></td>
+                        <td><input type="text" [formControl]="maintenanceEditForm.controls.performedAt" /></td>
+                        <td><input type="text" [formControl]="maintenanceEditForm.controls.outcome" /></td>
+                        <td><input type="text" [formControl]="maintenanceEditForm.controls.cost" /></td>
+                        <td><textarea rows="2" [formControl]="maintenanceEditForm.controls.notes"></textarea></td>
+                        <td class="actions">
+                          <button type="button" (click)="saveMaintenanceEdit(record)">Save</button>
+                          <button type="button" class="ghost" (click)="cancelMaintenanceEdit()">Cancel</button>
+                        </td>
+                      </tr>
+                    </ng-container>
+                    <ng-template #viewRow>
+                      <tr [ngClass]="maintenanceRowClass(record)">
+                        <td>{{ record.date }}</td>
+                        <td>{{ record.enteredBy }}</td>
+                        <td>{{ record.work }}</td>
+                        <td>{{ record.odoReading }}</td>
+                        <td>{{ record.performedAt }}</td>
+                        <td>{{ record.outcome }}</td>
+                        <td>{{ record.cost }}</td>
+                        <td>{{ record.notes }}</td>
+                        <td class="actions">
+                          <button
+                            type="button"
+                            (click)="startEditMaintenance(record)"
+                            [disabled]="!canEditMaintenance(record)"
+                          >
+                            Edit
+                          </button>
+                          <button
+                            type="button"
+                            *ngIf="authLevel() === 1"
+                            (click)="toggleMaintenanceLock(record)"
+                          >
+                            {{ record.locked ? 'Unlock' : 'Lock' }}
+                          </button>
+                        </td>
+                      </tr>
+                    </ng-template>
+                  </ng-container>
+                  <tr *ngIf="!selectedVehicle()?.maintenance?.length">
+                    <td colspan="9" class="empty">No maintenance recorded yet.</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </section>
+        </section>
+
+        <ng-template #noSelection>
+          <section class="panel vehicle-details empty-state">
+            <header class="panel__header">
+              <h2>Select a vehicle</h2>
+            </header>
+            <p>Choose a vehicle from the list to review its details and maintenance history.</p>
+          </section>
+        </ng-template>
+      </div>
+    </div>
+  </content>
+</ui-shell>
