@@ -1,0 +1,132 @@
+<ui-shell>
+  <content>
+    <div class="settings" *ngIf="user$ | async as user; else noUser">
+      <header class="settings__header">
+        <div>
+          <h1>Settings dashboard</h1>
+          <p>Manage your profile, preferences, and team access.</p>
+        </div>
+        <div class="settings__badge">
+          <span class="settings__name">{{ user.displayName }}</span>
+          <span class="settings__permission">
+            {{ permissionLabels[user.permissionLevel] }}
+          </span>
+        </div>
+      </header>
+
+      <nav class="settings__nav">
+        <button
+          type="button"
+          [class.active]="activeSection === 'profile'"
+          (click)="switchSection('profile')"
+        >
+          My profile
+        </button>
+        <button
+          type="button"
+          [class.active]="activeSection === 'add-user'"
+          [disabled]="!canManageUsers(user.permissionLevel)"
+          (click)="switchSection('add-user')"
+        >
+          Add user
+        </button>
+      </nav>
+
+      <section class="settings__panel" *ngIf="activeSection === 'profile'">
+        <h2>Account overview</h2>
+        <dl>
+          <div>
+            <dt>Name</dt>
+            <dd>{{ user.displayName }}</dd>
+          </div>
+          <div>
+            <dt>Email</dt>
+            <dd>{{ user.email }}</dd>
+          </div>
+          <div>
+            <dt>Permission level</dt>
+            <dd>{{ permissionLabels[user.permissionLevel] }}</dd>
+          </div>
+        </dl>
+        <p class="settings__hint">
+          Contact a system administrator if you need your access level adjusted.
+        </p>
+      </section>
+
+      <section class="settings__panel" *ngIf="activeSection === 'add-user'">
+        <h2>Add a new teammate</h2>
+        <p class="settings__hint">
+          Grant access to new staff members directly from this dashboard.
+        </p>
+
+        <ng-container *ngIf="canManageUsers(user.permissionLevel); else permissionWarning">
+          <form
+            class="settings__form"
+            [formGroup]="createUserForm"
+            (ngSubmit)="createUser(user.permissionLevel)"
+            novalidate
+          >
+            <label>
+              <span>Display name</span>
+              <input type="text" formControlName="displayName" required />
+            </label>
+            <div
+              class="validation"
+              *ngIf="createUserForm.controls.displayName.invalid && createUserForm.controls.displayName.touched"
+            >
+              A display name is required.
+            </div>
+
+            <label>
+              <span>Email</span>
+              <input type="email" formControlName="email" required />
+            </label>
+            <div
+              class="validation"
+              *ngIf="createUserForm.controls.email.invalid && createUserForm.controls.email.touched"
+            >
+              Enter a valid email address.
+            </div>
+
+            <label>
+              <span>Temporary password</span>
+              <input type="password" formControlName="password" required />
+            </label>
+            <div
+              class="validation"
+              *ngIf="createUserForm.controls.password.invalid && createUserForm.controls.password.touched"
+            >
+              Password must be at least 8 characters.
+            </div>
+
+            <label>
+              <span>Permission level</span>
+              <select formControlName="permissionLevel">
+                <option *ngFor="let level of permissionLevels" [ngValue]="level">
+                  {{ permissionLabels[level] }}
+                </option>
+              </select>
+            </label>
+
+            <button type="submit" [disabled]="createUserForm.invalid || isSavingUser">
+              {{ isSavingUser ? 'Creating user…' : 'Create user' }}
+            </button>
+
+            <p class="settings__status" *ngIf="saveMessage">{{ saveMessage }}</p>
+          </form>
+        </ng-container>
+        <ng-template #permissionWarning>
+          <p class="settings__warning">
+            You need administrator access (level 3 or higher) to add new users.
+          </p>
+        </ng-template>
+      </section>
+    </div>
+  </content>
+</ui-shell>
+
+<ng-template #noUser>
+  <div class="settings settings--empty">
+    <p>We were unable to load your profile information.</p>
+  </div>
+</ng-template>
