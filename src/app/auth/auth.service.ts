@@ -76,28 +76,27 @@ export class AuthService {
   }
 
   async login(email: string, password: string): Promise<AuthUser> {
-    // Call Edge Function that: verifies subdomain -> org, checks membership, signs in server-side
     const { data, error } = await this.supabaseService.client.functions.invoke(
       'user-management',
       {
         body: { action: 'login', payload: { email, password } },
+        headers: { 'x-org-slug': this.getOrgFromHost() ?? '' }, // <— add this
       },
     );
 
     if (error) throw new Error(error.message ?? 'Login failed');
+    if (!data?.user) throw new Error('Login failed: no user returned');
 
-    // If function returns a session, apply it to the client so Supabase-js is “logged in”
-    if (data?.session) {
-      const { access_token, refresh_token } = data.session;
+    // If the function returns a session, apply it so supabase-js is logged in
+    if (data.session?.access_token && data.session?.refresh_token) {
       const { error: setErr } =
         await this.supabaseService.client.auth.setSession({
-          access_token,
-          refresh_token,
+          access_token: data.session.access_token,
+          refresh_token: data.session.refresh_token,
         });
       if (setErr) throw new Error(setErr.message);
     }
 
-    // Build the user payload the same way you did before (but we already have basics in data.user)
     const user: AuthUser = {
       id: data.user.id,
       email: data.user.email ?? '',
@@ -108,6 +107,34 @@ export class AuthService {
     this.persistUser(user);
     this.currentUserSubject.next(user);
     return user;
+  }
+
+  async createUser(payload: CreateUserRequest): Promise<unknown> {
+    if (!this.canManageUsers()) {
+      throw new Error('You do not have permission to create users.');
+    }
+
+    const { data, error } = await this.supabaseService.client.functions.invoke(
+      'user-management',
+      {
+        body: { action: 'register', payload },
+        headers: { 'x-org-slug': this.getOrgFromHost() ?? '' }, // <— add this
+      },
+    );
+
+    if (error) throw new Error(error.message ?? 'Failed to create the user.');
+    return data;
+  }
+
+  // Helper to derive the org from the subdomain (acme.cue-rms.co.nz → "acme")
+  // Safe to no-op on SSR
+  private getOrgFromHost(): string | undefined {
+    if (!this.isBrowser) return undefined;
+    const host = window.location.host; // e.g., acme.localhost:4200 or acme.cue-rms.co.nz
+    const hostname = host.split(':')[0] ?? '';
+    // localhost pattern: acme.localhost
+    const m = hostname.match(/^([a-z0-9-]+)\./i);
+    return m?.[1]; // returns first label or undefined
   }
 
   async logout(): Promise<void> {
@@ -123,22 +150,6 @@ export class AuthService {
         await this.router.navigate(['/login']);
       }
     }
-  }
-
-  async createUser(payload: CreateUserRequest): Promise<unknown> {
-    if (!this.canManageUsers()) {
-      throw new Error('You do not have permission to create users.');
-    }
-
-    const { data, error } = await this.supabaseService.client.functions.invoke(
-      'user-management',
-      {
-        body: { action: 'register', payload },
-      },
-    );
-
-    if (error) throw new Error(error.message ?? 'Failed to create the user.');
-    return data;
   }
 
   hasPermission(level: PermissionLevel): boolean {
