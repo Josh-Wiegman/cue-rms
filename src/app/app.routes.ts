@@ -1,17 +1,26 @@
 import { Routes } from '@angular/router';
 import { HomeComponent } from './home/home-component/home-component';
 import { NotFoundComponent } from './shared/not-found-component/not-found-component';
+import { authGuard } from './auth/auth.guard';
 
 export const routes: Routes = [
+  {
+    path: 'login',
+    loadComponent: () =>
+      import('./auth/login/login.component').then((m) => m.LoginComponent),
+    title: 'Sign in | Cue RMS',
+  },
   {
     path: '',
     component: HomeComponent,
     title: 'Cue RMS',
+    canActivate: [authGuard],
   },
   {
     path: 'home',
     component: HomeComponent,
     title: 'Cue rms',
+    canActivate: [authGuard],
   },
   {
     path: 'sales',
@@ -20,6 +29,7 @@ export const routes: Routes = [
         (m) => m.SalesComponent,
       ),
     title: 'Sales | Cue RMS',
+    canActivate: [authGuard],
   },
   {
     path: 'crew',
@@ -28,6 +38,7 @@ export const routes: Routes = [
         (m) => m.CrewComponent,
       ),
     title: 'Crew | Cue RMS',
+    canActivate: [authGuard],
   },
   {
     path: 'crew-schedule',
@@ -36,6 +47,7 @@ export const routes: Routes = [
         (m) => m.CrewScheduler,
       ),
     title: 'Scheduler | Cue RMS',
+    canActivate: [authGuard],
   },
   {
     path: 'inventory',
@@ -44,6 +56,7 @@ export const routes: Routes = [
         (m) => m.InventoryComponent,
       ),
     title: 'Inventory | Cue RMS',
+    canActivate: [authGuard],
   },
   {
     path: 'vehicles',
@@ -52,6 +65,7 @@ export const routes: Routes = [
         './vehicles/vehicle-portal-component/vehicle-portal-component'
       ).then((m) => m.VehiclePortalComponent),
     title: 'Vehicles | Cue RMS',
+    canActivate: [authGuard],
   },
   {
     path: 'clashes',
@@ -60,6 +74,7 @@ export const routes: Routes = [
         (m) => m.ClashesComponent,
       ),
     title: 'Clashes | Cue RMS',
+    canActivate: [authGuard],
   },
   {
     path: 'calendar',
@@ -68,6 +83,7 @@ export const routes: Routes = [
         (m) => m.CalendarComponent,
       ),
     title: 'Calendar | Cue RMS',
+    canActivate: [authGuard],
   },
   {
     path: 'reporting',
@@ -76,6 +92,16 @@ export const routes: Routes = [
         (m) => m.ReportingComponent,
       ),
     title: 'Reporting | Cue RMS',
+    canActivate: [authGuard],
+  },
+  {
+    path: 'settings',
+    loadComponent: () =>
+      import('./settings/settings-dashboard/settings-dashboard.component').then(
+        (m) => m.SettingsDashboardComponent,
+      ),
+    title: 'Settings | Cue RMS',
+    canActivate: [authGuard],
   },
   {
     path: 'kb',
@@ -84,6 +110,7 @@ export const routes: Routes = [
         (m) => m.KnowledgeBaseRoutes,
       ),
     title: 'KBase | Cue RMS',
+    canActivate: [authGuard],
   },
   {
     path: '**',
