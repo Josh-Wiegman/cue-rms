@@ -21,7 +21,7 @@ export class MainNavigationComponent implements OnInit {
   private readonly authService = inject(AuthService);
   private readonly dbFunctions = inject(dbFunctionsService);
 
-  private readonly organisationId = 'org.xxx';
+  private readonly organisationId = 'gravity';
 
   protected readonly user$ = this.authService.currentUser$;
   protected navItems: NavigationItem[] = [];
