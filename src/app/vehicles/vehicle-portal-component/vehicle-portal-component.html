@@ -7,7 +7,7 @@
           <p>Track company vehicles, log maintenance and keep the fleet in sync.</p>
         </div>
         <div class="page-header__controls">
-          <div class="stats">
+          <div class="stats" *ngIf="authLevel() === 1">
             <div class="stat">
               <span class="stat__label">Active</span>
               <span class="stat__value">{{ activeVehicles() }}</span>
@@ -35,27 +35,44 @@
         </div>
       </header>
 
-      <section class="import">
-        <label class="import__label" for="vehicleCsv">Import vehicle spreadsheet (CSV)</label>
-        <input id="vehicleCsv" type="file" accept=".csv" (change)="importCsv($event)" />
-        <p class="import__summary" *ngIf="csvImportSummary()">{{ csvImportSummary() }}</p>
-        <ul class="import__errors" *ngIf="csvImportErrors().length">
-          <li *ngFor="let error of csvImportErrors()">{{ error }}</li>
-        </ul>
-      </section>
-
       <div class="portal-grid">
         <section class="panel vehicle-list">
           <header class="panel__header">
             <h2>Vehicles</h2>
-            <button
-              type="button"
-              class="panel__header-action"
-              (click)="openAddVehicleModal()"
-            >
-              <span class="panel__header-action-icon" aria-hidden="true">+</span>
-              <span class="panel__header-action-label">Add vehicle</span>
-            </button>
+            <div class="panel__header-action-group">
+              <button
+                type="button"
+                class="panel__header-action panel__header-action--primary"
+                (click)="handleAddVehicleClick()"
+              >
+                <span class="panel__header-action-icon" aria-hidden="true">+</span>
+                <span class="panel__header-action-label">Add vehicle</span>
+              </button>
+              <button
+                type="button"
+                class="panel__header-action panel__header-action--caret"
+                aria-label="Open vehicle actions"
+                aria-haspopup="menu"
+                [attr.aria-expanded]="showAddVehicleMenu()"
+                (click)="toggleAddVehicleMenu($event)"
+              >
+                <span aria-hidden="true">▾</span>
+              </button>
+              <div
+                class="panel__header-menu"
+                role="menu"
+                *ngIf="showAddVehicleMenu()"
+              >
+                <button type="button" role="menuitem" (click)="handleVehicleMenuSelect('new')">
+                  <span aria-hidden="true">+</span>
+                  Add vehicle
+                </button>
+                <button type="button" role="menuitem" (click)="handleVehicleMenuSelect('import')">
+                  <span aria-hidden="true">⇪</span>
+                  Import from CSV
+                </button>
+              </div>
+            </div>
           </header>
           <div class="table-wrapper">
             <table class="vehicle-table">
@@ -476,6 +493,63 @@
             </div>
             <div class="modal__actions">
               <button type="submit" class="primary">Add record</button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <div
+        class="modal-backdrop"
+        *ngIf="showImportCsvModal()"
+        (click)="closeImportCsvModal()"
+      >
+        <div
+          class="modal"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="importCsvModalTitle"
+          (click)="$event.stopPropagation()"
+        >
+          <header class="modal__header">
+            <h3 id="importCsvModalTitle">Import vehicles from CSV</h3>
+            <button
+              type="button"
+              class="modal__close"
+              (click)="closeImportCsvModal()"
+              aria-label="Close import vehicles dialog"
+            >
+              ×
+            </button>
+          </header>
+          <form class="panel__form modal__form" (ngSubmit)="importSelectedCsv()">
+            <p class="import-modal__description">
+              Upload the exported fleet spreadsheet (.csv) to add any missing vehicles. Existing
+              vehicles are skipped automatically.
+            </p>
+            <label class="import-modal__file">
+              <span class="import-modal__file-label">Choose spreadsheet</span>
+              <input
+                type="file"
+                accept=".csv"
+                #csvFileInput
+                (change)="handleCsvFileSelection($event)"
+              />
+            </label>
+            <p class="import-modal__filename" *ngIf="selectedCsvFileName()">
+              Selected: {{ selectedCsvFileName() }}
+            </p>
+            <p class="import__summary" *ngIf="csvImportSummary()">{{ csvImportSummary() }}</p>
+            <ul class="import__errors" *ngIf="csvImportErrors().length">
+              <li *ngFor="let error of csvImportErrors()">{{ error }}</li>
+            </ul>
+            <div class="modal__actions">
+              <button
+                type="submit"
+                class="primary"
+                [disabled]="!selectedCsvFile()"
+              >
+                Import vehicles
+              </button>
             </div>
           </form>
         </div>
