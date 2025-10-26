@@ -12,7 +12,7 @@ export class dbFunctionsService {
   async getLocations() {
     try {
       const { data, error } =
-        await this.supabaseService.client.functions.invoke('db_get_functions', {
+        await this.supabaseService.client.functions.invoke('database-access', {
           headers: { 'x-query-type': 'locations' },
         });
 
@@ -27,7 +27,7 @@ export class dbFunctionsService {
   async getJobsByDate(date: string) {
     try {
       const { data, error } =
-        await this.supabaseService.client.functions.invoke('db_get_functions', {
+        await this.supabaseService.client.functions.invoke('database-access', {
           headers: { 'x-query-type': 'jobs-by-date', 'x-query-date': date },
         });
 
@@ -42,7 +42,7 @@ export class dbFunctionsService {
   async getArticles() {
     try {
       const { data, error } =
-        await this.supabaseService.client.functions.invoke('db_get_functions', {
+        await this.supabaseService.client.functions.invoke('database-access', {
           headers: { 'x-query-type': 'articles' },
         });
 
@@ -57,7 +57,7 @@ export class dbFunctionsService {
   async getArticleById(id: string) {
     try {
       const { data, error } =
-        await this.supabaseService.client.functions.invoke('db_get_functions', {
+        await this.supabaseService.client.functions.invoke('database-access', {
           headers: { 'x-query-type': 'articles', 'x-query-id': id },
         });
 
