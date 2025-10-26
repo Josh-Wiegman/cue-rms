@@ -1,7 +1,6 @@
 import { Injectable } from '@angular/core';
-import { SupabaseClient } from '@supabase/supabase-js';
 import { BehaviorSubject } from 'rxjs';
-import { SupabaseService } from '../../shared/supabase-service/supabase.service';
+import { environment } from '../../../environments/environment';
 import {
   MaintenanceRecord,
   Vehicle,
@@ -56,21 +55,54 @@ type MaintenanceRow = {
   locked: boolean | null;
 };
 
+interface VehicleListApiResponse {
+  ok: boolean;
+  items?: VehicleRow[];
+  vehicle?: VehicleRow;
+  error?: string;
+}
+
+interface VehicleMutationApiResponse {
+  ok: boolean;
+  vehicle?: VehicleRow;
+  id?: string;
+  error?: string;
+}
+
+interface MaintenanceMutationApiResponse {
+  ok: boolean;
+  record?: MaintenanceRow;
+  id?: string;
+  error?: string;
+}
+
 @Injectable({ providedIn: 'root' })
 export class VehicleDataService {
   private readonly vehiclesSubject = new BehaviorSubject<Vehicle[]>([]);
-  private readonly supabaseClient: SupabaseClient;
-  private readonly vehicleSelect =
-    'id, location, name, license_plate, status, purchase_date, vin, engine, chassis, odometer, fuel_type, transmission, gross_vehicle_mass, notes, maintenance:vehicle_maintenance_records(id, vehicle_id, date, entered_by, work, odo_reading, performed_at, outcome, cost, notes, locked)';
+  private readonly baseUrl: string;
+  private readonly adminSecret = environment.vehiclePortalAdminSecret ?? '';
+  private authLevel: 1 | 2 = 2;
 
   readonly vehicles$ = this.vehiclesSubject.asObservable();
 
-  constructor(private readonly supabaseService: SupabaseService) {
-    this.supabaseClient = this.supabaseService.client;
+  constructor() {
+    this.baseUrl = this.buildBaseUrl();
+    void this.refreshVehicles();
+  }
+
+  setAuthLevel(level: 1 | 2): void {
+    if (this.authLevel === level) {
+      return;
+    }
+    this.authLevel = level;
     void this.refreshVehicles();
   }
 
   async addVehicle(payload: VehicleInput): Promise<Vehicle | null> {
+    const maintenancePayload = (payload.maintenance ?? [])
+      .filter((record) => this.hasMaintenanceContent(record))
+      .map((record) => this.buildMaintenanceColumns(undefined, record));
+
     const columns = this.buildVehicleColumns({
       location: payload.location.trim(),
       name: payload.name.trim(),
@@ -79,33 +111,20 @@ export class VehicleDataService {
       details: this.buildVehicleDetails(payload.details ?? {}),
     });
 
-    const { data, error } = await this.supabaseClient
-      .from('vehicles')
-      .insert(columns)
-      .select('id')
-      .single();
+    const response = await this.request<VehicleMutationApiResponse>('POST', '', {
+      body: {
+        ...columns,
+        maintenance: maintenancePayload,
+      },
+    });
 
-    if (error || !data) {
-      console.error('Failed to add vehicle', error);
+    const createdId = response?.vehicle?.id;
+    if (!response?.ok || !createdId) {
       return null;
     }
 
-    if (payload.maintenance?.length) {
-      const maintenancePayload = payload.maintenance
-        .filter((record) => this.hasMaintenanceContent(record))
-        .map((record) => this.buildMaintenanceColumns(data.id, record));
-      if (maintenancePayload.length > 0) {
-        const { error: maintenanceError } = await this.supabaseClient
-          .from('vehicle_maintenance_records')
-          .insert(maintenancePayload);
-        if (maintenanceError) {
-          console.error('Failed to save maintenance records', maintenanceError);
-        }
-      }
-    }
-
     await this.refreshVehicles();
-    return this.vehiclesSubject.value.find((vehicle) => vehicle.id === data.id) ?? null;
+    return this.vehiclesSubject.value.find((vehicle) => vehicle.id === createdId) ?? null;
   }
 
   async updateVehicle(
@@ -126,13 +145,14 @@ export class VehicleDataService {
       details: updated.details,
     });
 
-    const { error } = await this.supabaseClient
-      .from('vehicles')
-      .update({ ...columns, updated_at: new Date().toISOString() })
-      .eq('id', id);
+    const response = await this.request<VehicleMutationApiResponse>('PUT', '', {
+      body: {
+        id,
+        ...columns,
+      },
+    });
 
-    if (error) {
-      console.error('Failed to update vehicle', error);
+    if (!response?.ok) {
       return null;
     }
 
@@ -141,13 +161,11 @@ export class VehicleDataService {
   }
 
   async removeVehicle(id: string): Promise<void> {
-    const { error } = await this.supabaseClient
-      .from('vehicles')
-      .delete()
-      .eq('id', id);
+    const response = await this.request<VehicleMutationApiResponse>('DELETE', '', {
+      body: { id },
+    });
 
-    if (error) {
-      console.error('Failed to remove vehicle', error);
+    if (!response?.ok) {
       return;
     }
 
@@ -155,13 +173,14 @@ export class VehicleDataService {
   }
 
   async markVehicleStatus(id: string, status: VehicleStatus): Promise<void> {
-    const { error } = await this.supabaseClient
-      .from('vehicles')
-      .update({ status, updated_at: new Date().toISOString() })
-      .eq('id', id);
+    const response = await this.request<VehicleMutationApiResponse>('PUT', '', {
+      body: {
+        id,
+        status,
+      },
+    });
 
-    if (error) {
-      console.error('Failed to update vehicle status', error);
+    if (!response?.ok) {
       return;
     }
 
@@ -173,20 +192,18 @@ export class VehicleDataService {
     record: Omit<MaintenanceRecord, 'id'>,
   ): Promise<MaintenanceRecord | null> {
     const payload = this.buildMaintenanceColumns(vehicleId, record);
-    const { data, error } = await this.supabaseClient
-      .from('vehicle_maintenance_records')
-      .insert(payload)
-      .select('*')
-      .single();
+    const response = await this.request<MaintenanceMutationApiResponse>('POST', 'maintenance', {
+      body: payload,
+    });
 
-    if (error || !data) {
-      console.error('Failed to add maintenance record', error);
+    if (!response?.ok) {
       return null;
     }
 
     await this.refreshVehicles();
     const vehicle = this.vehiclesSubject.value.find((item) => item.id === vehicleId);
-    return vehicle?.maintenance.find((item) => item.id === data.id) ?? null;
+    const insertedId = response.record?.id ?? response.id;
+    return vehicle?.maintenance.find((item) => item.id === insertedId) ?? null;
   }
 
   async updateMaintenanceRecord(
@@ -201,16 +218,15 @@ export class VehicleDataService {
     }
 
     const updated = updater(this.clone(existing));
-    const payload = this.buildMaintenanceColumns(vehicleId, updated);
-    delete (payload as { vehicle_id?: string }).vehicle_id;
+    const payload = this.buildMaintenanceColumns(undefined, updated);
+    const response = await this.request<MaintenanceMutationApiResponse>('PUT', 'maintenance', {
+      body: {
+        id: recordId,
+        ...payload,
+      },
+    });
 
-    const { error } = await this.supabaseClient
-      .from('vehicle_maintenance_records')
-      .update(payload)
-      .eq('id', recordId);
-
-    if (error) {
-      console.error('Failed to update maintenance record', error);
+    if (!response?.ok) {
       return null;
     }
 
@@ -222,13 +238,10 @@ export class VehicleDataService {
   }
 
   async removeMaintenanceRecord(vehicleId: string, recordId: string): Promise<void> {
-    const { error } = await this.supabaseClient
-      .from('vehicle_maintenance_records')
-      .delete()
-      .eq('id', recordId);
-
-    if (error) {
-      console.error('Failed to remove maintenance record', error);
+    const response = await this.request<MaintenanceMutationApiResponse>('DELETE', 'maintenance', {
+      body: { id: recordId },
+    });
+    if (!response?.ok) {
       return;
     }
 
@@ -242,13 +255,13 @@ export class VehicleDataService {
       return;
     }
 
-    const { error } = await this.supabaseClient
-      .from('vehicle_maintenance_records')
-      .update({ locked: !record.locked })
-      .eq('id', recordId);
-
-    if (error) {
-      console.error('Failed to toggle maintenance lock', error);
+    const response = await this.request<MaintenanceMutationApiResponse>('PUT', 'maintenance', {
+      body: {
+        id: recordId,
+        locked: !record.locked,
+      },
+    });
+    if (!response?.ok) {
       return;
     }
 
@@ -280,12 +293,14 @@ export class VehicleDataService {
           status: merged.status,
           details: merged.details,
         });
-        const { error } = await this.supabaseClient
-          .from('vehicles')
-          .update({ ...updateColumns, updated_at: new Date().toISOString() })
-          .eq('id', current.id);
-        if (error) {
-          console.error('Failed to merge vehicle during import', error);
+        const updateResponse = await this.request<VehicleMutationApiResponse>('PUT', '', {
+          body: {
+            id: current.id,
+            ...updateColumns,
+          },
+        });
+        if (!updateResponse?.ok) {
+          console.error('Failed to merge vehicle during import');
           continue;
         }
 
@@ -296,14 +311,16 @@ export class VehicleDataService {
             ),
         );
         if (newMaintenance.length > 0) {
-          const maintenancePayload = newMaintenance.map((record) =>
-            this.buildMaintenanceColumns(current.id, record),
-          );
-          const { error: maintenanceError } = await this.supabaseClient
-            .from('vehicle_maintenance_records')
-            .insert(maintenancePayload);
-          if (maintenanceError) {
-            console.error('Failed to import maintenance record', maintenanceError);
+          for (const record of newMaintenance) {
+            const maintenancePayload = this.buildMaintenanceColumns(current.id, record);
+            const maintenanceResponse = await this.request<MaintenanceMutationApiResponse>(
+              'POST',
+              'maintenance',
+              { body: maintenancePayload },
+            );
+            if (!maintenanceResponse?.ok) {
+              console.error('Failed to import maintenance record');
+            }
           }
         }
       } else {
@@ -314,32 +331,25 @@ export class VehicleDataService {
           status: vehicle.status,
           details: vehicle.details,
         });
-        const { data, error } = await this.supabaseClient
-          .from('vehicles')
-          .insert(columns)
-          .select('id, license_plate')
-          .single();
-        if (error || !data) {
-          console.error('Failed to insert vehicle during import', error);
+        const maintenancePayload = vehicle.maintenance.map((record) =>
+          this.buildMaintenanceColumns(undefined, record),
+        );
+        const response = await this.request<VehicleMutationApiResponse>('POST', '', {
+          body: {
+            ...columns,
+            maintenance: maintenancePayload,
+          },
+        });
+        if (!response?.ok || !response.vehicle?.id) {
+          console.error('Failed to insert vehicle during import');
           continue;
         }
         added += 1;
-        existingByPlate.set(data.license_plate.toUpperCase(), {
+        existingByPlate.set(vehicle.licensePlate.toUpperCase(), {
           ...vehicle,
-          id: data.id,
-          licensePlate: data.license_plate.toUpperCase(),
+          id: response.vehicle.id,
+          licensePlate: vehicle.licensePlate.toUpperCase(),
         });
-        if (vehicle.maintenance.length > 0) {
-          const maintenancePayload = vehicle.maintenance.map((record) =>
-            this.buildMaintenanceColumns(data.id, record),
-          );
-          const { error: maintenanceError } = await this.supabaseClient
-            .from('vehicle_maintenance_records')
-            .insert(maintenancePayload);
-          if (maintenanceError) {
-            console.error('Failed to insert imported maintenance record', maintenanceError);
-          }
-        }
       }
     }
 
@@ -348,19 +358,94 @@ export class VehicleDataService {
   }
 
   private async refreshVehicles(): Promise<void> {
-    const { data, error } = await this.supabaseClient
-      .from('vehicles')
-      .select(this.vehicleSelect)
-      .order('name', { ascending: true })
-      .order('date', { foreignTable: 'vehicle_maintenance_records', ascending: false });
+    const response = await this.request<VehicleListApiResponse>('GET', '', {
+      query: { include: 'maintenance' },
+    });
 
-    if (error) {
-      console.error('Failed to load vehicles from Supabase', error);
+    if (!response?.ok) {
       return;
     }
 
-    const vehicles = (data ?? []).map((row) => this.mapVehicle(row));
+    const rows = response.items ?? (response.vehicle ? [response.vehicle] : []);
+    const vehicles = rows.map((row) => this.mapVehicle(row));
     this.vehiclesSubject.next(vehicles);
+  }
+
+  private buildBaseUrl(): string {
+    const trimmed = environment.supabaseDataUrl.replace(/\/+$/, '');
+    return `${trimmed}/functions/v1/vehicle-portal/`;
+  }
+
+  private async request<T extends { ok: boolean; error?: string }>(
+    method: 'GET' | 'POST' | 'PUT' | 'DELETE',
+    path: string,
+    options?: { query?: Record<string, unknown>; body?: unknown },
+  ): Promise<T | null> {
+    if (!this.adminSecret) {
+      console.error('Vehicle portal admin secret is not configured.');
+      return null;
+    }
+
+    const target = new URL(path ?? '', this.baseUrl);
+    const query = options?.query ?? {};
+    for (const [key, value] of Object.entries(query)) {
+      if (value === undefined || value === null) {
+        continue;
+      }
+      target.searchParams.set(key, String(value));
+    }
+
+    const headers: Record<string, string> = {
+      'x-admin-secret': this.adminSecret,
+      'x-auth-level': String(this.authLevel),
+    };
+
+    let body: string | undefined;
+    if (options?.body !== undefined) {
+      headers['content-type'] = 'application/json';
+      body = JSON.stringify(options.body);
+    }
+
+    try {
+      const response = await fetch(target.toString(), {
+        method,
+        headers,
+        body,
+      });
+
+      if (!response.ok) {
+        let errorDetails: string | undefined;
+        try {
+          const problem = (await response.json()) as { error?: string };
+          errorDetails = problem?.error;
+        } catch {
+          // Ignore body parse issues for non-JSON responses
+        }
+        console.error(
+          `Vehicle API ${method} ${target.pathname} failed`,
+          errorDetails ?? response.statusText,
+        );
+        return null;
+      }
+
+      if (response.status === 204) {
+        return { ok: true } as T;
+      }
+
+      const data = (await response.json()) as T;
+      if (!data.ok) {
+        console.error(
+          `Vehicle API ${method} ${target.pathname} returned error`,
+          data.error,
+        );
+        return null;
+      }
+
+      return data;
+    } catch (error) {
+      console.error(`Vehicle API ${method} ${target.pathname} exception`, error);
+      return null;
+    }
   }
 
   private mapVehicle(row: VehicleRow): Vehicle {
@@ -440,11 +525,10 @@ export class VehicleDataService {
   }
 
   private buildMaintenanceColumns(
-    vehicleId: string,
+    vehicleId: string | undefined,
     record: Omit<MaintenanceRecord, 'id'> | MaintenanceRecord,
   ): Record<string, unknown> {
-    return {
-      vehicle_id: vehicleId,
+    const payload: Record<string, unknown> = {
       date: this.nullIfEmpty(record.date),
       entered_by: this.nullIfEmpty(record.enteredBy),
       work: this.nullIfEmpty(record.work),
@@ -455,6 +539,12 @@ export class VehicleDataService {
       notes: this.nullIfEmpty(record.notes),
       locked: record.locked ?? false,
     };
+
+    if (vehicleId) {
+      payload.vehicle_id = vehicleId;
+    }
+
+    return payload;
   }
 
   private normaliseStatus(value: string | null): VehicleStatus {

@@ -147,6 +147,7 @@ export class VehiclePortalComponent implements OnInit {
   });
 
   ngOnInit(): void {
+    this.vehicleData.setAuthLevel(this.authLevel());
     this.vehicleData.vehicles$
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe((vehicles) => {
@@ -189,6 +190,7 @@ export class VehiclePortalComponent implements OnInit {
 
   changeAuthLevel(level: '1' | '2'): void {
     this.authLevel.set(level === '1' ? 1 : 2);
+    this.vehicleData.setAuthLevel(this.authLevel());
   }
 
   handleAuthLevelChange(event: Event): void {
