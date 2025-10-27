@@ -94,7 +94,7 @@ export class dbFunctionsService {
           {
             headers: {
               'x-query-type': 'navigation-items',
-              'x-org-id': orgId,
+              'x-org-slug': 'x-org-slug',
             },
           },
         );
