@@ -7,7 +7,7 @@ import eslintConfigPrettier from "eslint-config-prettier/flat";
 
 export default defineConfig([
   {
-    ignores: ['.angular/**', 'node_modules/**', 'dist/**'],
+    ignores: ['.angular/**', 'node_modules/**', 'dist/**', 'supabase/functions/**'],
   },
   {
     files: ["**/*.{js,mjs,cjs,ts,mts,cts}"],

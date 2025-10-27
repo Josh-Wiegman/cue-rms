@@ -127,10 +127,10 @@ export class SettingsDashboardComponent implements OnInit {
 
   private getPasswordResetRedirectUrl(): string {
     if (isPlatformBrowser(this.platformId) && typeof window !== 'undefined') {
-      return `${window.location.origin}/login`;
+      return `${window.location.origin}/reset-password`;
     }
 
-    return '/login';
+    return '/reset-password';
   }
   async logout(): Promise<void> {
     try {
