@@ -405,7 +405,15 @@
                         <td>{{ record.performedAt }}</td>
                         <td>{{ record.outcome }}</td>
                         <td>{{ record.cost }}</td>
-                        <td>{{ record.notes }}</td>
+                        <td class="maintenance__notes-cell">
+                          <button
+                            type="button"
+                            class="maintenance__notes-button"
+                            (click)="openMaintenanceNotesModal(record)"
+                          >
+                            View notes
+                          </button>
+                        </td>
                         <td class="actions">
                           <button
                             type="button"
@@ -642,6 +650,83 @@
               <button type="submit" class="primary">Add record</button>
             </div>
           </form>
+        </div>
+      </div>
+
+      <div
+        class="modal-backdrop"
+        *ngIf="showMaintenanceNotesModal()"
+        (click)="closeMaintenanceNotesModal()"
+      >
+        <div
+          class="modal notes-modal"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="maintenanceNotesModalTitle"
+          (click)="$event.stopPropagation()"
+        >
+          <header class="modal__header">
+            <h3 id="maintenanceNotesModalTitle">Maintenance notes</h3>
+            <button
+              type="button"
+              class="modal__close"
+              (click)="closeMaintenanceNotesModal()"
+              aria-label="Close maintenance notes"
+            >
+              ×
+            </button>
+          </header>
+          <div class="notes-modal__body" *ngIf="maintenanceNotesRecord() as notesRecord">
+            <ng-container *ngIf="!isEditingMaintenanceNotes(); else editNotes">
+              <div class="notes-modal__content">
+                {{
+                  notesRecord.notes
+                    ? notesRecord.notes
+                    : 'No notes recorded for this maintenance entry.'
+                }}
+              </div>
+              <div class="modal__actions notes-modal__actions">
+                <button
+                  type="button"
+                  class="ghost"
+                  (click)="closeMaintenanceNotesModal()"
+                >
+                  Close
+                </button>
+                <button
+                  type="button"
+                  *ngIf="canEditMaintenance(notesRecord)"
+                  (click)="startMaintenanceNotesEdit()"
+                >
+                  Edit
+                </button>
+              </div>
+            </ng-container>
+            <ng-template #editNotes>
+              <form
+                class="notes-modal__form"
+                (ngSubmit)="saveMaintenanceNotesEdit()"
+              >
+                <label class="notes-modal__label">
+                  <span>Notes</span>
+                  <textarea
+                    rows="8"
+                    [formControl]="maintenanceNotesControl"
+                  ></textarea>
+                </label>
+                <div class="modal__actions notes-modal__actions">
+                  <button type="submit" class="primary">Save</button>
+                  <button
+                    type="button"
+                    class="ghost"
+                    (click)="cancelMaintenanceNotesEdit()"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </form>
+            </ng-template>
+          </div>
         </div>
       </div>
 
