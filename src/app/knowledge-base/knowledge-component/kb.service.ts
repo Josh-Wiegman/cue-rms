@@ -6,6 +6,7 @@ import {
   from,
   map,
   of,
+  tap,
 } from 'rxjs';
 import {
   Article,
@@ -41,8 +42,11 @@ export class KbService {
     status: 'published',
   });
   private readonly viewMode$ = new BehaviorSubject<KnowledgeViewMode>('grid');
+  private readonly foldersSubject = new BehaviorSubject<KnowledgeFolder[]>([]);
 
-  constructor(private dbFunctions: dbFunctionsService) {}
+  constructor(private dbFunctions: dbFunctionsService) {
+    this.refreshFolders();
+  }
 
   // region ─── Article Queries ────────────────────────────────────────────────
 
@@ -162,7 +166,7 @@ export class KbService {
   // region ─── Folders & Navigation ──────────────────────────────────────────
 
   listFolders(): Observable<KnowledgeFolder[]> {
-    return from(this.dbFunctions.getKnowledgeFolders());
+    return this.foldersSubject.asObservable();
   }
 
   favouriteFolders(): Observable<KnowledgeFolder[]> {
@@ -171,6 +175,22 @@ export class KbService {
         folders.filter((folder) => (folder.progressPct ?? 0) >= 80),
       ),
     );
+  }
+
+  createFolder(
+    folder: Partial<KnowledgeFolder> & { name: string },
+  ): Observable<KnowledgeFolder> {
+    return from(this.dbFunctions.createKnowledgeFolder(folder)).pipe(
+      tap(() => this.refreshFolders()),
+    );
+  }
+
+  refreshFolders(): void {
+    from(this.dbFunctions.getKnowledgeFolders()).subscribe({
+      next: (folders) => this.foldersSubject.next(folders),
+      error: (error) =>
+        console.error('Failed to load knowledge folders', error),
+    });
   }
 
   // endregion

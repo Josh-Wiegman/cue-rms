@@ -6,10 +6,20 @@
   <div class="main-area">
     <header class="top-bar">
       <div class="title">
-        <h1>Knowledgebase</h1>
-        <p>Structured like Google Classroom – curated streams, folders and release gates.</p>
+        <h1>Knowledge base</h1>
+        <p>Curated playbooks, process updates, and training materials for your teams.</p>
       </div>
-      <app-kb-search></app-kb-search>
+      <div class="top-actions">
+        <a routerLink="/home" class="action-link">← Back to dashboard</a>
+        <a
+          *ngIf="(canManage$ | async)"
+          routerLink="/kb/admin"
+          class="action-link admin"
+        >
+          Admin console
+        </a>
+        <app-kb-search></app-kb-search>
+      </div>
     </header>
 
     <div class="content">

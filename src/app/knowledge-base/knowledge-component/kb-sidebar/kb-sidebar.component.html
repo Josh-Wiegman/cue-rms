@@ -1,12 +1,15 @@
 <aside class="sidebar">
   <div class="brand">
-    <h2>Workspace</h2>
-    <p>Organise learning like Google Classroom, but tailored to your crews.</p>
-    <button routerLink="/kb/training" class="cta">📘 Training hub</button>
+    <h2>Knowledge hub</h2>
+    <p>Reference SOPs, project learnings, and onboarding in one organised space.</p>
+    <a routerLink="/kb/training" class="cta">📚 Training library</a>
   </div>
 
-  <section *ngIf="(favourites$ | async)?.length">
-    <h3>Pinned folders</h3>
+  <section *ngIf="(favourites$ | async)?.length" class="pinned">
+    <header class="section-heading">
+      <h3>Pinned folders</h3>
+      <span>Frequent references</span>
+    </header>
     <button
       class="folder-pill"
       *ngFor="let folder of (favourites$ | async)"
@@ -17,31 +20,83 @@
     </button>
   </section>
 
-  <section>
-    <h3>All folders</h3>
+  <section class="folder-section">
+    <header class="section-heading">
+      <h3>All folders</h3>
+      <button
+        type="button"
+        class="text-link"
+        *ngIf="(canManage$ | async)"
+        (click)="toggleFolderForm()"
+      >
+        {{ showFolderForm ? 'Cancel' : 'New folder' }}
+      </button>
+    </header>
+
+    <form
+      class="folder-form"
+      *ngIf="showFolderForm && (canManage$ | async)"
+      [formGroup]="folderForm"
+      (ngSubmit)="createFolder()"
+    >
+      <div class="row">
+        <label>
+          <span>Name</span>
+          <input type="text" formControlName="name" placeholder="e.g. Site handovers" />
+        </label>
+        <label>
+          <span>Icon</span>
+          <input type="text" formControlName="icon" maxlength="2" />
+        </label>
+      </div>
+      <label>
+        <span>Description</span>
+        <textarea
+          formControlName="description"
+          rows="2"
+          placeholder="What belongs in this folder?"
+        ></textarea>
+      </label>
+      <div class="row">
+        <label>
+          <span>Colour</span>
+          <input type="color" formControlName="colour" />
+        </label>
+        <button class="create" type="submit" [disabled]="folderForm.invalid || creatingFolder">
+          {{ creatingFolder ? 'Creating…' : 'Create folder' }}
+        </button>
+      </div>
+      <p class="form-message" *ngIf="creationMessage" [class.error]="creationError">
+        {{ creationMessage }}
+      </p>
+    </form>
+
     <div class="folder-list" *ngIf="(folders$ | async) as folders">
       <article class="folder" *ngFor="let folder of folders" (click)="selectFolder(folder)">
-        <div class="icon" [style.background]="folder.colour || '#5f6efc'">{{ folder.icon || '📁' }}</div>
+        <div class="icon" [style.background]="folder.colour || '#2f3a4c'">{{ folder.icon || '📁' }}</div>
         <div class="copy">
           <strong>{{ folder.name }}</strong>
-          <span>{{ folder.completedCount }}/{{ folder.articleCount }} completed</span>
+          <span>{{ folder.completedCount }}/{{ folder.articleCount }} complete</span>
         </div>
       </article>
     </div>
   </section>
 
-  <section *ngIf="(modules$ | async) as modules">
-    <h3>Training playlists</h3>
+  <section *ngIf="(modules$ | async) as modules" class="modules">
+    <header class="section-heading">
+      <h3>Training playlists</h3>
+      <span>Structured upskilling</span>
+    </header>
     <div class="module" *ngFor="let module of modules">
       <header>
         <span class="colour" [style.background]="module.colour || '#4ac6b7'"></span>
         <div>
           <strong>{{ module.title }}</strong>
-          <small>{{ module.articleIds.length }} lessons • {{ module.quizIds.length }} quizzes</small>
+          <small>{{ module.articleIds.length }} articles • {{ module.quizIds.length }} quizzes</small>
         </div>
       </header>
       <footer>
-        <button class="ghost" [routerLink]="['/kb/training', module.id]">Open module</button>
+        <a class="ghost" [routerLink]="['/kb/training', module.id]">Open module</a>
       </footer>
     </div>
   </section>

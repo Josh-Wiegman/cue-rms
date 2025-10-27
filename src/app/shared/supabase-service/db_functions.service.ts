@@ -224,6 +224,20 @@ export class dbFunctionsService {
     return data.folders as KnowledgeFolder[];
   }
 
+  async createKnowledgeFolder(
+    folder: Partial<KnowledgeFolder> & { name: string },
+  ): Promise<KnowledgeFolder> {
+    const { data, error } = await this.supabaseService.client.functions.invoke(
+      'knowledgebase-hub',
+      {
+        headers: this.orgHeaders({ 'x-query-type': 'upsert-folder' }),
+        body: { folder },
+      },
+    );
+    if (error) throw error;
+    return data.folder as KnowledgeFolder;
+  }
+
   async getTrainingModules(): Promise<TrainingModule[]> {
     const { data, error } = await this.supabaseService.client.functions.invoke(
       'knowledgebase-hub',
