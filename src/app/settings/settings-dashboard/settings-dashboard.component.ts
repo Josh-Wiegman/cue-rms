@@ -75,7 +75,9 @@ export class SettingsDashboardComponent implements OnInit {
 
     try {
       const formValue = this.createUserForm.getRawValue();
-      const invitation = this.buildInvitationDetails(formValue.invitationMessage);
+      const invitation = this.buildInvitationDetails(
+        formValue.invitationMessage,
+      );
       await this.authService.createUser({
         displayName: formValue.displayName,
         email: formValue.email,
@@ -102,11 +104,10 @@ export class SettingsDashboardComponent implements OnInit {
   private buildInvitationDetails(
     invitationMessage: string,
   ): UserInvitationDetails {
-    const organisation: OrganisationBranding =
-      this.organisationBranding ?? {
-        name: 'Company Name',
-        logoUrl: null,
-      };
+    const organisation: OrganisationBranding = this.organisationBranding ?? {
+      name: 'Company Name',
+      logoUrl: null,
+    };
 
     const admin = this.authService.currentUser;
     const invitedBy = admin
@@ -127,7 +128,7 @@ export class SettingsDashboardComponent implements OnInit {
 
   private getPasswordResetRedirectUrl(): string {
     if (isPlatformBrowser(this.platformId) && typeof window !== 'undefined') {
-      return `${window.location.origin}/reset-password`;
+      return `https://cue-rms.com/reset-password`;
     }
 
     return '/reset-password';
