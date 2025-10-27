@@ -18,26 +18,15 @@ import {
   TrainingProgress,
 } from '../../knowledge-base/knowledge-component/models/training.model';
 
-// Optional: wherever you store org state; adjust to your app.
-interface OrgProvider {
-  getCurrentOrgSlug(): string | null; // implement this somewhere in your app
-}
-
 @Injectable({ providedIn: 'root' })
 export class dbFunctionsService {
   private readonly authService = inject(AuthService);
   private readonly supabaseService = inject(SupabaseService);
-
-  // TODO wire this to your real provider (AuthService, OrgBrandingService, etc.)
-  private orgProvider: OrgProvider = {
-    getCurrentOrgSlug: () => {
-      return this.authService.orgSlug;
-    },
-  };
+  private readonly org = this.authService.orgSlug;
 
   private orgHeaders(extra?: Record<string, string>) {
     const headers: Record<string, string> = { ...(extra ?? {}) };
-    const slug = this.orgProvider.getCurrentOrgSlug();
+    const slug = this.org;
     if (slug) headers['x-org-slug'] = slug;
     return headers;
   }
@@ -218,7 +207,12 @@ export class dbFunctionsService {
   async getKnowledgeFolders(): Promise<KnowledgeFolder[]> {
     const { data, error } = await this.supabaseService.client.functions.invoke(
       'knowledgebase-hub',
-      { headers: this.orgHeaders({ 'x-query-type': 'folders' }) },
+      {
+        headers: this.orgHeaders({
+          'x-query-type': 'folders',
+          'x-org-slug': this.org,
+        }),
+      },
     );
     if (error) throw error;
     return data.folders as KnowledgeFolder[];
