@@ -1,9 +1,218 @@
 <ui-shell>
   <content>
-    <h1>Locations</h1>
+    <div class="dashboard">
+      <header class="dashboard__header">
+        <div>
+          <h1>Rental operations hub</h1>
+          <p>
+            Stay ahead of production bookings, warehouse prep, and service
+            activity across the rental house. Inspired by Current RMS and
+            Rentman workflows.
+          </p>
+        </div>
+        <div class="dashboard__header-meta">
+          <span class="dashboard__meta-label">Today</span>
+          <span class="dashboard__meta-value">
+            {{ today | date: 'EEEE, MMM d' }}
+          </span>
+        </div>
+      </header>
 
-    <ul>
-      <li *ngFor="let i of locations">{{ i.id }} + {{ i.notes }}</li>
-    </ul>
+      <section class="dashboard__stats">
+        <article class="stat-card" *ngFor="let stat of headlineStats">
+          <header>
+            <h2>{{ stat.value }}</h2>
+            <p>{{ stat.label }}</p>
+          </header>
+          <footer>
+            <span>{{ stat.helper }}</span>
+            <span
+              *ngIf="stat.trend as trend"
+              class="trend"
+              [class.trend--up]="trend.direction === 'up'"
+              [class.trend--down]="trend.direction === 'down'"
+            >
+              {{ trend.value }}
+            </span>
+          </footer>
+        </article>
+      </section>
+
+      <div class="dashboard__grid">
+        <section class="panel panel--wide">
+          <header class="panel__header">
+            <div>
+              <h2>This week's productions</h2>
+              <p>Key bookings and their current readiness state</p>
+            </div>
+            <button type="button" class="panel__action">Open projects</button>
+          </header>
+          <div class="booking-timeline">
+            <article
+              class="booking-card"
+              *ngFor="let booking of productionBookings"
+            >
+              <div class="booking-card__header">
+                <h3>{{ booking.production }}</h3>
+                <span
+                  class="badge"
+                  [attr.data-status]="booking.status.key"
+                  >{{ booking.status.label }}</span
+                >
+              </div>
+              <div class="booking-card__meta">
+                <span>{{ booking.client }}</span>
+                <span>{{ booking.location }}</span>
+              </div>
+              <div class="booking-card__footer">
+                <span>{{ booking.schedule }}</span>
+                <div class="booking-card__tags">
+                  <span *ngFor="let tag of booking.focus">{{ tag }}</span>
+                </div>
+              </div>
+            </article>
+          </div>
+        </section>
+
+        <section class="panel panel--half">
+          <header class="panel__header">
+            <div>
+              <h2>Warehouse prep queue</h2>
+              <p>Picklists progressing through pull, QA, and staging</p>
+            </div>
+            <button type="button" class="panel__action">View warehouse</button>
+          </header>
+          <ul class="list list--prep">
+            <li *ngFor="let queue of prepQueue">
+              <div>
+                <h3>{{ queue.picklist }}</h3>
+                <p class="list__subtitle">{{ queue.owner }}</p>
+              </div>
+              <div class="list__meta">
+                <span class="badge" [attr.data-stage]="queue.stage.key">
+                  {{ queue.stage.label }}
+                </span>
+                <span>{{ queue.due }}</span>
+                <div class="progress" role="progressbar" aria-hidden="true">
+                  <div
+                    class="progress__bar"
+                    [style.width.%]="queue.progress"
+                  ></div>
+                </div>
+              </div>
+            </li>
+          </ul>
+        </section>
+
+        <section class="panel panel--half">
+          <header class="panel__header">
+            <div>
+              <h2>Logistics & deliveries</h2>
+              <p>Track transport status and departure windows</p>
+            </div>
+            <button type="button" class="panel__action">
+              Dispatch board
+            </button>
+          </header>
+          <ul class="list list--logistics">
+            <li *ngFor="let logistics of logisticsBoard">
+              <div>
+                <h3>{{ logistics.route }}</h3>
+                <p class="list__subtitle">{{ logistics.vehicle }}</p>
+              </div>
+              <div class="list__meta">
+                <span class="badge" [attr.data-logistics]="logistics.status.key">
+                  {{ logistics.status.label }}
+                </span>
+                <span>{{ logistics.depart }}</span>
+                <span>{{ logistics.driver }}</span>
+              </div>
+            </li>
+          </ul>
+        </section>
+
+        <section class="panel panel--third">
+          <header class="panel__header">
+            <div>
+              <h2>Gear utilisation</h2>
+              <p>Allocation load against available stock</p>
+            </div>
+            <button type="button" class="panel__action">Open inventory</button>
+          </header>
+          <div class="utilization-table">
+            <div class="utilization-table__head">
+              <span>Category</span>
+              <span>Allocated</span>
+              <span>Utilisation</span>
+              <span>Conflicts</span>
+            </div>
+            <div
+              class="utilization-table__row"
+              *ngFor="let row of utilization"
+            >
+              <span class="utilization-table__category">{{ row.category }}</span>
+              <span>{{ row.allocated }} / {{ row.available }}</span>
+              <div class="utilization-table__meter">
+                <div
+                  class="utilization-table__meter-bar"
+                  [style.width.%]="(row.allocated / row.available) * 100"
+                ></div>
+                <span class="utilization-table__percent">
+                  {{ (row.allocated / row.available) * 100 | number: '1.0-0' }}%
+                </span>
+              </div>
+              <span class="utilization-table__conflicts">
+                {{ row.conflicts }}
+                <small>conflicts</small>
+              </span>
+            </div>
+          </div>
+        </section>
+
+        <section class="panel panel--third">
+          <header class="panel__header">
+            <div>
+              <h2>Service & repairs</h2>
+              <p>Bench status on priority equipment</p>
+            </div>
+            <button type="button" class="panel__action">Open service</button>
+          </header>
+          <ul class="list list--service">
+            <li *ngFor="let ticket of serviceTickets">
+              <div>
+                <h3>{{ ticket.item }}</h3>
+                <p class="list__subtitle">{{ ticket.issue }}</p>
+              </div>
+              <div class="list__meta">
+                <span class="badge" [attr.data-service]="ticket.status.key">
+                  {{ ticket.status.label }}
+                </span>
+                <span>{{ ticket.technician }}</span>
+                <span class="list__status">{{ ticket.eta }}</span>
+              </div>
+            </li>
+          </ul>
+        </section>
+
+        <section class="panel panel--third panel--notes">
+          <header class="panel__header">
+            <div>
+              <h2>Crew updates</h2>
+              <p>Shift notes shared across departments</p>
+            </div>
+            <button type="button" class="panel__action">Open activity</button>
+          </header>
+          <ul class="list list--notes">
+            <li *ngFor="let note of crewNotes">
+              <div>
+                <h3>{{ note.title }}</h3>
+                <p class="list__subtitle">{{ note.author }} • {{ note.timestamp }}</p>
+              </div>
+              <p class="list__description">{{ note.description }}</p>
+            </li>
+          </ul>
+        </section>
+      </div>
+    </div>
   </content>
 </ui-shell>
