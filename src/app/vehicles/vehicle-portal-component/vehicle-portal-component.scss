@@ -1,6 +1,6 @@
-@use '../../../style/colors.scss' as colors;
-@use '../../../style/effects.scss' as effects;
-@use '../../../style/buttons.scss' as buttons;
+@use "../../../style/colors.scss" as colors;
+@use "../../../style/effects.scss" as effects;
+@use "../../../style/buttons.scss" as buttons;
 
 .vehicle-portal {
   display: flex;
@@ -121,7 +121,10 @@
   background: white;
   color: colors.$secondary-color;
   box-shadow: none;
-  transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+  transition:
+    background 0.2s ease,
+    color 0.2s ease,
+    border-color 0.2s ease;
 
   &:hover {
     background: rgba(colors.$secondary-color, 0.12);
@@ -266,7 +269,9 @@
   cursor: pointer;
   font-size: 1rem;
   line-height: 1;
-  transition: background 0.2s ease, color 0.2s ease;
+  transition:
+    background 0.2s ease,
+    color 0.2s ease;
 
   &:hover {
     background: rgba(colors.$primary-color, 0.08);
@@ -472,7 +477,7 @@ table {
     color: #1b7f57;
   }
 
-  &.status-sold {
+  &.status-unavailable {
     background: rgba(255, 166, 0, 0.15);
     color: #b77900;
   }
@@ -560,7 +565,9 @@ table {
   cursor: pointer;
   font-size: 0.9rem;
   font-weight: 500;
-  transition: background 0.2s ease, color 0.2s ease;
+  transition:
+    background 0.2s ease,
+    color 0.2s ease;
 
   &:hover,
   &:focus-visible {
@@ -719,14 +726,16 @@ table {
   border-radius: 0.9rem;
   border: 1px dashed rgba(colors.$primary-color, 0.2);
   background: rgba(colors.$off-white, 0.7);
-  transition: border-color 0.2s ease, background 0.2s ease;
+  transition:
+    border-color 0.2s ease,
+    background 0.2s ease;
 
   &:hover {
     border-color: rgba(colors.$secondary-color, 0.35);
     background: rgba(colors.$off-white, 0.9);
   }
 
-  input[type='file'] {
+  input[type="file"] {
     cursor: pointer;
   }
 }

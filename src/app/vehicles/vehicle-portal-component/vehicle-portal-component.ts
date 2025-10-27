@@ -65,8 +65,10 @@ export class VehiclePortalComponent implements OnInit {
     () =>
       this.vehicles().filter((vehicle) => vehicle.status === 'active').length,
   );
-  readonly soldVehicles = computed(
-    () => this.vehicles().filter((vehicle) => vehicle.status === 'sold').length,
+  readonly unavailableVehicles = computed(
+    () =>
+      this.vehicles().filter((vehicle) => vehicle.status === 'unavailable')
+        .length,
   );
   readonly archivedVehicles = computed(
     () =>
