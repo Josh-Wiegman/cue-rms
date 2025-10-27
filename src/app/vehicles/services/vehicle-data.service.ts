@@ -10,7 +10,8 @@ import {
   VehicleStatus,
 } from '../models/vehicle.model';
 import { SupabaseService } from '../../shared/supabase-service/supabase.service';
-import { AuthService } from '../../auth/auth.service'; // adjust path if needed
+import { AuthService } from '../../auth/auth.service';
+import { PermissionLevel } from '../../auth/models/permission-level.model';
 import { parseVehicleCsv } from './vehicle-csv.parser';
 
 export interface VehicleInput {
@@ -83,7 +84,16 @@ interface MaintenanceMutationApiResponse {
 
 @Injectable({ providedIn: 'root' })
 export class VehicleDataService {
+  // ------- state -------
   private readonly vehiclesSubject = new BehaviorSubject<Vehicle[]>([]);
+  readonly vehicles$ = this.vehiclesSubject.asObservable();
+
+  private readonly authScopeSubject = new BehaviorSubject<'admin' | 'viewer'>(
+    'viewer',
+  );
+  readonly isAdmin$ = this.authScopeSubject.asObservable();
+
+  // ------- deps & config -------
   private readonly supabaseService = inject(SupabaseService);
   private readonly authService = inject(AuthService);
 
@@ -91,17 +101,15 @@ export class VehicleDataService {
   private readonly orgSlug = this.authService.orgSlug;
   private readonly anonKey = environment.supabaseKey ?? '';
 
-  // Will be computed from user on auth changes
-  private authLevel: 1 | 2 = 1;
-
   private authSub?: Subscription;
-  readonly vehicles$ = this.vehiclesSubject.asObservable();
 
   constructor() {
     this.baseUrl = this.buildBaseUrl();
 
+    // watch auth changes, compute scope, and (re)load vehicles
     this.authSub = this.authService.currentUser$.subscribe(async (user) => {
-      this.authLevel = this.computeAuthLevelFromUser(user);
+      const scope = this.computeScopeFromUser(user);
+      this.authScopeSubject.next(scope);
 
       if (user) {
         await this.refreshVehicles();
@@ -111,10 +119,23 @@ export class VehicleDataService {
     });
   }
 
-  private computeAuthLevelFromUser(user: any): 1 | 2 {
-    if (!user) return 1;
+  // ======================
+  // Admin gating helpers
+  // ======================
+  isAdmin(): boolean {
+    return this.authScopeSubject.value === 'admin';
+  }
 
-    const lvl =
+  private requireAdminOrThrow(): void {
+    if (!this.isAdmin()) {
+      throw new Error('You do not have permission to perform this action.');
+    }
+  }
+
+  private computeScopeFromUser(user: any): 'admin' | 'viewer' {
+    if (!user) return 'viewer';
+
+    const lvl: PermissionLevel | null =
       user.permissionLevel ??
       user.user_metadata?.permissionLevel ??
       user.app_metadata?.permissionLevel ??
@@ -124,13 +145,20 @@ export class VehicleDataService {
     const roles: string[] =
       user.roles ?? user.app_metadata?.roles ?? user.user_metadata?.roles ?? [];
 
-    const isAdminByNumber = lvl === 1 || lvl === 3;
+    const isAdminByLevel =
+      lvl === PermissionLevel.SuperAdmin ||
+      lvl === PermissionLevel.Administrator;
     const isAdminByRole = Array.isArray(roles) && roles.includes('admin');
 
-    return isAdminByNumber || isAdminByRole ? 2 : 1;
+    return isAdminByLevel || isAdminByRole ? 'admin' : 'viewer';
   }
 
+  // ======================
+  // Vehicles (mutations)
+  // ======================
   async addVehicle(payload: VehicleInput): Promise<Vehicle | null> {
+    this.requireAdminOrThrow();
+
     const maintenancePayload = (payload.maintenance ?? [])
       .filter((record) => this.hasMaintenanceContent(record))
       .map((record) => this.buildMaintenanceColumns(undefined, record));
@@ -146,9 +174,7 @@ export class VehicleDataService {
     const response = await this.request<VehicleMutationApiResponse>(
       'POST',
       '',
-      {
-        body: { ...columns, maintenance: maintenancePayload },
-      },
+      { body: { ...columns, maintenance: maintenancePayload } },
     );
 
     const createdId = response?.vehicle?.id;
@@ -162,6 +188,8 @@ export class VehicleDataService {
     id: string,
     updater: (vehicle: Vehicle) => Vehicle,
   ): Promise<Vehicle | null> {
+    this.requireAdminOrThrow();
+
     const existing = this.vehiclesSubject.value.find((v) => v.id === id);
     if (!existing) return null;
 
@@ -184,42 +212,47 @@ export class VehicleDataService {
   }
 
   async removeVehicle(id: string): Promise<void> {
+    this.requireAdminOrThrow();
+
     const response = await this.request<VehicleMutationApiResponse>(
       'DELETE',
       '',
-      {
-        body: { id },
-      },
+      { body: { id } },
     );
     if (!response?.ok) return;
     await this.refreshVehicles();
   }
 
   async markVehicleStatus(id: string, status: VehicleStatus): Promise<void> {
+    this.requireAdminOrThrow();
+
     const existing = this.vehiclesSubject.value.find((v) => v.id === id);
     if (!existing) return;
 
-    // Build a full column set from the current cached vehicle, but with the new status
     const columns = this.buildVehicleColumns({
       location: existing.location.trim(),
       name: existing.name.trim(),
       licensePlate: existing.licensePlate.trim().toUpperCase(),
       status,
-      details: existing.details, // already normalized by mapVehicle()
+      details: existing.details,
     });
 
     const response = await this.request<VehicleMutationApiResponse>('PUT', '', {
       body: { id, ...columns },
     });
-
     if (!response?.ok) return;
     await this.refreshVehicles();
   }
 
+  // ======================
+  // Maintenance (mutations)
+  // ======================
   async addMaintenanceRecord(
     vehicleId: string,
     record: Omit<MaintenanceRecord, 'id'>,
   ): Promise<MaintenanceRecord | null> {
+    this.requireAdminOrThrow();
+
     const payload = this.buildMaintenanceColumns(vehicleId, record);
     const response = await this.request<MaintenanceMutationApiResponse>(
       'POST',
@@ -239,6 +272,8 @@ export class VehicleDataService {
     recordId: string,
     updater: (record: MaintenanceRecord) => MaintenanceRecord,
   ): Promise<MaintenanceRecord | null> {
+    this.requireAdminOrThrow();
+
     const vehicle = this.vehiclesSubject.value.find((x) => x.id === vehicleId);
     const existing = vehicle?.maintenance.find((m) => m.id === recordId);
     if (!vehicle || !existing) return null;
@@ -264,6 +299,8 @@ export class VehicleDataService {
     vehicleId: string,
     recordId: string,
   ): Promise<void> {
+    this.requireAdminOrThrow();
+
     const response = await this.request<MaintenanceMutationApiResponse>(
       'DELETE',
       'maintenance',
@@ -277,6 +314,8 @@ export class VehicleDataService {
     vehicleId: string,
     recordId: string,
   ): Promise<void> {
+    this.requireAdminOrThrow();
+
     const vehicle = this.vehiclesSubject.value.find((x) => x.id === vehicleId);
     const record = vehicle?.maintenance.find((m) => m.id === recordId);
     if (!record) return;
@@ -291,13 +330,14 @@ export class VehicleDataService {
     await this.refreshVehicles();
   }
 
-  /* =======================
-     CSV IMPORT (updated)
-     ======================= */
+  // ======================
+  // CSV import (mutation)
+  // ======================
   async importCsv(file: File): Promise<CsvImportResult> {
+    this.requireAdminOrThrow();
+
     const text = await file.text();
 
-    // ⬇️ Use the new robust parser (handles blob-in-A1 + table)
     const { vehicles, skipped, errors } = parseVehicleCsv(text, file.name, {
       defaultLocation: 'Dunedin',
       defaultPurchaseDateToToday: true,
@@ -387,8 +427,9 @@ export class VehicleDataService {
     return { added, skipped, errors };
   }
 
-  /* ===== REST OF SERVICE (unchanged) ===== */
-
+  // ======================
+  // Reads / mapping
+  // ======================
   private async refreshVehicles(): Promise<void> {
     const response = await this.request<VehicleListApiResponse>('GET', '', {
       query: { include: 'maintenance' },
@@ -398,80 +439,6 @@ export class VehicleDataService {
     const rows = response.items ?? (response.vehicle ? [response.vehicle] : []);
     const vehicles = rows.map((row) => this.mapVehicle(row));
     this.vehiclesSubject.next(vehicles);
-  }
-
-  private buildBaseUrl(): string {
-    const root = environment.supabaseDataUrl.replace(/\/+$/, '');
-    return `${root}/functions/v1/vehicles`;
-  }
-
-  private async request<T extends { ok: boolean; error?: string }>(
-    method: 'GET' | 'POST' | 'PUT' | 'DELETE',
-    path: string,
-    options?: { query?: Record<string, unknown>; body?: unknown },
-  ): Promise<T | null> {
-    const base = this.baseUrl + (this.baseUrl.endsWith('/') ? '' : '/');
-    const safePath = (path ?? '').replace(/^\/+/, '');
-    const target = new URL(safePath, base);
-
-    const query = options?.query ?? {};
-    for (const [key, value] of Object.entries(query)) {
-      if (value === undefined || value === null) continue;
-      target.searchParams.set(key, String(value));
-    }
-
-    const { data } = await this.supabaseService.client.auth.getSession();
-    const accessToken = data.session?.access_token;
-
-    const headers: Record<string, string> = {
-      'x-auth-level': String(this.authLevel),
-      'x-org-slug': this.orgSlug,
-      apikey: this.anonKey,
-      authorization: `Bearer ${accessToken ?? this.anonKey}`,
-    };
-
-    let body: string | undefined;
-    if (options?.body !== undefined) {
-      headers['content-type'] = 'application/json';
-      body = JSON.stringify(options.body);
-    }
-
-    try {
-      const response = await fetch(target.toString(), {
-        method,
-        headers,
-        body,
-      });
-      if (!response.ok) {
-        let errorDetails: string | undefined;
-        try {
-          errorDetails = (await response.json())?.error;
-        } catch {
-          /* ignore */
-        }
-        console.error(
-          `Vehicle API ${method} ${target.pathname} failed`,
-          errorDetails ?? response.statusText,
-        );
-        return null;
-      }
-      if (response.status === 204) return { ok: true } as T;
-      const dataJson = (await response.json()) as T;
-      if (!dataJson.ok) {
-        console.error(
-          `Vehicle API ${method} ${target.pathname} returned error`,
-          dataJson.error,
-        );
-        return null;
-      }
-      return dataJson;
-    } catch (error) {
-      console.error(
-        `Vehicle API ${method} ${target.pathname} exception`,
-        error,
-      );
-      return null;
-    }
   }
 
   private mapVehicle(row: VehicleRow): Vehicle {
@@ -514,6 +481,87 @@ export class VehicleDataService {
     };
   }
 
+  // ======================
+  // HTTP wrapper
+  // ======================
+  private buildBaseUrl(): string {
+    const root = environment.supabaseDataUrl.replace(/\/+$/, '');
+    return `${root}/functions/v1/vehicles`;
+  }
+
+  private async request<T extends { ok: boolean; error?: string }>(
+    method: 'GET' | 'POST' | 'PUT' | 'DELETE',
+    path: string,
+    options?: { query?: Record<string, unknown>; body?: unknown },
+  ): Promise<T | null> {
+    const base = this.baseUrl + (this.baseUrl.endsWith('/') ? '' : '/');
+    const safePath = (path ?? '').replace(/^\/+/, '');
+    const target = new URL(safePath, base);
+
+    const query = options?.query ?? {};
+    for (const [key, value] of Object.entries(query)) {
+      if (value === undefined || value === null) continue;
+      target.searchParams.set(key, String(value));
+    }
+
+    const { data } = await this.supabaseService.client.auth.getSession();
+    const accessToken = data.session?.access_token;
+
+    const headers: Record<string, string> = {
+      'x-auth-scope': this.isAdmin() ? 'admin' : 'viewer', // for debugging/analytics only; server must verify JWT
+      'x-org-slug': this.orgSlug,
+      apikey: this.anonKey,
+      authorization: `Bearer ${accessToken ?? this.anonKey}`,
+    };
+
+    let body: string | undefined;
+    if (options?.body !== undefined) {
+      headers['content-type'] = 'application/json';
+      body = JSON.stringify(options.body);
+    }
+
+    try {
+      const response = await fetch(target.toString(), {
+        method,
+        headers,
+        body,
+      });
+      if (!response.ok) {
+        let errorDetails: string | undefined;
+        try {
+          errorDetails = (await response.json())?.error;
+        } catch {
+          /* ignore non-JSON */
+        }
+        console.error(
+          `Vehicle API ${method} ${target.pathname} failed`,
+          errorDetails ?? response.statusText,
+        );
+        return null;
+      }
+      if (response.status === 204) return { ok: true } as T;
+
+      const dataJson = (await response.json()) as T;
+      if (!dataJson.ok) {
+        console.error(
+          `Vehicle API ${method} ${target.pathname} returned error`,
+          dataJson.error,
+        );
+        return null;
+      }
+      return dataJson;
+    } catch (error) {
+      console.error(
+        `Vehicle API ${method} ${target.pathname} exception`,
+        error,
+      );
+      return null;
+    }
+  }
+
+  // ======================
+  // Utilities
+  // ======================
   private buildVehicleColumns(data: {
     location: string;
     name: string;
@@ -601,8 +649,7 @@ export class VehicleDataService {
     return JSON.parse(JSON.stringify(value)) as T;
   }
 
-  /* ------------ merge helpers (unchanged) ------------ */
-
+  // ----- merge helpers -----
   private mergeVehicle(target: Vehicle, source: Vehicle): void {
     if (source.name && source.name.length > target.name.length)
       target.name = source.name;

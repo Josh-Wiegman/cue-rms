@@ -1,4 +1,6 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { CommonModule } from '@angular/common';
+import { map } from 'rxjs/operators';
 import { Component, OnInit, PLATFORM_ID, inject } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 
@@ -64,9 +66,27 @@ export class SettingsDashboardComponent implements OnInit {
     return this.authService.canManageUsers(permissionLevel);
   }
 
-  protected async createUser(permissionLevel: PermissionLevel): Promise<void> {
-    if (!this.canManageUsers(permissionLevel) || this.createUserForm.invalid) {
+  protected readonly visiblePermissionLevels$ = this.user$.pipe(
+    map((user) =>
+      this.permissionLevels.filter((lvl) =>
+        this.authService.canGrantLevel(lvl),
+      ),
+    ),
+  );
+
+  protected async createUser(
+    _permissionLevelParamIsUnused: PermissionLevel,
+  ): Promise<void> {
+    if (this.createUserForm.invalid) {
       this.createUserForm.markAllAsTouched();
+      return;
+    }
+
+    const formValue = this.createUserForm.getRawValue();
+    const requestedLevel = formValue.permissionLevel;
+
+    if (!this.authService.canGrantLevel(requestedLevel)) {
+      this.saveMessage = 'You do not have permission to assign that level.';
       return;
     }
 
@@ -74,14 +94,13 @@ export class SettingsDashboardComponent implements OnInit {
     this.saveMessage = '';
 
     try {
-      const formValue = this.createUserForm.getRawValue();
       const invitation = this.buildInvitationDetails(
         formValue.invitationMessage,
       );
       await this.authService.createUser({
         displayName: formValue.displayName,
         email: formValue.email,
-        permissionLevel: formValue.permissionLevel,
+        permissionLevel: requestedLevel,
         invitation,
       });
       this.saveMessage = `Invitation email sent to ${formValue.email}.`;

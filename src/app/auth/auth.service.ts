@@ -230,6 +230,11 @@ export class AuthService {
     return user ? user.permissionLevel <= level : false;
   }
 
+  canGrantLevel(target: PermissionLevel): boolean {
+    const current = this.currentUser?.permissionLevel ?? PermissionLevel.Viewer;
+    return target >= current;
+  }
+
   canManageUsers(permissionLevel?: PermissionLevel): boolean {
     const level =
       permissionLevel ?? this.currentUserSubject.value?.permissionLevel;

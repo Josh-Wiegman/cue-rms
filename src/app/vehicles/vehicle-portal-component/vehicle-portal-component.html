@@ -9,7 +9,7 @@
           </p>
         </div>
         <div class="page-header__controls">
-          <div class="stats" *ngIf="authLevel() === 1">
+          <div class="stats" *ngIf="vehicleDataService.isAdmin$ | async">
             <div class="stat">
               <span class="stat__label">Active</span>
               <span class="stat__value">{{ activeVehicles() }}</span>
@@ -88,7 +88,7 @@
                   <th>Location</th>
                   <th>Status</th>
                   <th
-                    *ngIf="isAdmin()"
+                    *ngIf="vehicleDataService.isAdmin$ | async"
                     class="actions-column"
                     scope="col"
                     aria-label="Vehicle actions"
@@ -121,7 +121,10 @@
                       >{{ vehicle.status }}</span
                     >
                   </td>
-                  <td class="actions" *ngIf="isAdmin()">
+                  <td
+                    class="actions"
+                    *ngIf="vehicleDataService.isAdmin$ | async"
+                  >
                     <button
                       type="button"
                       class="icon-button icon-button--danger"
@@ -133,7 +136,12 @@
                   </td>
                 </tr>
                 <tr *ngIf="!vehicles().length">
-                  <td [attr.colspan]="isAdmin() ? 5 : 4" class="empty">
+                  <td
+                    [attr.colspan]="
+                      (vehicleDataService.isAdmin$ | async) ? 5 : 4
+                    "
+                    class="empty"
+                  >
                     No vehicles loaded yet.
                   </td>
                 </tr>
@@ -387,7 +395,7 @@
                           <button
                             type="button"
                             class="icon-button icon-button--danger"
-                            *ngIf="isAdmin()"
+                            *ngIf="vehicleDataService.isAdmin$ | async"
                             aria-label="Delete maintenance record"
                             (click)="handleDeleteMaintenance(record, $event)"
                           >
@@ -424,7 +432,7 @@
                           </button>
                           <button
                             type="button"
-                            *ngIf="isAdmin()"
+                            *ngIf="vehicleDataService.isAdmin$ | async"
                             (click)="toggleMaintenanceLock(record)"
                           >
                             {{ record.locked ? "Unlock" : "Lock" }}
@@ -432,7 +440,7 @@
                           <button
                             type="button"
                             class="icon-button icon-button--danger"
-                            *ngIf="isAdmin()"
+                            *ngIf="vehicleDataService.isAdmin$ | async"
                             aria-label="Delete maintenance record"
                             (click)="handleDeleteMaintenance(record, $event)"
                           >
