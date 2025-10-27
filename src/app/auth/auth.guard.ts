@@ -1,17 +1,20 @@
+// src/app/auth/auth.guard.ts
+import { Injectable } from '@angular/core';
 import {
-  ActivatedRouteSnapshot,
   CanActivate,
-  Router,
+  ActivatedRouteSnapshot,
   RouterStateSnapshot,
   UrlTree,
+  Router,
 } from '@angular/router';
-import { inject } from '@angular/core';
-
 import { AuthService } from './auth.service';
 
+@Injectable({ providedIn: 'root' })
 export class authGuard implements CanActivate {
-  private readonly authService = inject(AuthService);
-  private readonly router = inject(Router);
+  constructor(
+    private readonly authService: AuthService,
+    private readonly router: Router,
+  ) {}
 
   canActivate(
     route: ActivatedRouteSnapshot,
@@ -19,16 +22,11 @@ export class authGuard implements CanActivate {
   ): boolean | UrlTree {
     const path = state.url.split('?')[0];
 
-    if (path === '/reset-password') {
-      return true;
-    }
+    // Always allow the reset page, even if a recovery session exists
+    if (path === '/reset-password') return true;
 
-    const isAuthed = this.authService.isAuthenticated();
-
-    if (!isAuthed) {
-      return this.router.parseUrl('/login');
-    }
-
-    return true;
+    return this.authService.isAuthenticated()
+      ? true
+      : this.router.parseUrl('/login');
   }
 }
