@@ -86,34 +86,21 @@ export class dbFunctionsService {
     }
   }
 
-  async getNavigationItems(orgId: string) {
-    try {
-      const { data, error } =
-        await this.supabaseService.client.functions.invoke(
-          'navbar-availability', // or 'navigation-items' if you align the name
-          {
-            headers: {
-              'x-query-type': 'navigation-items',
-              'x-org-slug': 'x-org-slug',
-            },
-          },
-        );
+  // Frontend
+  async getNavigationItems(orgSlug: string) {
+    const { data, error } = await this.supabaseService.client.functions.invoke(
+      'navbar-availability',
+      {
+        headers: {
+          'x-query-type': 'navigation-items',
+          'x-org-slug': orgSlug, // <-- send the ACTUAL slug, e.g., 'cue' or 'rms-nz'
+        },
+        body: {},
+      },
+    );
 
-      if (error) throw error;
-
-      // data: { ok, org_id, schema, items }
-      return data.items as Array<{
-        id: string;
-        label: string;
-        path: string;
-        available: boolean;
-        sort_order: number;
-        is_deleted: boolean;
-      }>;
-    } catch (err) {
-      console.error('Error fetching navigation items:', err);
-      throw err;
-    }
+    if (error) throw error;
+    return data.items;
   }
 
   getItems() {
