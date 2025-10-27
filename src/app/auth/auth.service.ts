@@ -10,10 +10,11 @@ import {
   isPermissionLevel,
   PermissionLevel,
 } from './models/permission-level.model';
+import { environment } from '../../environments/environment';
 
-@Injectable({
-  providedIn: 'root',
-})
+const SLUG_RE = /^[a-z0-9](?:[a-z0-9-]{0,38}[a-z0-9])?$/;
+
+@Injectable({ providedIn: 'root' })
 export class AuthService {
   private readonly supabaseService = inject(SupabaseService);
   private readonly router = inject(Router);
@@ -21,22 +22,75 @@ export class AuthService {
 
   private readonly isBrowser = isPlatformBrowser(this.platformId);
   private readonly storageKey = 'cue-rms:session';
+  private readonly orgOverrideKey = 'cue-rms:org-override';
 
   private readonly currentUserSubject = new BehaviorSubject<AuthUser | null>(
     null,
   );
   readonly currentUser$ = this.currentUserSubject.asObservable();
 
+  private readonly orgSubject = new BehaviorSubject<string>('public');
+  readonly org$ = this.orgSubject.asObservable();
+
   private readonly sessionInitialization: Promise<void>;
 
   constructor() {
+    // Derive org early so components can use it on init
+    const slug = this.detectOrgSlug();
+    this.orgSubject.next(slug);
+
     this.sessionInitialization = this.restoreSession();
   }
 
-  private async restoreSession(): Promise<void> {
+  // ---------- ORG DETECTION ----------
+  private detectOrgSlug(): string {
     if (!this.isBrowser) {
-      return;
+      // SSR: safest default; server will still enforce via host
+      return environment.defaultOrgSlug ?? 'public';
     }
+
+    // 1) Dev override from query (?org=dev)
+    const url = new URL(window.location.href);
+    const qp = url.searchParams.get('org');
+    if (qp && SLUG_RE.test(qp)) {
+      localStorage.setItem(this.orgOverrideKey, qp);
+      return qp;
+    }
+
+    // 2) Dev override from localStorage
+    const saved = localStorage.getItem(this.orgOverrideKey);
+    if (saved && SLUG_RE.test(saved)) {
+      return saved;
+    }
+
+    // 3) Host-based slug (authoritative for display; server also uses this)
+    const base = (environment.baseTenantDomain ?? '').toLowerCase(); // e.g. 'cue-rms.com'
+    const host = window.location.hostname.toLowerCase();
+
+    if (base && host.endsWith(base)) {
+      // strip "<slug>." prefix from "<slug>.base"
+      let remainder = host.slice(0, host.length - base.length);
+      if (remainder.endsWith('.')) remainder = remainder.slice(0, -1);
+      if (!remainder) return environment.defaultOrgSlug ?? 'public';
+      const [slug] = remainder.split('.').filter(Boolean);
+      if (slug && SLUG_RE.test(slug)) return slug;
+    }
+
+    // 4) Fallback: non-tenant host (localhost, app link, etc.)
+    return environment.defaultOrgSlug ?? 'public';
+  }
+
+  /** Dev helper: allow setting a manual org (e.g. from a tenant switcher) */
+  setOrgForDev(slug: string) {
+    if (!this.isBrowser) return;
+    if (!SLUG_RE.test(slug)) throw new Error('Invalid org slug');
+    localStorage.setItem(this.orgOverrideKey, slug);
+    this.orgSubject.next(slug);
+  }
+
+  // ---------- SESSION ----------
+  private async restoreSession(): Promise<void> {
+    if (!this.isBrowser) return;
 
     try {
       const stored = localStorage.getItem(this.storageKey);
@@ -75,24 +129,25 @@ export class AuthService {
     return this.currentUserSubject.value;
   }
 
-  org = 'gravity'; // TODO: Make dynamic based on deployment
+  get orgSlug(): string {
+    return this.orgSubject.value;
+  }
 
+  // ---------- AUTH ----------
   async login(email: string, password: string): Promise<AuthUser> {
+    // Do NOT send orgSlug or x-org-slug — server infers from subdomain.
     const { data, error } = await this.supabaseService.client.functions.invoke(
       'user-management',
       {
-        body: {
-          action: 'login',
-          payload: { email, password, orgSlug: this.org },
-        },
-        headers: { 'x-org-slug': this.org }, // belt + braces
+        body: { action: 'login', payload: { email, password } },
+        // headers: { }  // no tenant headers for login; host is authoritative
       },
     );
 
     if (error) throw new Error(error.message ?? 'Login failed');
     if (!data?.user) throw new Error('Login failed: no user returned');
 
-    // If the function returns a session, apply it so supabase-js is logged in
+    // Apply session so supabase-js is logged in too
     if (data.session?.access_token && data.session?.refresh_token) {
       const { error: setErr } =
         await this.supabaseService.client.auth.setSession({
@@ -130,27 +185,28 @@ export class AuthService {
           invitedBy:
             payload.invitation.invitedBy ??
             (admin
-              ? {
-                  displayName: admin.displayName,
-                  email: admin.email,
-                }
+              ? { displayName: admin.displayName, email: admin.email }
               : undefined),
         }
       : undefined;
 
-    const requestPayload = {
-      email: payload.email,
-      displayName: payload.displayName,
-      permissionLevel: payload.permissionLevel,
-      invitation,
-      orgSlug: this.org,
-    };
-
+    // For invite/register:
+    // - If your Edge Function allows privileged overrides via header, you can include x-org-slug.
+    // - If you rely on host only, you can omit it (recommended).
     const { data, error } = await this.supabaseService.client.functions.invoke(
       'user-management',
       {
-        body: { action: 'invite', payload: requestPayload },
-        headers: { 'x-org-slug': this.org }, // belt + braces
+        body: {
+          action: 'invite',
+          payload: {
+            email: payload.email,
+            displayName: payload.displayName,
+            permissionLevel: payload.permissionLevel,
+            invitation,
+            // orgSlug intentionally omitted to avoid tenant_mismatch with host
+          },
+        },
+        // headers: { 'x-org-slug': this.orgSubject.value } // only if your privileged flow requires it
       },
     );
 
@@ -161,15 +217,11 @@ export class AuthService {
   async logout(): Promise<void> {
     try {
       const { error } = await this.supabaseService.client.auth.signOut();
-      if (error) {
-        console.error('Error signing out of Supabase', error);
-      }
+      if (error) console.error('Error signing out of Supabase', error);
     } finally {
       this.currentUserSubject.next(null);
       this.clearPersistedSession();
-      if (this.isBrowser) {
-        await this.router.navigate(['/login']);
-      }
+      if (this.isBrowser) await this.router.navigate(['/login']);
     }
   }
 
@@ -181,15 +233,11 @@ export class AuthService {
   canManageUsers(permissionLevel?: PermissionLevel): boolean {
     const level =
       permissionLevel ?? this.currentUserSubject.value?.permissionLevel;
-    if (level === undefined) {
-      return false;
-    }
-
-    // Only users with privilege level of Administrator (3) or higher (numerically lower)
-    // are allowed to manage users.
+    if (level === undefined) return false;
     return level <= PermissionLevel.Administrator;
   }
 
+  // ---------- PROFILE ----------
   private async loadUserProfile(supabaseUser: User): Promise<AuthUser> {
     const { data, error } = await this.supabaseService.client
       .from('user_profiles')
@@ -216,26 +264,17 @@ export class AuthService {
   }
 
   private parsePermissionLevel(value: unknown): PermissionLevel {
-    if (typeof value === 'number' && isPermissionLevel(value)) {
-      return value;
-    }
-
+    if (typeof value === 'number' && isPermissionLevel(value)) return value;
     return PermissionLevel.Viewer;
   }
 
   private persistUser(user: AuthUser): void {
-    if (!this.isBrowser) {
-      return;
-    }
-
+    if (!this.isBrowser) return;
     localStorage.setItem(this.storageKey, JSON.stringify(user));
   }
 
   private clearPersistedSession(): void {
-    if (!this.isBrowser) {
-      return;
-    }
-
+    if (!this.isBrowser) return;
     localStorage.removeItem(this.storageKey);
   }
 }

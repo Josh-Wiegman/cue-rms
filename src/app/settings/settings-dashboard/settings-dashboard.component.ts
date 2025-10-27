@@ -51,7 +51,7 @@ export class SettingsDashboardComponent implements OnInit {
 
   async ngOnInit(): Promise<void> {
     this.organisationBranding = await this.orgBrandingService.getBranding(
-      this.authService.org,
+      this.authService.orgSlug,
     );
   }
 

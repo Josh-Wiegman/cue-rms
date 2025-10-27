@@ -6,4 +6,6 @@ export const environment = {
   supabaseDataUrl_2:
     'https://haletmjesqynrjecjfie.supabase.co/functions/v1/database-access',
   vehiclePortalAdminSecret: 'development-admin-secret',
+  baseTenantDomain: 'cue-rms.com',
+  defaultOrgSlug: 'public',
 };
