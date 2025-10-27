@@ -134,11 +134,18 @@ dl dd {
 }
 
 .settings__form input,
-.settings__form select {
+.settings__form select,
+.settings__form textarea {
   border: 1px solid #cbd5f5;
   border-radius: 0.75rem;
   padding: 0.85rem 1rem;
   font-size: 1rem;
+}
+
+.settings__form textarea {
+  min-height: 120px;
+  resize: vertical;
+  font-family: inherit;
 }
 
 .settings__form button {
@@ -167,6 +174,12 @@ dl dd {
   margin: 0;
   font-weight: 600;
   color: #16a34a;
+}
+
+.settings__helper {
+  margin: 0;
+  color: #475569;
+  font-size: 0.95rem;
 }
 
 .settings__warning {
