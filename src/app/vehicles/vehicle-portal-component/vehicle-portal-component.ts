@@ -414,12 +414,14 @@ export class VehiclePortalComponent implements OnInit {
     };
 
     append(['Vehicle Details']);
-    append(['Field', 'Value']);
     append(['Name', vehicle.name]);
     append(['License plate', vehicle.licensePlate]);
     append(['Location', vehicle.location]);
     append(['Status', vehicle.status]);
-    append(['Purchase date', vehicle.details.purchaseDate]);
+    append([
+      'Purchase date',
+      new Date(vehicle.details.purchaseDate).toISOString().split('T')[0],
+    ]);
     append(['VIN', vehicle.details.vin]);
     append(['Engine', vehicle.details.engine]);
     append(['Chassis', vehicle.details.chassis]);
@@ -448,7 +450,7 @@ export class VehiclePortalComponent implements OnInit {
     } else {
       vehicle.maintenance.forEach((record) => {
         append([
-          record.date,
+          new Date(record.date).toISOString().split('T')[0],
           record.enteredBy,
           record.work,
           record.odoReading,

@@ -388,7 +388,10 @@ export class VehicleDataService {
     options?: { query?: Record<string, unknown>; body?: unknown },
   ): Promise<T | null> {
     const base = this.baseUrl + (this.baseUrl.endsWith('/') ? '' : '/');
-    const target = new URL(path ? `/${path}` : '', base);
+
+    // ❗️No leading slash here; also strip any accidental one.
+    const safePath = (path ?? '').replace(/^\/+/, '');
+    const target = new URL(safePath, base);
 
     const query = options?.query ?? {};
     for (const [key, value] of Object.entries(query)) {
@@ -396,12 +399,11 @@ export class VehicleDataService {
       target.searchParams.set(key, String(value));
     }
 
-    // 🔑 Build auth headers (as you did earlier)
     const { data } = await this.supabaseService.client.auth.getSession();
     const accessToken = data.session?.access_token;
 
     const headers: Record<string, string> = {
-      'x-auth-level': String(this.authLevel), // ← now auto-derived
+      'x-auth-level': String(this.authLevel),
       'x-org-slug': this.orgSlug,
       apikey: this.anonKey,
       authorization: `Bearer ${accessToken ?? this.anonKey}`,
@@ -424,7 +426,7 @@ export class VehicleDataService {
         try {
           errorDetails = (await response.json())?.error;
         } catch {
-          return null;
+          // keep null
         }
         console.error(
           `Vehicle API ${method} ${target.pathname} failed`,
