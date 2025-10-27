@@ -64,10 +64,19 @@ export class ResetPasswordComponent implements OnInit {
   }
 
   private async initialiseSessionFromLink(): Promise<void> {
+    // Read query (?...) and fragment (#...) — Supabase may use either
     const query = this.route.snapshot.queryParamMap;
-    const type = query.get('type');
-    const accessToken = query.get('access_token');
-    const refreshToken = query.get('refresh_token');
+    const fragRaw = this.route.snapshot.fragment ?? '';
+    const frag = new URLSearchParams(
+      fragRaw.startsWith('#') ? fragRaw.slice(1) : fragRaw,
+    );
+
+    const type = query.get('type') ?? frag.get('type');
+
+    const accessToken = query.get('access_token') ?? frag.get('access_token');
+
+    const refreshToken =
+      query.get('refresh_token') ?? frag.get('refresh_token');
 
     if (type !== 'recovery' || !accessToken || !refreshToken) {
       this.state = 'error';
@@ -90,9 +99,11 @@ export class ResetPasswordComponent implements OnInit {
       return;
     }
 
+    // Clean the URL (remove tokens), stay on same route
     await this.router.navigate([], {
       relativeTo: this.route,
       queryParams: {},
+      fragment: undefined,
       replaceUrl: true,
     });
 
