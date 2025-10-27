@@ -91,17 +91,19 @@
         <label>
           Requires article IDs
           <input
+            #reqArticles
             type="text"
             placeholder="article-1, article-2"
-            (change)="updateRequiresArticles(($event.target as HTMLInputElement).value)"
+            (change)="updateRequiresArticles(reqArticles.value)"
           />
         </label>
         <label>
           Requires quiz IDs
           <input
+            #reqQuizzes
             type="text"
             placeholder="quiz-1"
-            (change)="updateRequiresQuizzes(($event.target as HTMLInputElement).value)"
+            (change)="updateRequiresQuizzes(reqQuizzes.value)"
           />
         </label>
       </div>
