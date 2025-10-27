@@ -1,7 +1,7 @@
 // src/app/vehicles/data/vehicle-data.service.ts
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { Injectable, inject } from '@angular/core';
-import { BehaviorSubject, Subscription } from 'rxjs';
+import { BehaviorSubject, map, Subscription } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import {
   MaintenanceRecord,
@@ -91,7 +91,9 @@ export class VehicleDataService {
   private readonly authScopeSubject = new BehaviorSubject<'admin' | 'viewer'>(
     'viewer',
   );
-  readonly isAdmin$ = this.authScopeSubject.asObservable();
+  readonly isAdmin$ = this.authScopeSubject
+    .asObservable()
+    .pipe(map((scope) => scope === 'admin'));
 
   // ------- deps & config -------
   private readonly supabaseService = inject(SupabaseService);
