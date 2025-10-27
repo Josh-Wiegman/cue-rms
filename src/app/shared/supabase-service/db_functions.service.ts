@@ -87,13 +87,13 @@ export class dbFunctionsService {
   }
 
   // Frontend
-  async getNavigationItems(orgSlug: string) {
+  async getNavigationItems() {
     const { data, error } = await this.supabaseService.client.functions.invoke(
       'navbar-availability',
       {
         headers: {
           'x-query-type': 'navigation-items',
-          'x-org-slug': orgSlug, // <-- send the ACTUAL slug, e.g., 'cue' or 'rms-nz'
+          'x-org-slug': 'gravity', // <-- send the ACTUAL slug, e.g., 'cue' or 'rms-nz'
         },
         body: {},
       },
