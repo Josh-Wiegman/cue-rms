@@ -52,6 +52,21 @@ export class dbFunctionsService {
     }
   }
 
+  async getNavigationItems() {
+    const { data, error } = await this.supabaseService.client.functions.invoke(
+      'navbar-availability',
+      {
+        headers: {
+          'x-query-type': 'navigation-items',
+          'x-org-slug': 'gravity', // <-- send the ACTUAL slug, e.g., 'cue' or 'rms-nz'
+        },
+        body: {},
+      },
+    );
+    if (error) throw error;
+    return data as { isFavourite: boolean };
+  }
+
   // ─── Knowledge Base Calls ─────────────────────────────────────────────────
 
   async getArticlesWithMeta(): Promise<Article[]> {
@@ -65,7 +80,9 @@ export class dbFunctionsService {
     return data.articles as Article[];
   }
 
-  async getArticleDetail(idOrSlug: string): Promise<ArticleWithRelations | null> {
+  async getArticleDetail(
+    idOrSlug: string,
+  ): Promise<ArticleWithRelations | null> {
     const { data, error } = await this.supabaseService.client.functions.invoke(
       'knowledgebase-hub',
       {
@@ -88,7 +105,9 @@ export class dbFunctionsService {
     return data.articles as Article[];
   }
 
-  async upsertArticle(article: Partial<Article> & { id?: string }): Promise<Article> {
+  async upsertArticle(
+    article: Partial<Article> & { id?: string },
+  ): Promise<Article> {
     const { data, error } = await this.supabaseService.client.functions.invoke(
       'knowledgebase-hub',
       {
@@ -117,29 +136,42 @@ export class dbFunctionsService {
     return data.comment as ArticleComment;
   }
 
-  async toggleFavouriteArticle(articleId: string): Promise<{ isFavourite: boolean }> {
+  async toggleFavouriteArticle(
+    articleId: string,
+  ): Promise<{ isFavourite: boolean }> {
     const { data, error } = await this.supabaseService.client.functions.invoke(
       'knowledgebase-hub',
       {
-        headers: { 'x-query-type': 'toggle-favourite', 'x-article-id': articleId },
+        headers: {
+          'x-query-type': 'toggle-favourite',
+          'x-article-id': articleId,
+        },
       },
     );
     if (error) throw error;
     return data as { isFavourite: boolean };
   }
 
-  async acknowledgeArticle(articleId: string): Promise<{ acknowledgedAt: string }> {
+  async acknowledgeArticle(
+    articleId: string,
+  ): Promise<{ acknowledgedAt: string }> {
     const { data, error } = await this.supabaseService.client.functions.invoke(
       'knowledgebase-hub',
       {
-        headers: { 'x-query-type': 'acknowledge-article', 'x-article-id': articleId },
+        headers: {
+          'x-query-type': 'acknowledge-article',
+          'x-article-id': articleId,
+        },
       },
     );
     if (error) throw error;
     return data as { acknowledgedAt: string };
   }
 
-  async recordArticleProgress(articleId: string, completed: boolean): Promise<void> {
+  async recordArticleProgress(
+    articleId: string,
+    completed: boolean,
+  ): Promise<void> {
     const { error } = await this.supabaseService.client.functions.invoke(
       'knowledgebase-hub',
       {
@@ -150,7 +182,10 @@ export class dbFunctionsService {
     if (error) throw error;
   }
 
-  async uploadKnowledgeAttachment(articleId: string, file: File): Promise<ArticleAttachment> {
+  async uploadKnowledgeAttachment(
+    articleId: string,
+    file: File,
+  ): Promise<ArticleAttachment> {
     const form = new FormData();
     form.append('articleId', articleId);
     form.append('file', file);
