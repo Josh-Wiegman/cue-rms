@@ -7,9 +7,25 @@ export interface AuthUser {
   permissionLevel: PermissionLevel;
 }
 
+export interface OrganisationBranding {
+  name: string;
+  logoUrl: string | null;
+}
+
+export interface UserInvitationDetails {
+  sendEmail: boolean;
+  message?: string;
+  organisation: OrganisationBranding;
+  resetPasswordRedirect: string;
+  invitedBy?: {
+    displayName: string;
+    email: string;
+  };
+}
+
 export interface CreateUserRequest {
   email: string;
-  password: string;
   displayName: string;
   permissionLevel: PermissionLevel;
+  invitation?: UserInvitationDetails;
 }

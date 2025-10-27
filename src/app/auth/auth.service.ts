@@ -119,10 +119,37 @@ export class AuthService {
       throw new Error('You do not have permission to create users.');
     }
 
+    const admin = this.currentUserSubject.value;
+    const invitation = payload.invitation
+      ? {
+          ...payload.invitation,
+          organisation: {
+            name: payload.invitation.organisation.name,
+            logoUrl: payload.invitation.organisation.logoUrl ?? null,
+          },
+          invitedBy:
+            payload.invitation.invitedBy ??
+            (admin
+              ? {
+                  displayName: admin.displayName,
+                  email: admin.email,
+                }
+              : undefined),
+        }
+      : undefined;
+
+    const requestPayload = {
+      email: payload.email,
+      displayName: payload.displayName,
+      permissionLevel: payload.permissionLevel,
+      invitation,
+      orgSlug: this.org,
+    };
+
     const { data, error } = await this.supabaseService.client.functions.invoke(
       'user-management',
       {
-        body: { action: 'register', payload },
+        body: { action: 'invite', payload: requestPayload },
         headers: { 'x-org-slug': this.org }, // belt + braces
       },
     );
