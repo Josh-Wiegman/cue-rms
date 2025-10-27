@@ -16,65 +16,64 @@ import {
   TrainingProgress,
 } from '../../knowledge-base/knowledge-component/models/training.model';
 
-@Injectable({
-  providedIn: 'root',
-})
+@Injectable({ providedIn: 'root' })
 export class dbFunctionsService {
   constructor(private supabaseService: SupabaseService) {}
 
-  async getLocations() {
-    try {
-      const { data, error } =
-        await this.supabaseService.client.functions.invoke('database-access', {
-          headers: { 'x-query-type': 'locations' },
-        });
+  // ─── Consolidated: all calls go to 'knowledgebase-hub' ─────────────────────
 
-      if (error) throw error;
-      return data.data;
-    } catch (err) {
-      console.error('Error fetching functions:', err);
-      throw err;
-    }
+  async getLocations(orgSlug?: string) {
+    const { data, error } = await this.supabaseService.client.functions.invoke(
+      'knowledgebase-hub',
+      {
+        headers: {
+          'x-query-type': 'locations',
+          ...(orgSlug ? { 'x-org-slug': orgSlug } : {}),
+        },
+      },
+    );
+    if (error) throw error;
+    // Edge returns { data: [...] }
+    return data.data;
   }
 
-  async getJobsByDate(date: string) {
-    try {
-      const { data, error } =
-        await this.supabaseService.client.functions.invoke('database-access', {
-          headers: { 'x-query-type': 'jobs-by-date', 'x-query-date': date },
-        });
-
-      if (error) throw error;
-      return data.data;
-    } catch (err) {
-      console.error('Error fetching functions:', err);
-      throw err;
-    }
+  async getJobsByDate(date: string, orgSlug?: string) {
+    const { data, error } = await this.supabaseService.client.functions.invoke(
+      'knowledgebase-hub',
+      {
+        headers: {
+          'x-query-type': 'jobs-by-date',
+          'x-query-date': date,
+          ...(orgSlug ? { 'x-org-slug': orgSlug } : {}),
+        },
+      },
+    );
+    if (error) throw error;
+    // Edge returns { data: [...] }
+    return data.data;
   }
 
   async getNavigationItems(orgSlug: string) {
     const { data, error } = await this.supabaseService.client.functions.invoke(
-      'navbar-availability',
+      'knowledgebase-hub',
       {
         headers: {
           'x-query-type': 'navigation-items',
           'x-org-slug': orgSlug,
         },
-        body: {},
       },
     );
     if (error) throw error;
-    return data.items;
+    // Edge returns { items: [...] }
+    return data.items as { label: string; path: string; available?: boolean }[];
   }
 
-  // ─── Knowledge Base Calls ─────────────────────────────────────────────────
+  // ─── Knowledge Base Calls ──────────────────────────────────────────────────
 
   async getArticlesWithMeta(): Promise<Article[]> {
     const { data, error } = await this.supabaseService.client.functions.invoke(
       'knowledgebase-hub',
-      {
-        headers: { 'x-query-type': 'articles-with-meta' },
-      },
+      { headers: { 'x-query-type': 'articles-with-meta' } },
     );
     if (error) throw error;
     return data.articles as Article[];
@@ -90,7 +89,7 @@ export class dbFunctionsService {
       },
     );
     if (error) throw error;
-    return data.article ?? null;
+    return (data.article ?? null) as ArticleWithRelations | null;
   }
 
   async searchArticles(term: string): Promise<Article[]> {
@@ -127,10 +126,7 @@ export class dbFunctionsService {
   }): Promise<ArticleComment> {
     const { data, error } = await this.supabaseService.client.functions.invoke(
       'knowledgebase-hub',
-      {
-        headers: { 'x-query-type': 'create-comment' },
-        body: payload,
-      },
+      { headers: { 'x-query-type': 'create-comment' }, body: payload },
     );
     if (error) throw error;
     return data.comment as ArticleComment;
@@ -190,13 +186,11 @@ export class dbFunctionsService {
     form.append('articleId', articleId);
     form.append('file', file);
 
+    // NOTE: this still calls the separate edge function you pasted.
     const { data, error } = await this.supabaseService.client.functions.invoke(
       'knowledgebase-attachments',
-      {
-        body: form,
-      },
+      { body: form },
     );
-
     if (error) throw error;
     return data.attachment as ArticleAttachment;
   }
@@ -204,9 +198,7 @@ export class dbFunctionsService {
   async getKnowledgeFolders(): Promise<KnowledgeFolder[]> {
     const { data, error } = await this.supabaseService.client.functions.invoke(
       'knowledgebase-hub',
-      {
-        headers: { 'x-query-type': 'folders' },
-      },
+      { headers: { 'x-query-type': 'folders' } },
     );
     if (error) throw error;
     return data.folders as KnowledgeFolder[];
@@ -215,9 +207,7 @@ export class dbFunctionsService {
   async getTrainingModules(): Promise<TrainingModule[]> {
     const { data, error } = await this.supabaseService.client.functions.invoke(
       'knowledgebase-hub',
-      {
-        headers: { 'x-query-type': 'training-modules' },
-      },
+      { headers: { 'x-query-type': 'training-modules' } },
     );
     if (error) throw error;
     return data.modules as TrainingModule[];
@@ -226,12 +216,10 @@ export class dbFunctionsService {
   async getQuiz(quizId: string): Promise<ArticleQuiz | null> {
     const { data, error } = await this.supabaseService.client.functions.invoke(
       'knowledgebase-hub',
-      {
-        headers: { 'x-query-type': 'quiz-detail', 'x-quiz-id': quizId },
-      },
+      { headers: { 'x-query-type': 'quiz-detail', 'x-quiz-id': quizId } },
     );
     if (error) throw error;
-    return data.quiz ?? null;
+    return (data.quiz ?? null) as ArticleQuiz | null;
   }
 
   async submitQuizAttempt(
@@ -252,10 +240,7 @@ export class dbFunctionsService {
   async getTrainingProgress(userId?: string): Promise<TrainingProgress> {
     const { data, error } = await this.supabaseService.client.functions.invoke(
       'knowledgebase-hub',
-      {
-        headers: { 'x-query-type': 'training-progress' },
-        body: { userId },
-      },
+      { headers: { 'x-query-type': 'training-progress' }, body: { userId } },
     );
     if (error) throw error;
     return data.progress as TrainingProgress;
@@ -264,9 +249,7 @@ export class dbFunctionsService {
   async getKnowledgeAdminSnapshot(): Promise<AdminDashboardSnapshot> {
     const { data, error } = await this.supabaseService.client.functions.invoke(
       'knowledgebase-hub',
-      {
-        headers: { 'x-query-type': 'admin-snapshot' },
-      },
+      { headers: { 'x-query-type': 'admin-snapshot' } },
     );
     if (error) throw error;
     return data.snapshot as AdminDashboardSnapshot;
@@ -279,15 +262,12 @@ export class dbFunctionsService {
   }): Promise<void> {
     const { error } = await this.supabaseService.client.functions.invoke(
       'knowledgebase-hub',
-      {
-        headers: { 'x-query-type': 'release-articles' },
-        body: payload,
-      },
+      { headers: { 'x-query-type': 'release-articles' }, body: payload },
     );
     if (error) throw error;
   }
 
-  // Legacy inventory demo data (kept for backwards compat)
+  // Legacy demo
   getItems() {
     return [
       { id: 1, name: 'test 1', category: 'light', stock: 5, price: 50 },
