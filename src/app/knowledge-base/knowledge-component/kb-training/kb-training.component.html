@@ -1,0 +1,33 @@
+<div class="training-hero">
+  <h1>Training playlists</h1>
+  <p>Admin curated journeys unlock as employees complete required lessons.</p>
+</div>
+
+<div class="progress" *ngIf="(progress$ | async) as progress">
+  <div class="stat">
+    <strong>{{ progress.completedArticles.length }}</strong>
+    <span>Articles completed</span>
+  </div>
+  <div class="stat">
+    <strong>{{ progress.quizAttempts.length }}</strong>
+    <span>Quizzes attempted</span>
+  </div>
+  <div class="stat">
+    <strong>{{ progress.acknowledgedArticles.length }}</strong>
+    <span>Acknowledged</span>
+  </div>
+</div>
+
+<section class="module-list" *ngIf="(modules$ | async) as modules">
+  <article class="module" *ngFor="let module of modules; trackBy: trackModule">
+    <header>
+      <h2>{{ module.title }}</h2>
+      <span class="meta">{{ module.articleIds.length }} lessons • {{ module.quizIds.length }} quizzes</span>
+    </header>
+    <p>{{ module.description }}</p>
+    <footer>
+      <a [routerLink]="['/kb']" class="cta">View lessons</a>
+      <span class="due" *ngIf="module.dueDate">Due {{ module.dueDate | date: 'mediumDate' }}</span>
+    </footer>
+  </article>
+</section>

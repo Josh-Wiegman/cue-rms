@@ -1,27 +1,23 @@
-import { Component } from '@angular/core';
+import { AsyncPipe, CommonModule } from '@angular/common';
+import { Component, inject } from '@angular/core';
 import { RouterModule } from '@angular/router';
-import { CommonModule } from '@angular/common';
+import { KbService } from '../kb.service';
+import { KnowledgeFolder } from '../models/folder.model';
 
 @Component({
   selector: 'app-kb-sidebar',
   templateUrl: './kb-sidebar.component.html',
   styleUrls: ['./kb-sidebar.component.scss'],
-  imports: [RouterModule, CommonModule],
+  imports: [RouterModule, CommonModule, AsyncPipe],
 })
 export class KbSidebarComponent {
-  categories = [
-    {
-      name: 'Getting Started',
-      slug: 'getting-started',
-      children: [
-        { id: 'intro', title: 'Introduction' },
-        { id: 'setup', title: 'Setup Guide' },
-      ],
-    },
-    {
-      name: 'Deployment',
-      slug: 'deployment',
-      children: [{ id: 'hosting', title: 'Hosting Options' }],
-    },
-  ];
+  private readonly kb = inject(KbService);
+
+  readonly folders$ = this.kb.listFolders();
+  readonly favourites$ = this.kb.favouriteFolders();
+  readonly modules$ = this.kb.listTrainingModules();
+
+  selectFolder(folder: KnowledgeFolder) {
+    this.kb.updateFilters({ folderId: folder.id });
+  }
 }

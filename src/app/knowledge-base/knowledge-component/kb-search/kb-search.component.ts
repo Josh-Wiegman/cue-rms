@@ -1,34 +1,35 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-import { Component, OnDestroy, OnInit } from '@angular/core';
-import { FormControl } from '@angular/forms';
-import { CommonModule } from '@angular/common';
-import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
+import { Component, OnDestroy, OnInit, inject } from '@angular/core';
+import { FormControl, ReactiveFormsModule } from '@angular/forms';
+import { AsyncPipe, CommonModule } from '@angular/common';
+import { debounceTime, distinctUntilChanged, startWith, switchMap } from 'rxjs/operators';
+import { Observable, Subscription } from 'rxjs';
 import { KbService } from '../kb.service';
-import { ReactiveFormsModule } from '@angular/forms';
+import { Article } from '../models/article.model';
 
 @Component({
   selector: 'app-kb-search',
   templateUrl: './kb-search.component.html',
   styleUrls: ['./kb-search.component.scss'],
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, AsyncPipe],
 })
 export class KbSearchComponent implements OnInit, OnDestroy {
-  control = new FormControl('');
-  resultsCount = 0;
-  private sub: any;
-
-  constructor(private kb: KbService) {}
+  private readonly kb = inject(KbService);
+  control = new FormControl('', { nonNullable: true });
+  results$!: Observable<Article[]>;
+  private sub = new Subscription();
 
   ngOnInit() {
-    this.sub = this.control.valueChanges
-      .pipe(debounceTime(250), distinctUntilChanged())
-      .subscribe((q) => {
-        if (q !== null) {
-          this.kb
-            .search(q)
-            .subscribe((list) => (this.resultsCount = list.length));
-        }
-      });
+    this.sub.add(
+      this.control.valueChanges
+        .pipe(startWith(''), debounceTime(250), distinctUntilChanged())
+        .subscribe((term) => this.kb.updateFilters({ term })),
+    );
+    this.results$ = this.control.valueChanges.pipe(
+      startWith(''),
+      debounceTime(250),
+      distinctUntilChanged(),
+      switchMap((term) => this.kb.search(term ?? '')),
+    );
   }
 
   clear() {
@@ -36,6 +37,6 @@ export class KbSearchComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy() {
-    this.sub?.unsubscribe();
+    this.sub.unsubscribe();
   }
 }

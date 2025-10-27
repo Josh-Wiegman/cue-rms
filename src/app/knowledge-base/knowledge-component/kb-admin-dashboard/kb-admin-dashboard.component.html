@@ -1,0 +1,54 @@
+<ng-container *ngIf="snapshot$ | async as snapshot; else loading">
+  <div class="summary">
+    <div class="tile">
+      <strong>{{ snapshot.totalArticles }}</strong>
+      <span>Total articles</span>
+    </div>
+    <div class="tile">
+      <strong>{{ snapshot.totalDrafts }}</strong>
+      <span>Drafts awaiting review</span>
+    </div>
+    <div class="tile">
+      <strong>{{ snapshot.totalUsers }}</strong>
+      <span>Active users</span>
+    </div>
+    <div class="tile">
+      <strong>{{ snapshot.averageCompletion | number: '1.0-0' }}%</strong>
+      <span>Average completion</span>
+    </div>
+  </div>
+
+  <section class="panels">
+    <article class="panel">
+      <header><h2>Top performers</h2></header>
+      <ul>
+        <li *ngFor="let user of snapshot.topPerformers">
+          <span>{{ user.fullName }}</span>
+          <small>{{ user.completedArticles }}/{{ user.totalArticles }} • {{ user.averageScore | number: '1.0-0' }}%</small>
+        </li>
+      </ul>
+    </article>
+    <article class="panel">
+      <header><h2>Needs attention</h2></header>
+      <ul>
+        <li *ngFor="let user of snapshot.atRiskUsers">
+          <span>{{ user.fullName }}</span>
+          <small>{{ user.outstandingArticles }} outstanding • {{ user.outstandingQuizzes }} quizzes</small>
+        </li>
+      </ul>
+    </article>
+  </section>
+
+  <section class="modules">
+    <h2>Modules</h2>
+    <div class="module" *ngFor="let module of snapshot.modules">
+      <strong>{{ module.title }}</strong>
+      <span>{{ module.articleIds.length }} lessons</span>
+      <a [routerLink]="['/kb/training', module.id]">Open</a>
+    </div>
+  </section>
+</ng-container>
+
+<ng-template #loading>
+  <div class="loading">Loading dashboard…</div>
+</ng-template>

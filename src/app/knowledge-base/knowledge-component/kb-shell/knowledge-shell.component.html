@@ -1,5 +1,19 @@
-<app-kb-sidebar></app-kb-sidebar>
-<app-kb-search></app-kb-search>
-<div class="kb-content">
-  <router-outlet></router-outlet>
+<div class="knowledge-shell">
+  <aside class="sidebar-area">
+    <app-kb-sidebar></app-kb-sidebar>
+  </aside>
+
+  <div class="main-area">
+    <header class="top-bar">
+      <div class="title">
+        <h1>Knowledgebase</h1>
+        <p>Structured like Google Classroom – curated streams, folders and release gates.</p>
+      </div>
+      <app-kb-search></app-kb-search>
+    </header>
+
+    <div class="content">
+      <router-outlet></router-outlet>
+    </div>
+  </div>
 </div>

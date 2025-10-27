@@ -1,19 +1,140 @@
-<div class="kb-shell">
-  <main class="kb-main article">
-    <ng-container *ngIf="article$ | async as article">
-      <div *ngIf="!article" class="not-found">Article not found.</div>
+<ng-container *ngIf="article$ | async as article; else loading">
+  <div class="article-hero" [style.--hero-image]="article.heroImage || ''">
+    <div class="hero-backdrop"></div>
+    <div class="hero-content">
+      <div class="breadcrumbs">{{ article.folderId }} › {{ article.tags?.join(' / ') }}</div>
+      <h1>{{ article.title }}</h1>
+      <p>{{ article.excerpt }}</p>
+      <div class="hero-meta">
+        <span>Updated {{ article.updatedAt | date: 'medium' }}</span>
+        <span>Estimated {{ article.estimatedReadMins || 5 }} min read</span>
+        <button class="cta" (click)="toggleFavourite(article.id)">
+          {{ article.isFavourite ? '★ Favourite' : '☆ Save for later' }}
+        </button>
+        <button class="ghost" (click)="acknowledge(article.id)">Acknowledge</button>
+      </div>
+      <div class="ack" *ngIf="acknowledgementMessage">{{ acknowledgementMessage }}</div>
+    </div>
+  </div>
 
-      <article *ngIf="article">
-        <h1 class="title">{{ article.title }}</h1>
-        <div class="meta">Updated {{ article.updated_at | date: "medium" }}</div>
+  <div class="article-layout">
+    <main>
+      <section class="article-body" [innerHTML]="article.body"></section>
 
-        <!-- For simplicity, article.body is markdown-ish raw text. Replace with markdown renderer if desired -->
-        <div class="body" [innerHTML]="article.body"></div>
-
-        <div class="tags" *ngIf="article.tags?.length">
-          <span class="tag" *ngFor="let t of article.tags">{{ t }}</span>
+      <section class="attachments" *ngIf="article.attachments?.length">
+        <h2>Attachments</h2>
+        <div class="attachment-list">
+          <a
+            class="attachment"
+            *ngFor="let attachment of article.attachments"
+            [href]="attachment.url"
+            target="_blank"
+          >
+            <span class="icon">{{ attachment.type === 'file' ? '📄' : attachment.type === 'image' ? '🖼️' : '🔗' }}</span>
+            <div>
+              <strong>{{ attachment.name }}</strong>
+              <small>{{ attachment.size ? (attachment.size / 1024 | number: '1.0-0') + ' KB' : 'External link' }}</small>
+            </div>
+          </a>
         </div>
-      </article>
-    </ng-container>
-  </main>
-</div>
+      </section>
+
+      <section class="checklist" *ngIf="article.checklist?.length">
+        <h2>Checklist</h2>
+        <label *ngFor="let item of article.checklist">
+          <input type="checkbox" (change)="completeChecklist(article.id, item.id, $event.target.checked)" />
+          {{ item.label }}
+        </label>
+      </section>
+
+      <section class="quiz" *ngIf="quiz$ | async as quiz">
+        <h2>{{ quiz.title }}</h2>
+        <p>{{ quiz.summary }}</p>
+        <form (ngSubmit)="submitQuiz(article.id, quiz.id)" [formGroup]="quizForm">
+          <div class="quiz-question" *ngFor="let question of quiz.questions">
+            <h3>{{ question.prompt }}</h3>
+            <ng-container [ngSwitch]="question.type">
+              <ng-container *ngSwitchCase="'single'">
+                <label *ngFor="let choice of question.choices">
+                  <input type="radio" [value]="choice.id" [formControlName]="question.id" />
+                  {{ choice.label }}
+                </label>
+              </ng-container>
+              <ng-container *ngSwitchCase="'multi'">
+                <label *ngFor="let choice of question.choices">
+                  <input
+                    type="checkbox"
+                    [checked]="(quizForm.get(question.id)?.value || []).includes(choice.id)"
+                    (change)="toggleMulti(question.id, choice.id, $event.target.checked)"
+                  />
+                  {{ choice.label }}
+                </label>
+              </ng-container>
+              <ng-container *ngSwitchCase="'true_false'">
+                <select [formControlName]="question.id">
+                  <option [ngValue]="true">True</option>
+                  <option [ngValue]="false">False</option>
+                </select>
+              </ng-container>
+              <ng-container *ngSwitchCase="'short_text'">
+                <textarea [formControlName]="question.id"></textarea>
+              </ng-container>
+            </ng-container>
+          </div>
+          <button class="cta" type="submit" [disabled]="submittingQuiz">Submit quiz</button>
+        </form>
+      </section>
+
+      <section class="comments">
+        <h2>Discussion</h2>
+        <div class="comment" *ngFor="let comment of article.comments; trackBy: trackByComment">
+          <div class="avatar">{{ comment.authorName[0] }}</div>
+          <div class="comment-body">
+            <header>
+              <strong>{{ comment.authorName }}</strong>
+              <span>{{ comment.createdAt | date: 'short' }}</span>
+            </header>
+            <p>{{ comment.body }}</p>
+            <div class="mentions" *ngIf="comment.mentions?.length">
+              <span *ngFor="let mention of comment.mentions">@{{ mention }}</span>
+            </div>
+          </div>
+        </div>
+
+        <form class="comment-form" [formGroup]="commentForm" (ngSubmit)="submitComment(article)">
+          <textarea
+            placeholder="Share an insight, ask a question, or @mention a teammate"
+            formControlName="body"
+          ></textarea>
+          <button type="submit" class="cta" [disabled]="submittingComment">Post comment</button>
+        </form>
+      </section>
+    </main>
+
+    <aside>
+      <section class="release" *ngIf="article.releaseRule">
+        <h3>Release rules</h3>
+        <ul>
+          <li *ngIf="article.releaseRule.sequenceIndex as order">Part of sequence #{{ order + 1 }}</li>
+          <li *ngIf="article.releaseRule.requiresArticles?.length">
+            Requires {{ article.releaseRule.requiresArticles.length }} article(s) first
+          </li>
+          <li *ngIf="article.releaseRule.requiresQuizzes?.length">
+            Requires {{ article.releaseRule.requiresQuizzes.length }} quiz(es)
+          </li>
+        </ul>
+      </section>
+
+      <section class="related" *ngIf="(relatedArticles$ | async)?.length as total">
+        <h3>Related articles</h3>
+        <a *ngFor="let related of (relatedArticles$ | async)" [routerLink]="['/kb/article', related.slug || related.id]">
+          {{ related.title }}
+        </a>
+      </section>
+    </aside>
+  </div>
+</ng-container>
+
+<ng-template #loading>
+  <div class="loading">Loading article…</div>
+</ng-template>
