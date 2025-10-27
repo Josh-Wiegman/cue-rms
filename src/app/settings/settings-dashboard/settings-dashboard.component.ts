@@ -1,4 +1,4 @@
-import { CommonModule, isPlatformBrowser } from '@angular/common';
+import { CommonModule } from '@angular/common';
 import { Component, OnInit, PLATFORM_ID, inject } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 
@@ -127,12 +127,9 @@ export class SettingsDashboardComponent implements OnInit {
   }
 
   private getPasswordResetRedirectUrl(): string {
-    if (isPlatformBrowser(this.platformId) && typeof window !== 'undefined') {
-      return `https://cue-rms.com/reset-password`;
-    }
-
-    return '/reset-password';
+    return 'https://www.cue-rms.com/reset-password';
   }
+
   async logout(): Promise<void> {
     try {
       await this.authService.logout();
