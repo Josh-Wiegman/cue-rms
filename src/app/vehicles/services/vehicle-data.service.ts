@@ -196,9 +196,22 @@ export class VehicleDataService {
   }
 
   async markVehicleStatus(id: string, status: VehicleStatus): Promise<void> {
-    const response = await this.request<VehicleMutationApiResponse>('PUT', '', {
-      body: { id, status },
+    const existing = this.vehiclesSubject.value.find((v) => v.id === id);
+    if (!existing) return;
+
+    // Build a full column set from the current cached vehicle, but with the new status
+    const columns = this.buildVehicleColumns({
+      location: existing.location.trim(),
+      name: existing.name.trim(),
+      licensePlate: existing.licensePlate.trim().toUpperCase(),
+      status,
+      details: existing.details, // already normalized by mapVehicle()
     });
+
+    const response = await this.request<VehicleMutationApiResponse>('PUT', '', {
+      body: { id, ...columns },
+    });
+
     if (!response?.ok) return;
     await this.refreshVehicles();
   }
@@ -562,8 +575,8 @@ export class VehicleDataService {
 
   private normaliseStatus(value: string | null): VehicleStatus {
     switch (value) {
-      case 'sold':
-        return 'sold';
+      case 'unavailable':
+        return 'unavailable';
       case 'archived':
         return 'archived';
       default:
@@ -607,7 +620,7 @@ export class VehicleDataService {
         switch (status) {
           case 'archived':
             return 2;
-          case 'sold':
+          case 'unavailable':
             return 1;
           default:
             return 0;

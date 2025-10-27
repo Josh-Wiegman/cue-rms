@@ -15,8 +15,8 @@
               <span class="stat__value">{{ activeVehicles() }}</span>
             </div>
             <div class="stat">
-              <span class="stat__label">Sold</span>
-              <span class="stat__value">{{ soldVehicles() }}</span>
+              <span class="stat__label">Unavailable</span>
+              <span class="stat__value">{{ unavailableVehicles() }}</span>
             </div>
             <div class="stat">
               <span class="stat__label">Archived</span>
@@ -164,10 +164,10 @@
               </button>
               <button
                 type="button"
-                (click)="markVehicleStatus('sold')"
-                [disabled]="selectedVehicle()?.status === 'sold'"
+                (click)="markVehicleStatus('unavailable')"
+                [disabled]="selectedVehicle()?.status === 'unavailable'"
               >
-                Mark sold
+                Mark unavailable
               </button>
               <button
                 type="button"
@@ -676,13 +676,16 @@
               ×
             </button>
           </header>
-          <div class="notes-modal__body" *ngIf="maintenanceNotesRecord() as notesRecord">
+          <div
+            class="notes-modal__body"
+            *ngIf="maintenanceNotesRecord() as notesRecord"
+          >
             <ng-container *ngIf="!isEditingMaintenanceNotes(); else editNotes">
               <div class="notes-modal__content">
                 {{
                   notesRecord.notes
                     ? notesRecord.notes
-                    : 'No notes recorded for this maintenance entry.'
+                    : "No notes recorded for this maintenance entry."
                 }}
               </div>
               <div class="modal__actions notes-modal__actions">

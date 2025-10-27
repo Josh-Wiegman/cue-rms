@@ -1,4 +1,4 @@
-export type VehicleStatus = 'active' | 'sold' | 'archived';
+export type VehicleStatus = 'active' | 'unavailable' | 'archived';
 
 export interface VehicleDetails {
   purchaseDate: string;
