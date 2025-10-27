@@ -23,7 +23,7 @@ export class authGuard implements CanActivate {
     const path = state.url.split('?')[0];
 
     // Always allow the reset page, even if a recovery session exists
-    if (path === '/reset-password') return true;
+    if (path.startsWith('/reset-password')) return true;
 
     return this.authService.isAuthenticated()
       ? true
