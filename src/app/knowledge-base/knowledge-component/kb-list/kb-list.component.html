@@ -1,17 +1,17 @@
 <div class="kb-dashboard" *ngIf="(stats$ | async) as stats">
   <div class="hero">
     <div class="hero-copy">
-      <h1>Knowledge classroom</h1>
-      <p>Pick up right where you left off. Your learning journey continues below.</p>
+      <h1>Knowledge overview</h1>
+      <p>Review the latest documentation, release notes, and learning content for your teams.</p>
       <div class="hero-stats">
         <div class="pill"><strong>{{ stats.total }}</strong><span>Total articles</span></div>
         <div class="pill success"><strong>{{ stats.published }}</strong><span>Published</span></div>
-        <div class="pill warning"><strong>{{ stats.drafts }}</strong><span>Drafts</span></div>
+        <div class="pill warning"><strong>{{ stats.drafts }}</strong><span>In review</span></div>
         <div class="pill neutral"><strong>{{ stats.folders }}</strong><span>Folders</span></div>
       </div>
     </div>
     <div class="hero-actions">
-      <button class="cta" routerLink="/kb/submit-article">➕ New article</button>
+      <button class="cta" routerLink="/kb/submit-article">Create article</button>
       <button class="ghost" (click)="setViewMode('grid')">Grid</button>
       <button class="ghost" (click)="setViewMode('timeline')">Timeline</button>
       <button class="ghost" (click)="setViewMode('folders')">Folders</button>
