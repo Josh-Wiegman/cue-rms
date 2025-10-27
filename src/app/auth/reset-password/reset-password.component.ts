@@ -55,11 +55,11 @@ export class ResetPasswordComponent implements OnInit {
     return !!this.form.errors?.['passwordsMismatch'];
   }
 
-  protected get passwordControl(): FormControl<string> {
+  protected get passwordControl(): FormControl<string | null> {
     return this.form.controls.password;
   }
 
-  protected get confirmPasswordControl(): FormControl<string> {
+  protected get confirmPasswordControl(): FormControl<string | null> {
     return this.form.controls.confirmPassword;
   }
 
@@ -71,7 +71,8 @@ export class ResetPasswordComponent implements OnInit {
 
     if (type !== 'recovery' || !accessToken || !refreshToken) {
       this.state = 'error';
-      this.errorMessage = 'This password reset link is invalid or has expired. Please request a new one.';
+      this.errorMessage =
+        'This password reset link is invalid or has expired. Please request a new one.';
       return;
     }
 
@@ -83,7 +84,9 @@ export class ResetPasswordComponent implements OnInit {
     if (error) {
       console.error('Failed to apply password reset session', error);
       this.state = 'error';
-      this.errorMessage = error.message ?? 'Unable to validate the reset link. Please request a new one.';
+      this.errorMessage =
+        error.message ??
+        'Unable to validate the reset link. Please request a new one.';
       return;
     }
 
@@ -106,8 +109,10 @@ export class ResetPasswordComponent implements OnInit {
     this.errorMessage = '';
 
     try {
-      const password = this.form.controls.password.value;
-      const { error } = await this.supabaseService.client.auth.updateUser({ password });
+      const password = this.form.controls.password.value ?? undefined;
+      const { error } = await this.supabaseService.client.auth.updateUser({
+        password,
+      });
       if (error) {
         throw error;
       }
