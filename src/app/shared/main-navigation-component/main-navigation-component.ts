@@ -45,8 +45,8 @@ export class MainNavigationComponent implements OnInit {
       this.navItems = items
         .filter((item) => item && item.available !== false)
         .map((item) => ({
-          label: item.label ?? item.name ?? '',
-          path: item.path ?? item.route ?? '/',
+          label: item.label ?? item.label ?? '',
+          path: item.path ?? item.path ?? '/',
           available: item.available,
         }))
         .filter((item) => item.label && item.path);

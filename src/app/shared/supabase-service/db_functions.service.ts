@@ -90,7 +90,7 @@ export class dbFunctionsService {
     try {
       const { data, error } =
         await this.supabaseService.client.functions.invoke(
-          'navbar-availability',
+          'navbar-availability', // or 'navigation-items' if you align the name
           {
             headers: {
               'x-query-type': 'navigation-items',
@@ -100,7 +100,16 @@ export class dbFunctionsService {
         );
 
       if (error) throw error;
-      return data.data;
+
+      // data: { ok, org_id, schema, items }
+      return data.items as Array<{
+        id: string;
+        label: string;
+        path: string;
+        available: boolean;
+        sort_order: number;
+        is_deleted: boolean;
+      }>;
     } catch (err) {
       console.error('Error fetching navigation items:', err);
       throw err;
