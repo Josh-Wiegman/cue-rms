@@ -16,6 +16,7 @@ export const routes: Routes = [
       import('./auth/reset-password/reset-password.component').then(
         (m) => m.ResetPasswordComponent,
       ),
+    canActivate: [authGuard],
     title: 'Reset password | Cue RMS',
   },
   {

@@ -1,19 +1,34 @@
-import { CanActivateFn, Router } from '@angular/router';
+import {
+  ActivatedRouteSnapshot,
+  CanActivate,
+  Router,
+  RouterStateSnapshot,
+  UrlTree,
+} from '@angular/router';
 import { inject } from '@angular/core';
 
 import { AuthService } from './auth.service';
 
-export const authGuard: CanActivateFn = async (_route, state) => {
-  const authService = inject(AuthService);
-  const router = inject(Router);
+export class authGuard implements CanActivate {
+  private readonly authService = inject(AuthService);
+  private readonly router = inject(Router);
 
-  await authService.ensureSessionResolved();
+  canActivate(
+    route: ActivatedRouteSnapshot,
+    state: RouterStateSnapshot,
+  ): boolean | UrlTree {
+    const path = state.url.split('?')[0];
 
-  if (authService.isAuthenticated()) {
+    if (path === '/reset-password') {
+      return true;
+    }
+
+    const isAuthed = this.authService.isAuthenticated();
+
+    if (!isAuthed) {
+      return this.router.parseUrl('/login');
+    }
+
     return true;
   }
-
-  return router.createUrlTree(['/login'], {
-    queryParams: state.url ? { redirectTo: state.url } : undefined,
-  });
-};
+}
