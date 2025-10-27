@@ -24,7 +24,7 @@ export class MainNavigationComponent implements OnInit {
   private readonly orgBrandingService = inject(OrgBrandingService);
 
   // Use your existing slug/id (header x-org-slug aligns with this)
-  private readonly organisationId = 'gravity';
+  private readonly organisationId = this.authService.orgSlug;
 
   protected readonly user$ = this.authService.currentUser$;
   protected navItems: NavigationItem[] = [];
