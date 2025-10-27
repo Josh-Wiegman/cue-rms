@@ -11,6 +11,14 @@ export const routes: Routes = [
     title: 'Sign in | Cue RMS',
   },
   {
+    path: 'reset-password',
+    loadComponent: () =>
+      import('./auth/reset-password/reset-password.component').then(
+        (m) => m.ResetPasswordComponent,
+      ),
+    title: 'Reset password | Cue RMS',
+  },
+  {
     path: '',
     component: HomeComponent,
     title: 'Cue RMS',
