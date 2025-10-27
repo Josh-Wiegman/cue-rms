@@ -46,9 +46,12 @@ export class VehiclePortalComponent implements OnInit {
   authLevel = signal<1 | 2>(2);
   showAddVehicleModal = signal(false);
   showAddMaintenanceModal = signal(false);
+  showMaintenanceNotesModal = signal(false);
   showAddVehicleMenu = signal(false);
   showImportCsvModal = signal(false);
   selectedCsvFile = signal<File | null>(null);
+  maintenanceNotesRecord = signal<MaintenanceRecord | null>(null);
+  isEditingMaintenanceNotes = signal(false);
 
   readonly isAdmin = computed(() => this.authLevel() === 1);
   readonly selectedVehicle = computed(
@@ -126,6 +129,7 @@ export class VehiclePortalComponent implements OnInit {
     cost: [''],
     notes: [''],
   });
+  readonly maintenanceNotesControl = this.fb.nonNullable.control('');
 
   csvImportSummary = signal<string>('');
   csvImportErrors = signal<string[]>([]);
@@ -217,6 +221,61 @@ export class VehiclePortalComponent implements OnInit {
 
   closeAddVehicleModal(): void {
     this.showAddVehicleModal.set(false);
+  }
+
+  openMaintenanceNotesModal(record: MaintenanceRecord): void {
+    this.maintenanceNotesRecord.set(record);
+    this.maintenanceNotesControl.setValue(record.notes ?? '');
+    this.isEditingMaintenanceNotes.set(false);
+    this.showMaintenanceNotesModal.set(true);
+  }
+
+  closeMaintenanceNotesModal(): void {
+    this.showMaintenanceNotesModal.set(false);
+    this.isEditingMaintenanceNotes.set(false);
+    this.maintenanceNotesRecord.set(null);
+  }
+
+  startMaintenanceNotesEdit(): void {
+    const record = this.maintenanceNotesRecord();
+    if (!record || !this.canEditMaintenance(record)) {
+      return;
+    }
+    this.maintenanceNotesControl.setValue(record.notes ?? '');
+    this.isEditingMaintenanceNotes.set(true);
+  }
+
+  cancelMaintenanceNotesEdit(): void {
+    const record = this.maintenanceNotesRecord();
+    if (!record) {
+      return;
+    }
+    this.maintenanceNotesControl.setValue(record.notes ?? '');
+    this.isEditingMaintenanceNotes.set(false);
+  }
+
+  async saveMaintenanceNotesEdit(): Promise<void> {
+    const record = this.maintenanceNotesRecord();
+    const vehicle = this.selectedVehicle();
+    if (!record || !vehicle) {
+      return;
+    }
+
+    const updated = await this.vehicleData.updateMaintenanceRecord(
+      vehicle.id,
+      record.id,
+      (current) => ({
+        ...current,
+        notes: this.maintenanceNotesControl.value,
+      }),
+    );
+
+    if (updated) {
+      this.maintenanceNotesRecord.set(updated);
+      this.maintenanceNotesControl.setValue(updated.notes ?? '');
+    }
+
+    this.isEditingMaintenanceNotes.set(false);
   }
 
   handleAddVehicleClick(): void {
