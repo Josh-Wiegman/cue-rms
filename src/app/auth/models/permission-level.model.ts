@@ -17,3 +17,5 @@ export const PERMISSION_LEVELS: PermissionLevel[] = [
 export function isPermissionLevel(value: number): value is PermissionLevel {
   return PERMISSION_LEVELS.includes(value as PermissionLevel);
 }
+
+export const rankOf = (lvl: PermissionLevel) => Number(lvl);

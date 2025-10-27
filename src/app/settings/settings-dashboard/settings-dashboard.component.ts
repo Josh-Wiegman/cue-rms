@@ -50,6 +50,7 @@ export class SettingsDashboardComponent implements OnInit {
   protected isSavingUser = false;
   protected saveMessage = '';
   protected organisationBranding: OrganisationBranding | null = null;
+  compareLevels = (a: PermissionLevel, b: PermissionLevel) => a === b;
 
   async ngOnInit(): Promise<void> {
     this.organisationBranding = await this.orgBrandingService.getBranding(
@@ -67,9 +68,9 @@ export class SettingsDashboardComponent implements OnInit {
   }
 
   protected readonly visiblePermissionLevels$ = this.user$.pipe(
-    map((user) =>
+    map((me) =>
       this.permissionLevels.filter((lvl) =>
-        this.authService.canGrantLevel(lvl),
+        me ? this.authService.canGrantLevel(lvl) : false,
       ),
     ),
   );

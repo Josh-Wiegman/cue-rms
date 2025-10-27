@@ -98,10 +98,10 @@
 
             <label>
               <span>Permission level</span>
-              <select formControlName="permissionLevel">
+              <select formControlName="permissionLevel" [compareWith]="compareLevels"> … </select>
                 <option
-                  *ngFor="let lvl of visiblePermissionLevels$ | async"
-                  [value]="lvl"
+                  *ngFor="let lvl of (visiblePermissionLevels$ | async) ?? []"
+                  [ngValue]="lvl"
                 >
                   {{ permissionLabels[lvl] }}
                 </option>
