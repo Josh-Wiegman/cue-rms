@@ -1,4 +1,9 @@
-export type ArticleStatus = 'draft' | 'pending_review' | 'scheduled' | 'published' | 'archived';
+export type ArticleStatus =
+  | 'draft'
+  | 'pending_review'
+  | 'scheduled'
+  | 'published'
+  | 'archived';
 
 export interface ArticleAttachment {
   id: string;

@@ -1,7 +1,12 @@
 import { Component, OnDestroy, OnInit, inject } from '@angular/core';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { AsyncPipe, CommonModule } from '@angular/common';
-import { debounceTime, distinctUntilChanged, startWith, switchMap } from 'rxjs/operators';
+import {
+  debounceTime,
+  distinctUntilChanged,
+  startWith,
+  switchMap,
+} from 'rxjs/operators';
 import { Observable, Subscription } from 'rxjs';
 import { KbService } from '../kb.service';
 import { Article } from '../models/article.model';

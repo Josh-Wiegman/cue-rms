@@ -1,4 +1,10 @@
-import { AsyncPipe, CommonModule, DatePipe, NgFor, NgIf } from '@angular/common';
+import {
+  AsyncPipe,
+  CommonModule,
+  DatePipe,
+  NgFor,
+  NgIf,
+} from '@angular/common';
 import { Component, inject } from '@angular/core';
 import { RouterModule } from '@angular/router';
 import { combineLatest, map } from 'rxjs';
@@ -46,6 +52,8 @@ export class KbListComponent {
   toggleFavourite(article: Article, event: Event) {
     event.preventDefault();
     event.stopPropagation();
-    this.kb.toggleFavourite(article.id).subscribe((res) => (article.isFavourite = res.isFavourite));
+    this.kb
+      .toggleFavourite(article.id)
+      .subscribe((res) => (article.isFavourite = res.isFavourite));
   }
 }

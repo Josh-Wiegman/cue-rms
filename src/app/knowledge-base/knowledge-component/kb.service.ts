@@ -1,5 +1,12 @@
 import { Injectable } from '@angular/core';
-import { BehaviorSubject, Observable, combineLatest, from, map, of } from 'rxjs';
+import {
+  BehaviorSubject,
+  Observable,
+  combineLatest,
+  from,
+  map,
+  of,
+} from 'rxjs';
 import {
   Article,
   ArticleAttachment,
@@ -30,7 +37,9 @@ interface KnowledgeBaseFilters {
   providedIn: 'root',
 })
 export class KbService {
-  private readonly filters$ = new BehaviorSubject<KnowledgeBaseFilters>({ status: 'published' });
+  private readonly filters$ = new BehaviorSubject<KnowledgeBaseFilters>({
+    status: 'published',
+  });
   private readonly viewMode$ = new BehaviorSubject<KnowledgeViewMode>('grid');
 
   constructor(private dbFunctions: dbFunctionsService) {}
@@ -44,7 +53,11 @@ export class KbService {
     ]).pipe(
       map(([articles, filters]) =>
         articles.filter((article) => {
-          if (filters.status && filters.status !== 'all' && article.status !== filters.status) {
+          if (
+            filters.status &&
+            filters.status !== 'all' &&
+            article.status !== filters.status
+          ) {
             return false;
           }
           if (filters.folderId && article.folderId !== filters.folderId) {
@@ -57,7 +70,8 @@ export class KbService {
             return false;
           }
           if (filters.term) {
-            const haystack = `${article.title} ${article.excerpt ?? ''} ${(article.tags ?? []).join(' ')}`.toLowerCase();
+            const haystack =
+              `${article.title} ${article.excerpt ?? ''} ${(article.tags ?? []).join(' ')}`.toLowerCase();
             if (!haystack.includes(filters.term.toLowerCase())) {
               return false;
             }
@@ -79,8 +93,12 @@ export class KbService {
     return from(this.dbFunctions.searchArticles(term));
   }
 
-  upsertArticle(article: Partial<Article> & { id?: string }): Observable<Article> {
-    return from(this.dbFunctions.upsertArticle(article)).pipe(map((data) => data as Article));
+  upsertArticle(
+    article: Partial<Article> & { id?: string },
+  ): Observable<Article> {
+    return from(this.dbFunctions.upsertArticle(article)).pipe(
+      map((data) => data as Article),
+    );
   }
 
   updateFilters(filters: Partial<KnowledgeBaseFilters>): void {
@@ -99,9 +117,19 @@ export class KbService {
     return this.viewMode$.asObservable();
   }
 
-  addComment(articleId: string, body: string, mentions: string[], parentId?: string): Observable<ArticleComment> {
+  addComment(
+    articleId: string,
+    body: string,
+    mentions: string[],
+    parentId?: string,
+  ): Observable<ArticleComment> {
     return from(
-      this.dbFunctions.createArticleComment({ articleId, body, mentions, parentId }),
+      this.dbFunctions.createArticleComment({
+        articleId,
+        body,
+        mentions,
+        parentId,
+      }),
     ).pipe(map((data) => data as ArticleComment));
   }
 
@@ -109,15 +137,23 @@ export class KbService {
     return from(this.dbFunctions.toggleFavouriteArticle(articleId));
   }
 
-  acknowledgeArticle(articleId: string): Observable<{ acknowledgedAt: string }> {
+  acknowledgeArticle(
+    articleId: string,
+  ): Observable<{ acknowledgedAt: string }> {
     return from(this.dbFunctions.acknowledgeArticle(articleId));
   }
 
-  recordArticleProgress(articleId: string, completed: boolean): Observable<void> {
+  recordArticleProgress(
+    articleId: string,
+    completed: boolean,
+  ): Observable<void> {
     return from(this.dbFunctions.recordArticleProgress(articleId, completed));
   }
 
-  uploadAttachment(articleId: string, file: File): Observable<ArticleAttachment> {
+  uploadAttachment(
+    articleId: string,
+    file: File,
+  ): Observable<ArticleAttachment> {
     return from(this.dbFunctions.uploadKnowledgeAttachment(articleId, file));
   }
 
@@ -131,7 +167,9 @@ export class KbService {
 
   favouriteFolders(): Observable<KnowledgeFolder[]> {
     return this.listFolders().pipe(
-      map((folders) => folders.filter((folder) => (folder.progressPct ?? 0) >= 80)),
+      map((folders) =>
+        folders.filter((folder) => (folder.progressPct ?? 0) >= 80),
+      ),
     );
   }
 
@@ -144,10 +182,15 @@ export class KbService {
   }
 
   getQuiz(quizId: string): Observable<ArticleQuiz | undefined> {
-    return from(this.dbFunctions.getQuiz(quizId)).pipe(map((data) => data ?? undefined));
+    return from(this.dbFunctions.getQuiz(quizId)).pipe(
+      map((data) => data ?? undefined),
+    );
   }
 
-  submitQuizAttempt(quizId: string, responses: Record<string, unknown>): Observable<QuizAttempt> {
+  submitQuizAttempt(
+    quizId: string,
+    responses: Record<string, unknown>,
+  ): Observable<QuizAttempt> {
     return from(this.dbFunctions.submitQuizAttempt(quizId, responses));
   }
 
@@ -159,7 +202,11 @@ export class KbService {
     return from(this.dbFunctions.getKnowledgeAdminSnapshot());
   }
 
-  releaseArticles(payload: { articleIds: string[]; userIds?: string[]; teamIds?: string[] }): Observable<void> {
+  releaseArticles(payload: {
+    articleIds: string[];
+    userIds?: string[];
+    teamIds?: string[];
+  }): Observable<void> {
     return from(this.dbFunctions.releaseArticles(payload));
   }
 
@@ -167,9 +214,9 @@ export class KbService {
 
   // region ─── Helpers ───────────────────────────────────────────────────────
 
-  buildTimelineGrouping(articles$: Observable<Article[]>): Observable<
-    { period: string; articles: Article[] }[]
-  > {
+  buildTimelineGrouping(
+    articles$: Observable<Article[]>,
+  ): Observable<{ period: string; articles: Article[] }[]> {
     return articles$.pipe(
       map((articles) =>
         Object.entries(

@@ -13,7 +13,7 @@
       <span>Active users</span>
     </div>
     <div class="tile">
-      <strong>{{ snapshot.averageCompletion | number: '1.0-0' }}%</strong>
+      <strong>{{ snapshot.averageCompletion | number: "1.0-0" }}%</strong>
       <span>Average completion</span>
     </div>
   </div>
@@ -24,7 +24,10 @@
       <ul>
         <li *ngFor="let user of snapshot.topPerformers">
           <span>{{ user.fullName }}</span>
-          <small>{{ user.completedArticles }}/{{ user.totalArticles }} • {{ user.averageScore | number: '1.0-0' }}%</small>
+          <small
+            >{{ user.completedArticles }}/{{ user.totalArticles }} •
+            {{ user.averageScore | number: "1.0-0" }}%</small
+          >
         </li>
       </ul>
     </article>
@@ -33,7 +36,10 @@
       <ul>
         <li *ngFor="let user of snapshot.atRiskUsers">
           <span>{{ user.fullName }}</span>
-          <small>{{ user.outstandingArticles }} outstanding • {{ user.outstandingQuizzes }} quizzes</small>
+          <small
+            >{{ user.outstandingArticles }} outstanding •
+            {{ user.outstandingQuizzes }} quizzes</small
+          >
         </li>
       </ul>
     </article>

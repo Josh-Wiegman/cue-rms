@@ -1,4 +1,10 @@
-import { AsyncPipe, CommonModule, DatePipe, NgFor, NgIf } from '@angular/common';
+import {
+  AsyncPipe,
+  CommonModule,
+  DatePipe,
+  NgFor,
+  NgIf,
+} from '@angular/common';
 import { Component, inject } from '@angular/core';
 import { RouterModule } from '@angular/router';
 import { KbService } from '../kb.service';

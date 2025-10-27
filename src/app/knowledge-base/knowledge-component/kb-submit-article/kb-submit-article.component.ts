@@ -1,6 +1,12 @@
 import { AsyncPipe, CommonModule } from '@angular/common';
 import { Component, inject } from '@angular/core';
-import { FormArray, FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import {
+  FormArray,
+  FormBuilder,
+  FormGroup,
+  ReactiveFormsModule,
+  Validators,
+} from '@angular/forms';
 import { Router } from '@angular/router';
 import { KbService } from '../kb.service';
 import { lastValueFrom } from 'rxjs';
@@ -76,7 +82,9 @@ export class KbSubmitArticleComponent {
     this.form.patchValue({ slug: articleId });
     for (const file of Array.from(files)) {
       try {
-        const attachment = await lastValueFrom(this.kb.uploadAttachment(articleId, file));
+        const attachment = await lastValueFrom(
+          this.kb.uploadAttachment(articleId, file),
+        );
         if (attachment) {
           this.attachments.push(attachment);
         }
@@ -84,6 +92,31 @@ export class KbSubmitArticleComponent {
         console.error(err);
       }
     }
+  }
+
+  private parseIdList(input: string): string[] {
+    return input
+      .split(',')
+      .map((v) => v.trim())
+      .filter((v) => !!v);
+  }
+
+  updateRequiresArticles(raw: string): void {
+    const requiresArticles = this.parseIdList(raw);
+    this.form.get('releaseRule')?.patchValue({
+      requiresArticles,
+      sequenceIndex: null,
+      requiresQuizzes: null,
+    });
+  }
+
+  updateRequiresQuizzes(raw: string): void {
+    const requiresQuizzes = this.parseIdList(raw);
+    this.form.get('releaseRule')?.patchValue({
+      requiresQuizzes,
+      sequenceIndex: null,
+      requiresArticles: null,
+    });
   }
 
   submit(): void {
@@ -112,7 +145,11 @@ export class KbSubmitArticleComponent {
     this.kb.upsertArticle(article).subscribe({
       next: () => {
         this.message = '✅ Article saved. It will appear once approved.';
-        this.form.reset({ status: 'pending_review', estimatedReadMins: 10, tags: [] });
+        this.form.reset({
+          status: 'pending_review',
+          estimatedReadMins: 10,
+          tags: [],
+        });
         this.attachments = [];
         this.isSubmitting = false;
         this.router.navigate(['/kb']);
@@ -133,11 +170,13 @@ export class KbSubmitArticleComponent {
       this.slugManuallyEdited = true;
     });
 
-    titleControl
-      ?.valueChanges.pipe(debounceTime(200), distinctUntilChanged())
+    titleControl?.valueChanges
+      .pipe(debounceTime(200), distinctUntilChanged())
       .subscribe((title) => {
         if (!this.slugManuallyEdited) {
-          slugControl?.setValue(this.slugify(title ?? ''), { emitEvent: false });
+          slugControl?.setValue(this.slugify(title ?? ''), {
+            emitEvent: false,
+          });
         }
       });
   }

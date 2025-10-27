@@ -1,17 +1,43 @@
-import { AsyncPipe, CommonModule, DatePipe, NgFor, NgIf, NgSwitch, NgSwitchCase } from '@angular/common';
+import {
+  AsyncPipe,
+  CommonModule,
+  DatePipe,
+  NgFor,
+  NgIf,
+  NgSwitch,
+  NgSwitchCase,
+} from '@angular/common';
 import { Component, inject } from '@angular/core';
-import { FormBuilder, FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import {
+  FormBuilder,
+  FormControl,
+  FormGroup,
+  ReactiveFormsModule,
+  Validators,
+} from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 import { map, switchMap } from 'rxjs';
 import { KbService } from '../kb.service';
 import { ArticleComment, ArticleWithRelations } from '../models/article.model';
+import { RouterLink, RouterLinkActive } from '@angular/router';
 
 @Component({
   selector: 'app-kb-article',
   standalone: true,
   templateUrl: './kb-article.component.html',
   styleUrls: ['./kb-article.component.scss'],
-  imports: [CommonModule, AsyncPipe, DatePipe, ReactiveFormsModule, NgFor, NgIf, NgSwitch, NgSwitchCase],
+  imports: [
+    CommonModule,
+    AsyncPipe,
+    DatePipe,
+    ReactiveFormsModule,
+    RouterLink,
+    RouterLinkActive,
+    NgFor,
+    NgIf,
+    NgSwitch,
+    NgSwitchCase,
+  ],
 })
 export class KbArticleComponent {
   private readonly route = inject(ActivatedRoute);
@@ -22,7 +48,9 @@ export class KbArticleComponent {
     switchMap((params) => this.kb.get(params.get('id') ?? '')),
   );
 
-  readonly relatedArticles$ = this.article$.pipe(map((article) => article?.relatedArticles ?? []));
+  readonly relatedArticles$ = this.article$.pipe(
+    map((article) => article?.relatedArticles ?? []),
+  );
   readonly quiz$ = this.article$.pipe(map((article) => article?.quiz));
 
   readonly commentForm = this.fb.group({
@@ -100,7 +128,8 @@ export class KbArticleComponent {
     this.kb.submitQuizAttempt(quizId, this.quizForm.value).subscribe({
       next: () => {
         this.submittingQuiz = false;
-        this.acknowledgementMessage = 'Quiz submitted! We will let your admin know you passed.';
+        this.acknowledgementMessage =
+          'Quiz submitted! We will let your admin know you passed.';
       },
       error: () => {
         this.submittingQuiz = false;

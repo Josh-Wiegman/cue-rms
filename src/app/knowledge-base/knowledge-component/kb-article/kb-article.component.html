@@ -112,15 +112,15 @@
     </main>
 
     <aside>
-      <section class="release" *ngIf="article.releaseRule">
+      <section class="release" *ngIf="article.releaseRule as rule">
         <h3>Release rules</h3>
         <ul>
-          <li *ngIf="article.releaseRule.sequenceIndex as order">Part of sequence #{{ order + 1 }}</li>
-          <li *ngIf="article.releaseRule.requiresArticles?.length">
-            Requires {{ article.releaseRule.requiresArticles.length }} article(s) first
+          <li *ngIf="rule.sequenceIndex as order">Part of sequence #{{ order + 1 }}</li>
+          <li *ngIf="rule.requiresArticles?.length as acount">
+            Requires {{ acount }} article(s) first
           </li>
-          <li *ngIf="article.releaseRule.requiresQuizzes?.length">
-            Requires {{ article.releaseRule.requiresQuizzes.length }} quiz(es)
+          <li *ngIf="rule.requiresQuizzes?.length as qcount">
+            Requires {{ qcount }} quiz(es)
           </li>
         </ul>
       </section>

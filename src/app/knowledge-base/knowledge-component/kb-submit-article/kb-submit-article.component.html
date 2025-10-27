@@ -1,22 +1,42 @@
 <div class="submit-shell">
   <header>
     <h1>Create a classroom-ready article</h1>
-    <p>Craft content, attach resources, and define release gates so onboarding flows step-by-step.</p>
+    <p>
+      Craft content, attach resources, and define release gates so onboarding
+      flows step-by-step.
+    </p>
   </header>
 
   <form [formGroup]="form" (ngSubmit)="submit()" class="article-form">
     <section>
-      <label>Title<input type="text" formControlName="title" placeholder="Article headline" /></label>
+      <label
+        >Title<input
+          type="text"
+          formControlName="title"
+          placeholder="Article headline"
+      /></label>
       <div class="field-grid">
-        <label>Slug<input type="text" formControlName="slug" placeholder="unique-article-slug" /></label>
+        <label
+          >Slug<input
+            type="text"
+            formControlName="slug"
+            placeholder="unique-article-slug"
+        /></label>
         <label>
           Folder
           <select formControlName="folderId">
             <option value="" disabled>Select folder</option>
-            <option *ngFor="let folder of (folders$ | async)" [value]="folder.id">{{ folder.name }}</option>
+            <option *ngFor="let folder of folders$ | async" [value]="folder.id">
+              {{ folder.name }}
+            </option>
           </select>
         </label>
-        <label>Estimated mins<input type="number" formControlName="estimatedReadMins" min="1" /></label>
+        <label
+          >Estimated mins<input
+            type="number"
+            formControlName="estimatedReadMins"
+            min="1"
+        /></label>
         <label>
           Status
           <select formControlName="status">
@@ -27,11 +47,19 @@
           </select>
         </label>
       </div>
-      <label>Hero image URL<input type="url" formControlName="heroImage" /></label>
-      <label>Excerpt<textarea formControlName="excerpt" rows="3"></textarea></label>
+      <label
+        >Hero image URL<input type="url" formControlName="heroImage"
+      /></label>
+      <label
+        >Excerpt<textarea formControlName="excerpt" rows="3"></textarea>
+      </label>
       <label>
         Body
-        <textarea formControlName="body" rows="10" placeholder="Use markdown or HTML to structure your lesson"></textarea>
+        <textarea
+          formControlName="body"
+          rows="10"
+          placeholder="Use markdown or HTML to structure your lesson"
+        ></textarea>
       </label>
       <label>
         Tags
@@ -48,20 +76,24 @@
       <h2>Attachments</h2>
       <input type="file" multiple (change)="onAttachmentSelected($event)" />
       <ul>
-        <li *ngFor="let attachment of attachments">{{ attachment.name }} — {{ attachment.type }}</li>
+        <li *ngFor="let attachment of attachments">
+          {{ attachment.name }} — {{ attachment.type }}
+        </li>
       </ul>
     </section>
 
     <section>
       <h2>Release sequencing</h2>
       <div [formGroup]="form.controls['releaseRule']">
-        <label>Sequence order<input type="number" formControlName="sequenceIndex" /></label>
+        <label
+          >Sequence order<input type="number" formControlName="sequenceIndex"
+        /></label>
         <label>
           Requires article IDs
           <input
             type="text"
             placeholder="article-1, article-2"
-            (change)="form.controls['releaseRule'].patchValue({ requiresArticles: ($event.target as HTMLInputElement).value.split(',').map(v => v.trim()).filter(Boolean) })"
+            (change)="updateRequiresArticles(($event.target as HTMLInputElement).value)"
           />
         </label>
         <label>
@@ -69,7 +101,7 @@
           <input
             type="text"
             placeholder="quiz-1"
-            (change)="form.controls['releaseRule'].patchValue({ requiresQuizzes: ($event.target as HTMLInputElement).value.split(',').map(v => v.trim()).filter(Boolean) })"
+            (change)="updateRequiresQuizzes(($event.target as HTMLInputElement).value)"
           />
         </label>
       </div>
@@ -77,17 +109,29 @@
 
     <section>
       <h2>Checklist</h2>
-      <button type="button" class="ghost" (click)="addChecklistItem()">+ Add item</button>
+      <button type="button" class="ghost" (click)="addChecklistItem()">
+        + Add item
+      </button>
       <div class="checklist" formArrayName="checklist">
-        <div class="item" *ngFor="let group of checklist.controls; let i = index" [formGroupName]="i">
-          <input type="text" formControlName="label" placeholder="e.g. Confirm equipment tagged" />
+        <div
+          class="item"
+          *ngFor="let group of checklist.controls; let i = index"
+          [formGroupName]="i"
+        >
+          <input
+            type="text"
+            formControlName="label"
+            placeholder="e.g. Confirm equipment tagged"
+          />
           <button type="button" (click)="removeChecklistItem(i)">Remove</button>
         </div>
       </div>
     </section>
 
     <footer>
-      <button type="submit" [disabled]="form.invalid || isSubmitting">{{ isSubmitting ? 'Saving…' : 'Save article' }}</button>
+      <button type="submit" [disabled]="form.invalid || isSubmitting">
+        {{ isSubmitting ? "Saving…" : "Save article" }}
+      </button>
       <span class="message" *ngIf="message">{{ message }}</span>
     </footer>
   </form>
