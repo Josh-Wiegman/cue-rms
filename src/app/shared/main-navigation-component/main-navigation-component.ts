@@ -44,7 +44,9 @@ export class MainNavigationComponent implements OnInit {
 
   private async loadNavigationItems(): Promise<void> {
     try {
-      const response = await this.dbFunctions.getNavigationItems();
+      const response = await this.dbFunctions.getNavigationItems(
+        this.organisationId,
+      );
       const items = Array.isArray(response) ? response : [];
 
       this.navItems = items

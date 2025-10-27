@@ -88,7 +88,7 @@ export class VehicleDataService {
   private readonly authService = inject(AuthService);
 
   private readonly baseUrl: string;
-  private readonly orgSlug = 'gravity';
+  private readonly orgSlug = this.authService.orgSlug;
   private readonly anonKey = environment.supabaseKey ?? '';
 
   // Will be computed from user on auth changes
