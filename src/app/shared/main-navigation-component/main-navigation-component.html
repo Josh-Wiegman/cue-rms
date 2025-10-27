@@ -1,6 +1,18 @@
 <nav>
   <div class="nav__brand">
-    <h1><a routerLink="/">Company Name</a></h1>
+    <a class="brand">
+      <img
+        *ngIf="orgLogoUrl; else nameOnly"
+        [src]="orgLogoUrl"
+        [alt]="orgName || 'Company Logo'"
+        class="brand__logo"
+        width="256"
+        height="64"
+        loading="eager"
+        decoding="async"
+      />
+      <ng-template #nameOnly>{{ orgName || "Company Name" }}</ng-template>
+    </a>
   </div>
 
   <ul class="nav__links">
