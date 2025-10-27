@@ -1,5 +1,5 @@
-import { CommonModule } from '@angular/common';
-import { Component, inject } from '@angular/core';
+import { CommonModule, isPlatformBrowser } from '@angular/common';
+import { Component, OnInit, PLATFORM_ID, inject } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 
 import { UiShellComponent } from '../../shared/ui-shell/ui-shell-component';
@@ -8,6 +8,11 @@ import {
   PERMISSION_LEVELS,
   PermissionLevel,
 } from '../../auth/models/permission-level.model';
+import {
+  OrganisationBranding,
+  UserInvitationDetails,
+} from '../../auth/models/auth-user.model';
+import { OrgBrandingService } from '../../shared/org-branding/org-branding.service';
 
 @Component({
   selector: 'app-settings-dashboard',
@@ -16,9 +21,11 @@ import {
   templateUrl: './settings-dashboard.component.html',
   styleUrl: './settings-dashboard.component.scss',
 })
-export class SettingsDashboardComponent {
+export class SettingsDashboardComponent implements OnInit {
   private readonly authService = inject(AuthService);
   private readonly fb = inject(FormBuilder);
+  private readonly orgBrandingService = inject(OrgBrandingService);
+  private readonly platformId = inject(PLATFORM_ID);
 
   protected readonly user$ = this.authService.currentUser$;
   protected readonly permissionLevels = PERMISSION_LEVELS;
@@ -34,12 +41,19 @@ export class SettingsDashboardComponent {
   protected readonly createUserForm = this.fb.nonNullable.group({
     displayName: ['', [Validators.required, Validators.minLength(2)]],
     email: ['', [Validators.required, Validators.email]],
-    password: ['', [Validators.required, Validators.minLength(8)]],
     permissionLevel: [PermissionLevel.Staff, [Validators.required]],
+    invitationMessage: [''],
   });
 
   protected isSavingUser = false;
   protected saveMessage = '';
+  protected organisationBranding: OrganisationBranding | null = null;
+
+  async ngOnInit(): Promise<void> {
+    this.organisationBranding = await this.orgBrandingService.getBranding(
+      this.authService.org,
+    );
+  }
 
   protected switchSection(section: 'profile' | 'add-user'): void {
     this.activeSection = section;
@@ -61,18 +75,19 @@ export class SettingsDashboardComponent {
 
     try {
       const formValue = this.createUserForm.getRawValue();
+      const invitation = this.buildInvitationDetails(formValue.invitationMessage);
       await this.authService.createUser({
         displayName: formValue.displayName,
         email: formValue.email,
-        password: formValue.password,
         permissionLevel: formValue.permissionLevel,
+        invitation,
       });
-      this.saveMessage = 'User invitation sent successfully.';
+      this.saveMessage = `Invitation email sent to ${formValue.email}.`;
       this.createUserForm.reset({
         displayName: '',
         email: '',
-        password: '',
         permissionLevel: PermissionLevel.Staff,
+        invitationMessage: '',
       });
     } catch (error) {
       this.saveMessage =
@@ -82,6 +97,40 @@ export class SettingsDashboardComponent {
     } finally {
       this.isSavingUser = false;
     }
+  }
+
+  private buildInvitationDetails(
+    invitationMessage: string,
+  ): UserInvitationDetails {
+    const organisation: OrganisationBranding =
+      this.organisationBranding ?? {
+        name: 'Company Name',
+        logoUrl: null,
+      };
+
+    const admin = this.authService.currentUser;
+    const invitedBy = admin
+      ? {
+          displayName: admin.displayName,
+          email: admin.email,
+        }
+      : undefined;
+
+    return {
+      sendEmail: true,
+      organisation,
+      resetPasswordRedirect: this.getPasswordResetRedirectUrl(),
+      message: invitationMessage?.trim() ? invitationMessage.trim() : undefined,
+      invitedBy,
+    };
+  }
+
+  private getPasswordResetRedirectUrl(): string {
+    if (isPlatformBrowser(this.platformId) && typeof window !== 'undefined') {
+      return `${window.location.origin}/login`;
+    }
+
+    return '/login';
   }
   async logout(): Promise<void> {
     try {
