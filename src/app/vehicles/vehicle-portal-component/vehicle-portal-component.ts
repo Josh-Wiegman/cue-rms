@@ -37,6 +37,7 @@ import {
   styleUrl: './vehicle-portal-component.scss',
 })
 export class VehiclePortalComponent implements OnInit {
+  protected readonly vehicleDataService = inject(VehicleDataService);
   private readonly fb = inject(FormBuilder);
   private readonly vehicleData = inject(VehicleDataService);
   private readonly destroyRef = inject(DestroyRef);
