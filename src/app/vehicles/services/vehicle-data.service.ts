@@ -132,25 +132,56 @@ export class VehicleDataService {
     }
   }
 
+  private toNumberOrNull(v: unknown): number | null {
+    const n =
+      typeof v === 'string' ? Number(v) : typeof v === 'number' ? v : NaN;
+    return Number.isFinite(n) ? n : null;
+  }
+
+  private toStringArray(input: unknown): string[] {
+    if (Array.isArray(input)) return input.map(String);
+    if (typeof input === 'string') return [input]; // allow single string
+    if (input && typeof input === 'object') {
+      // Some SDKs put roles under { roles: ['x'] } or similar; flatten common cases
+      const maybeArr = (input as any).roles ?? (input as any).role ?? null;
+      if (Array.isArray(maybeArr)) return maybeArr.map(String);
+      if (typeof maybeArr === 'string') return [maybeArr];
+    }
+    return [];
+  }
+
   private computeScopeFromUser(user: any): 'admin' | 'viewer' {
     if (!user) return 'viewer';
 
-    const lvl: PermissionLevel | null =
+    const lvlRaw =
       user.permissionLevel ??
       user.user_metadata?.permissionLevel ??
       user.app_metadata?.permissionLevel ??
       user.metadata?.permissionLevel ??
       null;
 
-    const roles: string[] =
-      user.roles ?? user.app_metadata?.roles ?? user.user_metadata?.roles ?? [];
+    const lvl = this.toNumberOrNull(lvlRaw); // handles "1", 1, "5", etc.
+
+    const rolesRaw =
+      user.roles ??
+      user.app_metadata?.roles ??
+      user.user_metadata?.roles ??
+      user.metadata?.roles ??
+      null;
+
+    const roles = this.toStringArray(rolesRaw).map((r) => r.toLowerCase());
 
     const isAdminByLevel =
       lvl === PermissionLevel.SuperAdmin ||
-      lvl === PermissionLevel.Administrator;
-    const isAdminByRole = Array.isArray(roles) && roles.includes('admin');
+      lvl === PermissionLevel.Administrator; // 1 or 3
 
-    return isAdminByLevel || isAdminByRole ? 'admin' : 'viewer';
+    const isAdminByRole = roles.includes('admin');
+
+    const scope = isAdminByLevel || isAdminByRole ? 'admin' : 'viewer';
+
+    console.debug('[VehicleDataService] scope', { lvlRaw, lvl, roles, scope });
+
+    return scope;
   }
 
   // ======================
