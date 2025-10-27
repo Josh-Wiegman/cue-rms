@@ -1,92 +1,155 @@
-:host {
-  width: 260px;
-  display: inline-block;
-}
-
 .sidebar {
-  position: sticky; // stays fixed as you scroll
-  top: 0;
-  width: 260px;
-  min-height: 100vh;
-  background-color: #f9fafb; // light neutral background
-  border-right: 1px solid #e5e7eb;
-  padding: 1.5rem 1rem;
-  box-sizing: border-box;
   display: flex;
   flex-direction: column;
-  gap: 2rem;
+  gap: 1.75rem;
+  padding: 2rem 1.5rem;
+  background: linear-gradient(180deg, #f6f7ff 0%, #ffffff 40%);
+  border-right: 1px solid rgba(95, 110, 252, 0.1);
+  height: 100%;
 
   .brand {
-    font-size: 1.4rem;
-    font-weight: 700;
-    color: #111827;
-    text-align: left;
-  }
+    background: #3847d0;
+    color: #fff;
+    border-radius: 18px;
+    padding: 1.5rem;
+    box-shadow: 0 20px 40px rgba(56, 71, 208, 0.25);
 
-  nav {
-    .section-title {
-      font-size: 0.85rem;
-      text-transform: uppercase;
-      font-weight: 600;
-      color: #6b7280;
-      margin-bottom: 0.5rem;
-      letter-spacing: 0.05em;
+    h2 {
+      margin: 0;
     }
 
-    ul {
-      list-style: none;
-      padding: 0;
+    p {
+      opacity: 0.82;
+      margin: 0.75rem 0 1.5rem;
+    }
+
+    .cta {
+      width: 100%;
+      border: none;
+      padding: 0.75rem 1.25rem;
+      border-radius: 14px;
+      background: #fff;
+      color: #3847d0;
+      font-weight: 600;
+      cursor: pointer;
+    }
+  }
+
+  section {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+
+    h3 {
       margin: 0;
+      font-size: 1rem;
+      color: #4a4f68;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+  }
 
-      li {
-        margin: 0.3rem 0;
+  .folder-pill {
+    border: none;
+    background: #fff;
+    border-radius: 999px;
+    padding: 0.5rem 1rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
+    box-shadow: 0 12px 20px rgba(45, 53, 126, 0.12);
 
-        a {
-          display: block;
-          padding: 0.4rem 0.6rem;
-          color: #374151;
-          text-decoration: none;
-          border-radius: 0.375rem;
-          transition:
-            background-color 0.2s,
-            color 0.2s;
+    .dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: #5f6efc;
+    }
+  }
 
-          &:hover,
-          &.active {
-            background-color: #e5e7eb;
-            color: #111827;
-          }
+  .folder-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+
+    .folder {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.75rem 1rem;
+      border-radius: 14px;
+      background: rgba(95, 110, 252, 0.08);
+      cursor: pointer;
+
+      .icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 12px;
+        display: grid;
+        place-items: center;
+        color: #fff;
+      }
+
+      .copy {
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
+
+        strong {
+          margin: 0;
+        }
+
+        span {
+          font-size: 0.8rem;
+          color: #6f768a;
         }
       }
     }
   }
 
-  .help {
-    margin-top: auto; // push to bottom of sidebar
+  .module {
+    background: #fff;
+    border-radius: 18px;
+    padding: 1rem 1.25rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    box-shadow: 0 18px 36px rgba(45, 53, 126, 0.12);
 
-    h4 {
-      font-size: 0.9rem;
-      font-weight: 600;
-      color: #6b7280;
-      margin-bottom: 0.5rem;
+    header {
+      display: flex;
+      gap: 0.75rem;
+      align-items: center;
+
+      .colour {
+        width: 12px;
+        height: 40px;
+        border-radius: 6px;
+        background: #4ac6b7;
+      }
+
+      strong {
+        display: block;
+      }
+
+      small {
+        color: #6f768a;
+      }
     }
 
-    ul {
-      list-style: none;
-      padding: 0;
-      margin: 0;
+    footer {
+      display: flex;
+      justify-content: flex-end;
 
-      li {
-        margin: 0.25rem 0;
-
-        a {
-          color: #2563eb;
-          text-decoration: none;
-
-          &:hover {
-            text-decoration: underline;
-          }
-        }
+      .ghost {
+        border: none;
+        padding: 0.5rem 1rem;
+        border-radius: 999px;
+        background: rgba(95, 110, 252, 0.12);
+        cursor: pointer;
+        color: #3847d0;
+        font-weight: 600;
       }
     }
   }

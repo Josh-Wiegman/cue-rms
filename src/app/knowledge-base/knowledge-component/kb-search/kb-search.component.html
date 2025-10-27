@@ -1,7 +1,13 @@
 <div class="kb-search">
-  <input [formControl]="control" placeholder="Search the knowledge base..." />
-  <button *ngIf="control.value" (click)="clear()">✕</button>
-  <div class="bcount" *ngIf="resultsCount !== null">
-    {{ resultsCount }} results
+  <span class="icon">🔍</span>
+  <input [formControl]="control" placeholder="Search the knowledge classroom" />
+  <button *ngIf="control.value" (click)="clear()" type="button">✕</button>
+</div>
+
+<div class="search-popover" *ngIf="control.value && (results$ | async) as results">
+  <div class="result" *ngFor="let result of results | slice: 0:5">
+    <div class="title">{{ result.title }}</div>
+    <div class="excerpt">{{ result.excerpt }}</div>
   </div>
+  <div class="empty" *ngIf="results.length === 0">No matches yet. Try another keyword.</div>
 </div>

@@ -1,57 +1,94 @@
-<div class="submit-article">
-  <h2>Submit an Article</h2>
+<div class="submit-shell">
+  <header>
+    <h1>Create a classroom-ready article</h1>
+    <p>Craft content, attach resources, and define release gates so onboarding flows step-by-step.</p>
+  </header>
 
-  <form [formGroup]="form" (ngSubmit)="submit()">
-    <!-- Title -->
-    <label>
-      Title
-      <input type="text" formControlName="title" placeholder="Enter title" />
-    </label>
-    <div
-      class="error"
-      *ngIf="form.controls['title'].invalid && form.controls['title'].touched"
-    >
-      Title is required and must be under 150 characters.
-    </div>
+  <form [formGroup]="form" (ngSubmit)="submit()" class="article-form">
+    <section>
+      <label>Title<input type="text" formControlName="title" placeholder="Article headline" /></label>
+      <div class="field-grid">
+        <label>Slug<input type="text" formControlName="slug" placeholder="unique-article-slug" /></label>
+        <label>
+          Folder
+          <select formControlName="folderId">
+            <option value="" disabled>Select folder</option>
+            <option *ngFor="let folder of (folders$ | async)" [value]="folder.id">{{ folder.name }}</option>
+          </select>
+        </label>
+        <label>Estimated mins<input type="number" formControlName="estimatedReadMins" min="1" /></label>
+        <label>
+          Status
+          <select formControlName="status">
+            <option value="draft">Draft</option>
+            <option value="pending_review">Pending review</option>
+            <option value="scheduled">Scheduled</option>
+            <option value="published">Published</option>
+          </select>
+        </label>
+      </div>
+      <label>Hero image URL<input type="url" formControlName="heroImage" /></label>
+      <label>Excerpt<textarea formControlName="excerpt" rows="3"></textarea></label>
+      <label>
+        Body
+        <textarea formControlName="body" rows="10" placeholder="Use markdown or HTML to structure your lesson"></textarea>
+      </label>
+      <label>
+        Tags
+        <input
+          type="text"
+          placeholder="tag1, tag2"
+          [value]="(form.value.tags || []).join(', ')"
+          (change)="onTagInput($event)"
+        />
+      </label>
+    </section>
 
-    <!-- Excerpt -->
-    <label>
-      Excerpt
-      <textarea
-        formControlName="excerpt"
-        placeholder="Short summary (optional)"
-      ></textarea>
-    </label>
+    <section class="attachments">
+      <h2>Attachments</h2>
+      <input type="file" multiple (change)="onAttachmentSelected($event)" />
+      <ul>
+        <li *ngFor="let attachment of attachments">{{ attachment.name }} — {{ attachment.type }}</li>
+      </ul>
+    </section>
 
-    <!-- Body -->
-    <label>
-      Body
-      <textarea
-        formControlName="body"
-        placeholder="Full article content"
-      ></textarea>
-    </label>
-    <div
-      class="error"
-      *ngIf="form.controls['body'].invalid && form.controls['body'].touched"
-    >
-      Body is required.
-    </div>
+    <section>
+      <h2>Release sequencing</h2>
+      <div [formGroup]="form.controls['releaseRule']">
+        <label>Sequence order<input type="number" formControlName="sequenceIndex" /></label>
+        <label>
+          Requires article IDs
+          <input
+            type="text"
+            placeholder="article-1, article-2"
+            (change)="form.controls['releaseRule'].patchValue({ requiresArticles: ($event.target as HTMLInputElement).value.split(',').map(v => v.trim()).filter(Boolean) })"
+          />
+        </label>
+        <label>
+          Requires quiz IDs
+          <input
+            type="text"
+            placeholder="quiz-1"
+            (change)="form.controls['releaseRule'].patchValue({ requiresQuizzes: ($event.target as HTMLInputElement).value.split(',').map(v => v.trim()).filter(Boolean) })"
+          />
+        </label>
+      </div>
+    </section>
 
-    <!-- Tags -->
-    <label>
-      Tags (comma separated)
-      <input
-        type="text"
-        formControlName="tags"
-        placeholder="e.g. setup, deployment"
-      />
-    </label>
+    <section>
+      <h2>Checklist</h2>
+      <button type="button" class="ghost" (click)="addChecklistItem()">+ Add item</button>
+      <div class="checklist" formArrayName="checklist">
+        <div class="item" *ngFor="let group of checklist.controls; let i = index" [formGroupName]="i">
+          <input type="text" formControlName="label" placeholder="e.g. Confirm equipment tagged" />
+          <button type="button" (click)="removeChecklistItem(i)">Remove</button>
+        </div>
+      </div>
+    </section>
 
-    <button type="submit" [disabled]="isSubmitting || form.invalid">
-      {{ isSubmitting ? "Submitting…" : "Submit Article" }}
-    </button>
+    <footer>
+      <button type="submit" [disabled]="form.invalid || isSubmitting">{{ isSubmitting ? 'Saving…' : 'Save article' }}</button>
+      <span class="message" *ngIf="message">{{ message }}</span>
+    </footer>
   </form>
-
-  <p class="message" *ngIf="message">{{ message }}</p>
 </div>

@@ -1,25 +1,48 @@
 <aside class="sidebar">
-  <div class="brand">Knowledge Base</div>
+  <div class="brand">
+    <h2>Workspace</h2>
+    <p>Organise learning like Google Classroom, but tailored to your crews.</p>
+    <button routerLink="/kb/training" class="cta">📘 Training hub</button>
+  </div>
 
-  <nav>
-    <div class="section-title">Categories</div>
-    <ul>
-      <li *ngFor="let cat of categories">
-        <a [routerLink]="['/kb', cat.slug]">{{ cat.name }}</a>
-        <ul *ngIf="cat.children">
-          <li *ngFor="let child of cat.children">
-            <a [routerLink]="['/kb/article/', child.id]">{{ child.title }}</a>
-          </li>
-        </ul>
-      </li>
-    </ul>
-  </nav>
+  <section *ngIf="(favourites$ | async)?.length">
+    <h3>Pinned folders</h3>
+    <button
+      class="folder-pill"
+      *ngFor="let folder of (favourites$ | async)"
+      (click)="selectFolder(folder)"
+    >
+      <span class="dot" [style.background]="folder.colour"></span>
+      {{ folder.name }}
+    </button>
+  </section>
 
-  <section class="help">
-    <h4>Quick links</h4>
-    <ul>
-      <li><a href="www.cue-go.co.nz/contact">Contact support</a></li>
-      <li><a [routerLink]="['/kb/submit-article']">Submit article</a></li>
-    </ul>
+  <section>
+    <h3>All folders</h3>
+    <div class="folder-list" *ngIf="(folders$ | async) as folders">
+      <article class="folder" *ngFor="let folder of folders" (click)="selectFolder(folder)">
+        <div class="icon" [style.background]="folder.colour || '#5f6efc'">{{ folder.icon || '📁' }}</div>
+        <div class="copy">
+          <strong>{{ folder.name }}</strong>
+          <span>{{ folder.completedCount }}/{{ folder.articleCount }} completed</span>
+        </div>
+      </article>
+    </div>
+  </section>
+
+  <section *ngIf="(modules$ | async) as modules">
+    <h3>Training playlists</h3>
+    <div class="module" *ngFor="let module of modules">
+      <header>
+        <span class="colour" [style.background]="module.colour || '#4ac6b7'"></span>
+        <div>
+          <strong>{{ module.title }}</strong>
+          <small>{{ module.articleIds.length }} lessons • {{ module.quizIds.length }} quizzes</small>
+        </div>
+      </header>
+      <footer>
+        <button class="ghost" [routerLink]="['/kb/training', module.id]">Open module</button>
+      </footer>
+    </div>
   </section>
 </aside>

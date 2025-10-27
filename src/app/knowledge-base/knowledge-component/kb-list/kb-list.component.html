@@ -1,23 +1,87 @@
-<div class="kb-shell">
-  <div class="kb-main">
-    <section class="kb-cards">
-      <ng-container *ngIf="articles$ | async as articles">
-        <div *ngIf="articles.length === 0" class="empty">
-          No articles found.
-        </div>
-        <article class="kb-card" *ngFor="let a of articles">
-          <a [routerLink]="['/kb/article', a.id]" class="kb-card-link">
-            <h3 class="kb-card-title">{{ a.title }}</h3>
-            <p class="kb-card-excerpt">{{ a.excerpt }}</p>
-            <div class="kb-card-meta">
-              <small *ngIf="a.tags?.length">{{ a.tags?.join(" • ") }}</small>
-              <small *ngIf="a.updated_at">
-                — {{ a.updated_at | date: "mediumDate" }}</small
-              >
-            </div>
-          </a>
-        </article>
-      </ng-container>
-    </section>
+<div class="kb-dashboard" *ngIf="(stats$ | async) as stats">
+  <div class="hero">
+    <div class="hero-copy">
+      <h1>Knowledge classroom</h1>
+      <p>Pick up right where you left off. Your learning journey continues below.</p>
+      <div class="hero-stats">
+        <div class="pill"><strong>{{ stats.total }}</strong><span>Total articles</span></div>
+        <div class="pill success"><strong>{{ stats.published }}</strong><span>Published</span></div>
+        <div class="pill warning"><strong>{{ stats.drafts }}</strong><span>Drafts</span></div>
+        <div class="pill neutral"><strong>{{ stats.folders }}</strong><span>Folders</span></div>
+      </div>
+    </div>
+    <div class="hero-actions">
+      <button class="cta" routerLink="/kb/submit-article">➕ New article</button>
+      <button class="ghost" (click)="setViewMode('grid')">Grid</button>
+      <button class="ghost" (click)="setViewMode('timeline')">Timeline</button>
+      <button class="ghost" (click)="setViewMode('folders')">Folders</button>
+    </div>
   </div>
 </div>
+
+<ng-container *ngIf="(viewMode$ | async) as mode">
+  <section class="grid-view" *ngIf="mode === 'grid'">
+    <article class="class-card" *ngFor="let article of (articles$ | async); trackBy: trackById">
+      <header>
+        <div class="class-meta">
+          <span class="status" [class.draft]="article.status !== 'published'">{{ article.status }}</span>
+          <span class="folder">{{ article.folderId }}</span>
+        </div>
+        <button
+          class="favourite"
+          title="Toggle favourite"
+          [class.active]="article.isFavourite"
+          (click)="toggleFavourite(article, $event)"
+        >
+          {{ article.isFavourite ? '★' : '☆' }}
+        </button>
+      </header>
+      <h3>{{ article.title }}</h3>
+      <p>{{ article.excerpt }}</p>
+      <footer>
+        <div class="chips">
+          <span class="chip" *ngFor="let tag of article.tags">#{{ tag }}</span>
+        </div>
+        <div class="meta">Updated {{ article.updatedAt | date: 'mediumDate' }}</div>
+        <a class="cta" [routerLink]="['/kb/article', article.slug || article.id]">Open</a>
+      </footer>
+    </article>
+  </section>
+
+  <section class="timeline-view" *ngIf="mode === 'timeline'">
+    <div class="timeline-group" *ngFor="let group of (timeline$ | async)">
+      <h2>{{ group.period }}</h2>
+      <div class="timeline-card" *ngFor="let article of group.articles; trackBy: trackById">
+        <div class="timeline-date">{{ article.createdAt | date: 'MMM d' }}</div>
+        <div class="timeline-body">
+          <h3>{{ article.title }}</h3>
+          <p>{{ article.excerpt }}</p>
+          <div class="timeline-tags">
+            <span *ngFor="let tag of article.tags">#{{ tag }}</span>
+          </div>
+          <a [routerLink]="['/kb/article', article.slug || article.id]" class="cta">Review</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="folder-view" *ngIf="mode === 'folders'">
+    <div class="folder" *ngFor="let folder of (folders$ | async); trackBy: trackByFolder">
+      <header>
+        <div class="icon" [style.background]="folder.colour || '#5f6efc'">{{ folder.icon || '📁' }}</div>
+        <div>
+          <h3>{{ folder.name }}</h3>
+          <p>{{ folder.description }}</p>
+        </div>
+      </header>
+      <footer>
+        <div class="progress">
+          <span>{{ folder.completedCount }}/{{ folder.articleCount }} complete</span>
+          <div class="bar">
+            <div class="fill" [style.width.%]="folder.progressPct || 0"></div>
+          </div>
+        </div>
+      </footer>
+    </div>
+  </section>
+</ng-container>

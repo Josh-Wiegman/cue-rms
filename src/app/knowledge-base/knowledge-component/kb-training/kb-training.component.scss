@@ -1,0 +1,79 @@
+.training-hero {
+  background: linear-gradient(135deg, #4ac6b7, #5f6efc);
+  border-radius: 22px;
+  padding: 2rem;
+  color: #fff;
+  margin-bottom: 1.5rem;
+
+  h1 {
+    margin: 0 0 0.5rem;
+  }
+}
+
+.progress {
+  display: flex;
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+
+  .stat {
+    background: #fff;
+    border-radius: 18px;
+    padding: 1rem 1.5rem;
+    box-shadow: 0 16px 30px rgba(42, 51, 142, 0.12);
+    display: grid;
+    gap: 0.25rem;
+
+    strong {
+      font-size: 1.6rem;
+    }
+
+    span {
+      color: #5f6575;
+      font-size: 0.85rem;
+    }
+  }
+}
+
+.module-list {
+  display: grid;
+  gap: 1.5rem;
+
+  .module {
+    background: #fff;
+    border-radius: 20px;
+    padding: 1.75rem;
+    box-shadow: 0 20px 36px rgba(42, 51, 142, 0.12);
+    display: grid;
+    gap: 1rem;
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+
+      .meta {
+        color: #6f768a;
+      }
+    }
+
+    footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+
+      .cta {
+        background: #3847d0;
+        color: #fff;
+        padding: 0.6rem 1.2rem;
+        border-radius: 14px;
+        text-decoration: none;
+        font-weight: 600;
+      }
+
+      .due {
+        color: #5f6575;
+        font-size: 0.85rem;
+      }
+    }
+  }
+}
