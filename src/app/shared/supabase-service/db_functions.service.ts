@@ -64,7 +64,7 @@ export class dbFunctionsService {
       },
     );
     if (error) throw error;
-    return data as { isFavourite: boolean };
+    return data.items;
   }
 
   // ─── Knowledge Base Calls ─────────────────────────────────────────────────

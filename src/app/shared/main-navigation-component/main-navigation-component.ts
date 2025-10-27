@@ -61,7 +61,6 @@ export class MainNavigationComponent implements OnInit {
     }
   }
 
-  // ⬇️ NEW: fetch org name/logo from your edge function
   private async loadOrgBranding(): Promise<void> {
     try {
       const branding = await this.orgBrandingService.getBranding(
