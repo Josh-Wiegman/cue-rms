@@ -507,8 +507,10 @@ export class VehicleDataService {
     const { data } = await this.supabaseService.client.auth.getSession();
     const accessToken = data.session?.access_token;
 
+    // inside request<T>() where you build headers
     const headers: Record<string, string> = {
-      'x-auth-scope': this.isAdmin() ? 'admin' : 'viewer', // for debugging/analytics only; server must verify JWT
+      'x-auth-scope': this.isAdmin() ? 'admin' : 'viewer', // new (keep)
+      'x-auth-level': this.isAdmin() ? '2' : '1', // <-- bring this back for legacy function
       'x-org-slug': this.orgSlug,
       apikey: this.anonKey,
       authorization: `Bearer ${accessToken ?? this.anonKey}`,
