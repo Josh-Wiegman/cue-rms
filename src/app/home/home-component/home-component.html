@@ -6,14 +6,13 @@
           <h1>Rental operations hub</h1>
           <p>
             Stay ahead of production bookings, warehouse prep, and service
-            activity across the rental house. Inspired by Current RMS and
-            Rentman workflows.
+            activity across the rental house.
           </p>
         </div>
         <div class="dashboard__header-meta">
           <span class="dashboard__meta-label">Today</span>
           <span class="dashboard__meta-value">
-            {{ today | date: 'EEEE, MMM d' }}
+            {{ today | date: "EEEE, MMM d" }}
           </span>
         </div>
       </header>
@@ -54,11 +53,9 @@
             >
               <div class="booking-card__header">
                 <h3>{{ booking.production }}</h3>
-                <span
-                  class="badge"
-                  [attr.data-status]="booking.status.key"
-                  >{{ booking.status.label }}</span
-                >
+                <span class="badge" [attr.data-status]="booking.status.key">{{
+                  booking.status.label
+                }}</span>
               </div>
               <div class="booking-card__meta">
                 <span>{{ booking.client }}</span>
@@ -110,9 +107,7 @@
               <h2>Logistics & deliveries</h2>
               <p>Track transport status and departure windows</p>
             </div>
-            <button type="button" class="panel__action">
-              Dispatch board
-            </button>
+            <button type="button" class="panel__action">Dispatch board</button>
           </header>
           <ul class="list list--logistics">
             <li *ngFor="let logistics of logisticsBoard">
@@ -121,7 +116,10 @@
                 <p class="list__subtitle">{{ logistics.vehicle }}</p>
               </div>
               <div class="list__meta">
-                <span class="badge" [attr.data-logistics]="logistics.status.key">
+                <span
+                  class="badge"
+                  [attr.data-logistics]="logistics.status.key"
+                >
                   {{ logistics.status.label }}
                 </span>
                 <span>{{ logistics.depart }}</span>
@@ -146,11 +144,10 @@
               <span>Utilisation</span>
               <span>Conflicts</span>
             </div>
-            <div
-              class="utilization-table__row"
-              *ngFor="let row of utilization"
-            >
-              <span class="utilization-table__category">{{ row.category }}</span>
+            <div class="utilization-table__row" *ngFor="let row of utilization">
+              <span class="utilization-table__category">{{
+                row.category
+              }}</span>
               <span>{{ row.allocated }} / {{ row.available }}</span>
               <div class="utilization-table__meter">
                 <div
@@ -158,7 +155,7 @@
                   [style.width.%]="(row.allocated / row.available) * 100"
                 ></div>
                 <span class="utilization-table__percent">
-                  {{ (row.allocated / row.available) * 100 | number: '1.0-0' }}%
+                  {{ (row.allocated / row.available) * 100 | number: "1.0-0" }}%
                 </span>
               </div>
               <span class="utilization-table__conflicts">
@@ -206,7 +203,9 @@
             <li *ngFor="let note of crewNotes">
               <div>
                 <h3>{{ note.title }}</h3>
-                <p class="list__subtitle">{{ note.author }} • {{ note.timestamp }}</p>
+                <p class="list__subtitle">
+                  {{ note.author }} • {{ note.timestamp }}
+                </p>
               </div>
               <p class="list__description">{{ note.description }}</p>
             </li>
