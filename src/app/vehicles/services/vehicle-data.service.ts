@@ -1,3 +1,4 @@
+// src/app/vehicles/data/vehicle-data.service.ts
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { Injectable, inject } from '@angular/core';
 import { BehaviorSubject, Subscription } from 'rxjs';
@@ -10,6 +11,7 @@ import {
 } from '../models/vehicle.model';
 import { SupabaseService } from '../../shared/supabase-service/supabase.service';
 import { AuthService } from '../../auth/auth.service'; // adjust path if needed
+import { parseVehicleCsv } from './vehicle-csv.parser';
 
 export interface VehicleInput {
   location: string;
@@ -112,7 +114,6 @@ export class VehicleDataService {
   private computeAuthLevelFromUser(user: any): 1 | 2 {
     if (!user) return 1;
 
-    // Try several places the app might store it:
     const lvl =
       user.permissionLevel ??
       user.user_metadata?.permissionLevel ??
@@ -120,7 +121,6 @@ export class VehicleDataService {
       user.metadata?.permissionLevel ??
       null;
 
-    // If you also tag admins by role, this keeps working even without a number:
     const roles: string[] =
       user.roles ?? user.app_metadata?.roles ?? user.user_metadata?.roles ?? [];
 
@@ -278,9 +278,18 @@ export class VehicleDataService {
     await this.refreshVehicles();
   }
 
+  /* =======================
+     CSV IMPORT (updated)
+     ======================= */
   async importCsv(file: File): Promise<CsvImportResult> {
     const text = await file.text();
-    const { vehicles, skipped, errors } = this.parseCsv(text);
+
+    // ⬇️ Use the new robust parser (handles blob-in-A1 + table)
+    const { vehicles, skipped, errors } = parseVehicleCsv(text, file.name, {
+      defaultLocation: 'Dunedin',
+      defaultPurchaseDateToToday: true,
+    });
+
     if (vehicles.length === 0) return { added: 0, skipped, errors };
 
     const existingByPlate = new Map(
@@ -365,6 +374,8 @@ export class VehicleDataService {
     return { added, skipped, errors };
   }
 
+  /* ===== REST OF SERVICE (unchanged) ===== */
+
   private async refreshVehicles(): Promise<void> {
     const response = await this.request<VehicleListApiResponse>('GET', '', {
       query: { include: 'maintenance' },
@@ -378,7 +389,6 @@ export class VehicleDataService {
 
   private buildBaseUrl(): string {
     const root = environment.supabaseDataUrl.replace(/\/+$/, '');
-    // Supabase function is "vehicles" (no trailing slash). We'll add path segments manually.
     return `${root}/functions/v1/vehicles`;
   }
 
@@ -388,8 +398,6 @@ export class VehicleDataService {
     options?: { query?: Record<string, unknown>; body?: unknown },
   ): Promise<T | null> {
     const base = this.baseUrl + (this.baseUrl.endsWith('/') ? '' : '/');
-
-    // ❗️No leading slash here; also strip any accidental one.
     const safePath = (path ?? '').replace(/^\/+/, '');
     const target = new URL(safePath, base);
 
@@ -426,7 +434,7 @@ export class VehicleDataService {
         try {
           errorDetails = (await response.json())?.error;
         } catch {
-          // keep null
+          /* ignore */
         }
         console.error(
           `Vehicle API ${method} ${target.pathname} failed`,
@@ -580,187 +588,7 @@ export class VehicleDataService {
     return JSON.parse(JSON.stringify(value)) as T;
   }
 
-  private parseCsv(text: string): {
-    vehicles: Vehicle[];
-    skipped: number;
-    errors: string[];
-  } {
-    const rawLines = text.split(/\r?\n/);
-    const lines = rawLines.filter((line) => line.trim().length > 0);
-
-    if (lines.length < 2)
-      return { vehicles: [], skipped: 0, errors: ['No data rows found.'] };
-
-    const headers = this.normaliseHeaderLine(lines.shift()!);
-    const vehiclesByPlate = new Map<string, Vehicle>();
-    const errors: string[] = [];
-    let skipped = 0;
-
-    lines.forEach((line, index) => {
-      const values = this.splitCsvLine(line);
-      if (values.length < headers.length) {
-        values.push(...Array(headers.length - values.length).fill(''));
-      } else if (values.length > headers.length) {
-        errors.push(
-          `Row ${index + 2} skipped: expected ${headers.length} columns but received ${values.length}.`,
-        );
-        skipped += 1;
-        return;
-      }
-
-      const row: Record<string, string> = {};
-      headers.forEach((header, headerIndex) => {
-        row[header] = values[headerIndex] ?? '';
-      });
-
-      const name = this.getRowValue(row, [
-        'vehicle',
-        'vehicle_name',
-        'name',
-        'vehicle_description',
-        'vehicle_make_model',
-      ]);
-      const licensePlateRaw = this.getRowValue(row, [
-        'license_plate',
-        'plate',
-        'registration',
-        'rego',
-        'license',
-        'licence_plate',
-        'registration_plate',
-        'rego_number',
-        'registration_number',
-        'license_number',
-        'licence_number',
-      ]);
-
-      if (!name || !licensePlateRaw) {
-        errors.push(
-          `Row ${index + 2} skipped: vehicle and license plate are required.`,
-        );
-        skipped += 1;
-        return;
-      }
-
-      const licensePlate = licensePlateRaw.toUpperCase();
-      const status = this.parseStatus(
-        this.getRowValue(row, ['status', 'vehicle_status', 'current_status']),
-      );
-
-      const candidate: Vehicle = {
-        id: this.createId(),
-        location:
-          this.getRowValue(row, [
-            'location',
-            'branch',
-            'site',
-            'depot',
-            'base',
-            'branch_location',
-            'region',
-          ]) || 'Unassigned',
-        name,
-        licensePlate,
-        status,
-        details: {
-          purchaseDate: this.getRowValue(row, [
-            'purchase_date',
-            'purchased',
-            'purchase',
-            'date_purchased',
-          ]),
-          vin: this.getRowValue(row, ['vin', 'vehicle_identification_number']),
-          engine: this.getRowValue(row, ['engine', 'engine_type']),
-          chassis: this.getRowValue(row, [
-            'chassis',
-            'chassis_number',
-            'frame_number',
-          ]),
-          odometer: this.getRowValue(row, [
-            'odometer',
-            'odometer_reading',
-            'odo',
-            'mileage',
-          ]),
-          fuelType: this.getRowValue(row, ['fuel_type', 'fuel']),
-          transmission: this.getRowValue(row, ['transmission', 'gearbox']),
-          grossVehicleMass: this.getRowValue(row, [
-            'gross_vehicle_mass',
-            'gvm',
-            'gvw',
-            'gvm_kg',
-            'gross_vehicle_weight',
-          ]),
-          notes: this.getRowValue(row, [
-            'vehicle_notes',
-            'notes',
-            'comments',
-            'vehicle_comments',
-          ]),
-        },
-        maintenance: this.extractMaintenanceRecords(row),
-      };
-
-      const existing = vehiclesByPlate.get(licensePlate);
-      if (existing) {
-        this.mergeVehicle(existing, candidate);
-      } else {
-        vehiclesByPlate.set(licensePlate, candidate);
-      }
-    });
-
-    const vehicles = Array.from(vehiclesByPlate.values());
-    return { vehicles, skipped, errors };
-  }
-
-  private normaliseHeaderLine(line: string): string[] {
-    return this.splitCsvLine(line).map((header) =>
-      header
-        .replace(/^\ufeff/, '')
-        .toLowerCase()
-        .replace(/[^a-z0-9]+/g, ' ')
-        .trim()
-        .replace(/\s+/g, '_'),
-    );
-  }
-
-  private splitCsvLine(line: string): string[] {
-    const values: string[] = [];
-    let current = '';
-    let inQuotes = false;
-
-    for (let i = 0; i < line.length; i += 1) {
-      const char = line[i];
-      if (char === '"') {
-        if (inQuotes && line[i + 1] === '"') {
-          current += '"';
-          i += 1;
-          continue;
-        }
-        inQuotes = !inQuotes;
-        continue;
-      }
-
-      if (char === ',' && !inQuotes) {
-        values.push(current.trim());
-        current = '';
-        continue;
-      }
-
-      current += char;
-    }
-
-    values.push(current.trim());
-    return values;
-  }
-
-  private getRowValue(row: Record<string, string>, keys: string[]): string {
-    for (const key of keys) {
-      const value = row[key];
-      if (value && value.trim().length > 0) return value.trim();
-    }
-    return '';
-  }
+  /* ------------ merge helpers (unchanged) ------------ */
 
   private mergeVehicle(target: Vehicle, source: Vehicle): void {
     if (source.name && source.name.length > target.name.length)
@@ -829,7 +657,7 @@ export class VehicleDataService {
     a: MaintenanceRecord,
     b: MaintenanceRecord,
   ): boolean {
-    const normalise = (v: string) => v.trim().toLowerCase();
+    const normalise = (v: string) => (v ?? '').toString().trim().toLowerCase();
     return (
       normalise(a.date) === normalise(b.date) &&
       normalise(a.enteredBy) === normalise(b.enteredBy) &&
@@ -842,112 +670,6 @@ export class VehicleDataService {
     );
   }
 
-  private extractMaintenanceRecords(
-    row: Record<string, string>,
-  ): MaintenanceRecord[] {
-    const groups = new Map<
-      string,
-      Partial<MaintenanceRecord> & { locked?: boolean }
-    >();
-
-    Object.entries(row).forEach(([key, value]) => {
-      if (!value) return;
-
-      const prefixMatch = key.match(/^(maintenance|service|log)_(.+)$/);
-      if (!prefixMatch) return;
-
-      let remainder = prefixMatch[2];
-      if (
-        /^(next|upcoming|future)_/.test(remainder) ||
-        /_next$/.test(remainder)
-      )
-        return;
-      if (remainder.includes('interval') || remainder.includes('due')) return;
-
-      const leadingIndex = remainder.match(/^(\d+)_/);
-      const trailingIndex = remainder.match(/_(\d+)$/);
-      let index = '0';
-      if (leadingIndex) {
-        index = leadingIndex[1];
-        remainder = remainder.slice(leadingIndex[0].length);
-      } else if (trailingIndex) {
-        index = trailingIndex[1];
-        remainder = remainder.slice(0, -trailingIndex[0].length);
-      }
-
-      remainder = remainder.replace(/^(log|entry|record)_/, '');
-      const field = this.mapMaintenanceField(remainder);
-      if (!field) return;
-
-      const group =
-        groups.get(index) ??
-        ({} as Partial<MaintenanceRecord> & { locked?: boolean });
-      if (field === 'locked') {
-        (group as { locked?: boolean }).locked = this.parseLockedValue(value);
-      } else {
-        (group as Partial<MaintenanceRecord>)[field] = value;
-      }
-      groups.set(index, group);
-    });
-
-    const records: MaintenanceRecord[] = [];
-    Array.from(groups.entries())
-      .sort((a, b) => Number(a[0]) - Number(b[0]))
-      .forEach(([, partial]) => {
-        const record = this.toMaintenanceRecord(partial);
-        if (record) records.push(record);
-      });
-
-    return records;
-  }
-
-  private mapMaintenanceField(segment: string): keyof MaintenanceRecord | null {
-    const cleaned = segment.replace(/__+/g, '_');
-    if (cleaned.includes('update')) return null;
-
-    const matches = (pattern: RegExp) => pattern.test(cleaned);
-    if (matches(/(?:^|_)(date|performed|completed)(?:_|$)/)) return 'date';
-    if (matches(/(?:^|_)(entered_by|enteredby|author|user)(?:_|$)/))
-      return 'enteredBy';
-    if (matches(/(?:^|_)(work|description|summary|task)(?:_|$)/)) return 'work';
-    if (matches(/(?:^|_)(odo|odometer|mileage|km)(?:_|$)/)) return 'odoReading';
-    if (
-      matches(/(?:^|_)(performed_at|provider|vendor|mechanic|location)(?:_|$)/)
-    )
-      return 'performedAt';
-    if (matches(/(?:^|_)(outcome|result|status)(?:_|$)/)) return 'outcome';
-    if (matches(/(?:^|_)(cost|amount|price|total)(?:_|$)/)) return 'cost';
-    if (matches(/(?:^|_)(note|comment|remark)(?:_|$)/)) return 'notes';
-    if (matches(/(?:^|_)(locked|lock|is_locked)(?:_|$)/)) return 'locked';
-    return null;
-  }
-
-  private parseLockedValue(raw: string): boolean {
-    const value = raw.trim().toLowerCase();
-    return (
-      value === 'true' || value === 'yes' || value === 'locked' || value === '1'
-    );
-  }
-
-  private toMaintenanceRecord(
-    source: Partial<MaintenanceRecord> & { locked?: boolean },
-  ): MaintenanceRecord | null {
-    const record: MaintenanceRecord = {
-      id: this.createId(),
-      date: source.date?.trim() ?? '',
-      enteredBy: source.enteredBy?.trim() ?? '',
-      work: source.work?.trim() ?? '',
-      odoReading: source.odoReading?.trim() ?? '',
-      performedAt: source.performedAt?.trim() ?? '',
-      outcome: source.outcome?.trim() ?? '',
-      cost: source.cost?.trim() ?? '',
-      notes: source.notes?.trim() ?? '',
-      locked: source.locked ?? false,
-    };
-    if (!this.hasMaintenanceContent(record)) return null;
-    return record;
-  }
-
   private hasMaintenanceContent(record: MaintenanceRecord): boolean {
     return [
       record.date,
@@ -958,20 +680,6 @@ export class VehicleDataService {
       record.outcome,
       record.cost,
       record.notes,
-    ].some((v) => v.trim().length > 0);
-  }
-
-  private parseStatus(raw: string | undefined): VehicleStatus {
-    const value = raw?.toLowerCase() ?? '';
-    if (value === 'sold') return 'sold';
-    if (value === 'archived') return 'archived';
-    return 'active';
-  }
-
-  private createId(): string {
-    if (typeof crypto !== 'undefined' && 'randomUUID' in crypto) {
-      return crypto.randomUUID();
-    }
-    return Math.random().toString(36).slice(2, 11);
+    ].some((v) => (v ?? '').toString().trim().length > 0);
   }
 }
