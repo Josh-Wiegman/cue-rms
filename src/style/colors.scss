@@ -1,6 +1,6 @@
 // Colors
 $hero-dark-color: rgb(32, 41, 79);
-$hero-light-color: rgb(80, 74, 146);
+$hero-light-color: rgb(79, 70, 229);
 $hero-text-color: rgb(246, 248, 251);
 
 $main-dark-color: rgb(246, 248, 251);
@@ -20,7 +20,8 @@ $warning-text-light-color: rgb(173, 132, 31);
 $accent-color: rgb(99, 102, 241);
 
 // Gradients
-$hero-gradient: linear-gradient(140deg, $hero-dark-color, $hero-light-color);
+$hero-gradient: linear-gradient(135deg, $hero-dark-color, $hero-light-color);
+$hero-gradient-minor: linear-gradient(145deg, $accent-color, $hero-light-color);
 $main-gradient: linear-gradient(140deg, $main-dark-color, $main-light-color);
 
 // Borders
