@@ -1,13 +1,10 @@
+@use "../../../style/colors.scss" as *;
+
 :host {
   display: grid;
   grid-template-columns: 280px minmax(0, 1fr);
   height: 100vh;
   width: 100vw;
-}
-
-header-component {
-  grid-column: 2;
-  grid-row: 1;
 }
 
 main-navigation-component {
@@ -16,6 +13,7 @@ main-navigation-component {
 
 #content {
   grid-column: 2;
-  margin: 20px;
+  padding: 20px;
   overflow-x: hidden;
+  background: $main-gradient;
 }
