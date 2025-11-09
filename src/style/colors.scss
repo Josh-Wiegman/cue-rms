@@ -24,4 +24,10 @@ $hero-gradient: linear-gradient(140deg, $hero-dark-color, $hero-light-color);
 $main-gradient: linear-gradient(140deg, $main-dark-color, $main-light-color);
 
 // Borders
-$main-border: 1px solid $main-border-color;
+$main-border: 2px solid $main-border-color;
+$minor-border-radius: 0.6rem;
+$major-border-radius: 1.25rem;
+
+// Transitions
+$quick-transition: 0.2s ease;
+$medium-transition: 0.3s ease;

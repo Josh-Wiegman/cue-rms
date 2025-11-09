@@ -14,7 +14,7 @@ type NavigationItem = {
 
 @Component({
   selector: 'main-navigation-component',
-  imports: [RouterLink, RouterLinkActive, NgIf, NgFor, AsyncPipe],
+  imports: [RouterLink, RouterLinkActive, NgIf, AsyncPipe],
   templateUrl: './main-navigation-component.html',
   styleUrl: './main-navigation-component.scss',
 })

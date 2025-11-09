@@ -9,11 +9,13 @@
 
 main-navigation-component {
   grid-column: 1;
+  border: $main-border;
+  padding: 1.25rem;
 }
 
 #content {
   grid-column: 2;
-  padding: 20px;
+  padding: 1rem;
   overflow-x: hidden;
   background: $main-gradient;
 }

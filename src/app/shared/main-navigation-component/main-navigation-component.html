@@ -1,34 +1,45 @@
 <nav>
   <div class="nav__brand">
     <a class="brand">
-      <img
-        *ngIf="orgLogoUrl; else nameOnly"
-        [src]="orgLogoUrl"
-        [alt]="orgName || 'Company Logo'"
-        class="brand__logo"
-        width="256"
-        height="64"
-        loading="eager"
-        decoding="async"
-      />
-      <ng-template #nameOnly>{{ orgName || "Company Name" }}</ng-template>
+      @if (orgLogoUrl) {
+        <img
+          [src]="orgLogoUrl"
+          [alt]="orgName || 'Company Logo'"
+          class="brand__logo"
+          loading="eager"
+          decoding="async"
+        />
+      }
+      <span class="brand__name">{{ orgName || "Company Name" }}</span>
     </a>
   </div>
 
   <ul class="nav__links">
-    <li *ngFor="let item of navItems">
-      <a [routerLink]="item.path" routerLinkActive="active">{{ item.label }}</a>
-    </li>
+    @for (item of navItems; track item.label) {
+      <li>
+        <a [routerLink]="item.path" routerLinkActive="" active>{{
+          item.label
+        }}</a>
+      </li>
+    }
   </ul>
 
-  <div class="nav__actions" *ngIf="user$ | async as user; else login">
-    <span class="nav__user">
+  <div class="nav__actions" *ngIf="user$ | async as user">
+    <div class="nav__actions--user">
       {{ user.displayName }} · L{{ user.permissionLevel }}
-    </span>
-    <button type="button" (click)="logout()">Sign out</button>
+    </div>
+    <div class="nav__actions--more">
+      <img
+        src="more-vertical.svg"
+        alt="Account options"
+        title="Account options"
+      />
+      <ul class="nav__actions--sub-nav">
+        <li>
+          <a routerLink="/settings" routerLinkActive="active">Settings</a>
+        </li>
+        <li><button (click)="logout()">Sign out</button></li>
+      </ul>
+    </div>
   </div>
-
-  <ng-template #login>
-    <a class="nav__login" routerLink="/login">Sign in</a>
-  </ng-template>
 </nav>
