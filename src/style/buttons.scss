@@ -8,7 +8,7 @@
 @mixin primary-button {
   @include button-base;
   border: none;
-  background: $hero-gradient;
+  background: $hero-gradient-minor;
   color: $hero-text-color;
 }
 
