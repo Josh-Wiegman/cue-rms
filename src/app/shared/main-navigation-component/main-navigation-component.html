@@ -17,7 +17,7 @@
   <ul class="nav__links">
     @for (item of navItems; track item.label) {
       <li>
-        <a [routerLink]="item.path" routerLinkActive="" active>{{
+        <a [routerLink]="item.path" routerLinkActive="active">{{
           item.label
         }}</a>
       </li>
