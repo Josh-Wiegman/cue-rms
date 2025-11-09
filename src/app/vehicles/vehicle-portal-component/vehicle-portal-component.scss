@@ -152,7 +152,7 @@
   align-items: stretch;
   border-radius: 0.5rem;
   overflow: visible;
-  background: colors.$main-text-color;
+  background: colors.$hero-gradient-minor;
   border: 1px solid rgba(colors.$main-text-color, 0.4);
 
   .panel__header-action {
@@ -160,7 +160,7 @@
     border-radius: 0;
     border: none;
     padding: 0.45rem 1rem;
-    color: colors.$main-text-color;
+    color: colors.$hero-text-color;
 
     &:hover {
       background: rgba(255, 255, 255, 0.12);
@@ -511,9 +511,8 @@ table {
   }
 
   .status-actions__export {
-    background: colors.$main-text-color;
-    border-color: colors.$main-text-color;
-    color: colors.$main-text-color;
+    background: colors.$hero-gradient-minor;
+    color: colors.$hero-text-color;
     margin-left: 0.5rem;
 
     &:hover:not(:disabled) {
