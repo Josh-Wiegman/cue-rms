@@ -146,11 +146,11 @@ nav {
 }
 
 .brand__logo {
-  max-height: 40px;
-  max-width: 40px;
-  width: auto;
+  height: 40px;
+  width: 40px;
   object-fit: contain;
   border-radius: $minor-border-radius;
+  background-color: $accent-color;
 }
 
 .brand__name {
