@@ -1,11 +1,10 @@
 import { Component } from '@angular/core';
 import { MainNavigationComponent } from '../main-navigation-component/main-navigation-component';
-import { HeaderComponent } from '../header-component/header-component';
 
 @Component({
   selector: 'ui-shell',
   standalone: true,
-  imports: [MainNavigationComponent, HeaderComponent],
+  imports: [MainNavigationComponent],
   templateUrl: './ui-shell-component.html',
   styleUrl: './ui-shell-component.scss',
 })

@@ -1,1 +1,6 @@
-$default-font: Helvetica, Arial, sans-serif;
+@font-face {
+  font-family: Manrope;
+  src: url(Manrope-VariableFont_wght.ttf);
+}
+
+$font-sans: Manrope, Helvetica, Arial, sans-serif;
