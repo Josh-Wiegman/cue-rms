@@ -5,9 +5,16 @@
   box-sizing: border-box;
   margin: 0;
   padding: 0;
-  font-family: $default-font;
+  font-family: $font-sans;
+  font-size: 1rem;
 }
 
 body {
-  background-color: $off-white;
+  background-color: $main-gradient;
+}
+
+h1 {
+  font-weight: 900;
+  font-size: 2.1rem;
+  line-height: 3rem;
 }

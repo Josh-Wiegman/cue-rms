@@ -1,7 +1,27 @@
-// Main colors
-$primary-color: #292e2f;
-$off-white: #f4f4f4;
-$off-black: #1f1f1f;
+// Colors
+$hero-dark-color: rgb(32, 41, 79);
+$hero-light-color: rgb(80, 74, 146);
+$hero-text-color: rgb(246, 248, 251);
 
-// Accent colors
-$secondary-color: #0995b0;
+$main-dark-color: rgb(246, 248, 251);
+$main-light-color: rgb(255, 255, 255);
+$main-border-color: rgb(226, 231, 239);
+$main-text-color: rgb(31, 42, 68);
+
+$fail-color: rgba(218, 68, 62, 0.3);
+$fail-text-light-color: rgb(174, 41, 36);
+
+$success-color: rgba(104, 188, 95, 0.3);
+$success-text-light-color: rgb(27, 116, 61);
+
+$warning-color: rgba(246, 202, 94, 0.45);
+$warning-text-light-color: rgb(173, 132, 31);
+
+$accent-color: rgb(99, 102, 241);
+
+// Gradients
+$hero-gradient: linear-gradient(140deg, $hero-dark-color, $hero-light-color);
+$main-gradient: linear-gradient(140deg, $main-dark-color, $main-light-color);
+
+// Borders
+$main-border: 1px solid $main-border-color;

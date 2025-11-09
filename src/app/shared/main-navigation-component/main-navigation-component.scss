@@ -1,13 +1,14 @@
 @use "../../../style/colors.scss" as *;
 
 nav {
-  background-color: $primary-color;
-  color: $off-white;
+  background-color: $main-light-color;
+  color: $main-text-color;
   height: 100%;
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
   padding: 1.5rem 1.75rem;
+  border: $main-border;
 }
 
 .nav__brand h1 {
@@ -16,7 +17,7 @@ nav {
 }
 
 .nav__brand a {
-  color: $off-white;
+  color: $main-text-color;
   text-decoration: none;
 }
 
@@ -41,7 +42,7 @@ nav {
 
 .nav__links a {
   padding: 0.9rem 1rem;
-  color: $off-white;
+  color: $main-text-color;
   text-decoration: none;
   display: block;
   border-radius: 0.75rem;
@@ -70,7 +71,7 @@ nav {
 
 .nav__actions button {
   background: rgba(255, 255, 255, 0.14);
-  color: $off-white;
+  color: $main-text-color;
   border: none;
   border-radius: 999px;
   padding: 0.45rem 1.1rem;
@@ -84,7 +85,7 @@ nav {
 }
 
 .nav__login {
-  color: $off-white;
+  color: $main-text-color;
   text-decoration: none;
   background: rgba(255, 255, 255, 0.14);
   padding: 0.6rem 1.2rem;
