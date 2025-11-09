@@ -1,6 +1,6 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
-import { AsyncPipe, NgFor, NgIf } from '@angular/common';
+import { AsyncPipe, NgIf } from '@angular/common';
 
 import { AuthService } from '../../auth/auth.service';
 import { dbFunctionsService } from '../supabase-service/db_functions.service';
