@@ -1,0 +1,79 @@
+<section class="presenter-view" *ngIf="timer$ | async as timer; else notFound">
+  <header class="presenter-view__header">
+    <div>
+      <p class="presenter-view__eyebrow">Stage Timer · Code {{ timer.code }}</p>
+      <h1>{{ timer.name }}</h1>
+    </div>
+    <div class="presenter-view__header-actions">
+      <span class="presenter-view__status" [ngClass]="'status--' + timer.status">
+        {{ timerStatus(timer) }}
+      </span>
+      <a class="presenter-view__back" (click)="goHome()">Back to Stage Timer</a>
+    </div>
+  </header>
+
+  <div class="presenter-view__grid">
+    <section class="presenter-view__main">
+      <div class="presenter-view__time">{{ formatTime(timer.remainingSeconds) }}</div>
+      <div class="presenter-view__timeline">
+        <div class="presenter-view__timeline-fill" [style.width.%]="timerProgress(timer)"></div>
+      </div>
+      <div class="presenter-view__meta">
+        <div>
+          <span class="label">Duration</span>
+          <span class="value">{{ formatTime(timer.durationSeconds) }}</span>
+        </div>
+        <div>
+          <span class="label">Remaining</span>
+          <span class="value">{{ formatTime(timer.remainingSeconds) }}</span>
+        </div>
+      </div>
+    </section>
+
+    <aside class="presenter-view__sidebar">
+      <section class="presenter-view__notes">
+        <header>
+          <h2>Show notes</h2>
+          <p>Stay aligned with the production team in real-time.</p>
+        </header>
+        <ul *ngIf="notesFor(timer) as notes">
+          <li *ngFor="let note of notes">
+            <span class="time">{{ note.createdAt | date: 'shortTime' }}</span>
+            <span class="body">{{ note.body }}</span>
+          </li>
+          <li *ngIf="!notes.length" class="empty">No notes yet.</li>
+        </ul>
+      </section>
+    </aside>
+  </div>
+
+  <div
+    class="presenter-view__urgent"
+    *ngIf="urgentNoteFor(timer) as urgent"
+    [class.presenter-view__urgent--acknowledged]="urgent.acknowledgedAt"
+  >
+    <div class="presenter-view__urgent-content">
+      <div class="presenter-view__urgent-title">
+        <span>Urgent note</span>
+        <span class="time">Sent {{ urgent.createdAt | date: 'shortTime' }}</span>
+      </div>
+      <p>{{ urgent.body }}</p>
+      <div class="presenter-view__urgent-footer">
+        <span *ngIf="urgent.acknowledgedAt" class="ack">
+          Acknowledged {{ urgent.acknowledgedAt | date: 'shortTime' }}
+        </span>
+        <button type="button" (click)="acknowledge(timer)">
+          {{ urgent.acknowledgedAt ? 'Dismiss' : 'Acknowledge' }}
+        </button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<ng-template #notFound>
+  <section class="presenter-view presenter-view--empty">
+    <h1>Timer not found</h1>
+    <p>We couldn't find a timer for the code <strong>{{ code }}</strong>.</p>
+    <a class="presenter-view__back" routerLink="../../stage-timer">Back to Stage Timer</a>
+  </section>
+</ng-template>
