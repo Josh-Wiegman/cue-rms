@@ -162,35 +162,37 @@
                 {{ selectedVehicle()?.location }}
               </p>
             </div>
-            <div class="status-actions">
-              <button
-                type="button"
-                (click)="markVehicleStatus('active')"
-                [disabled]="selectedVehicle()?.status === 'active'"
-              >
-                Mark active
-              </button>
-              <button
-                type="button"
-                (click)="markVehicleStatus('unavailable')"
-                [disabled]="selectedVehicle()?.status === 'unavailable'"
-              >
-                Mark unavailable
-              </button>
-              <button
-                type="button"
-                (click)="markVehicleStatus('archived')"
-                [disabled]="selectedVehicle()?.status === 'archived'"
-              >
-                Archive
-              </button>
-              <button
-                type="button"
-                class="status-actions__export"
-                (click)="exportSelectedVehicle()"
-              >
-                Export CSV
-              </button>
+            <div class="vehicle__actions--more">
+              <img src="more-vertical.svg" alt="More" />
+              <ul class="vehicle__actions--sub-nav">
+                <li>
+                  <button
+                    (click)="markVehicleStatus('active')"
+                    [disabled]="selectedVehicle()?.status === 'active'"
+                  >
+                    Mark active
+                  </button>
+                </li>
+                <li>
+                  <button
+                    (click)="markVehicleStatus('unavailable')"
+                    [disabled]="selectedVehicle()?.status === 'unavailable'"
+                  >
+                    Mark unavailable
+                  </button>
+                </li>
+                <li>
+                  <button
+                    (click)="markVehicleStatus('archived')"
+                    [disabled]="selectedVehicle()?.status === 'archived'"
+                  >
+                    Archive vehicle
+                  </button>
+                </li>
+                <li>
+                  <button (click)="exportSelectedVehicle()">Export CSV</button>
+                </li>
+              </ul>
             </div>
           </header>
 

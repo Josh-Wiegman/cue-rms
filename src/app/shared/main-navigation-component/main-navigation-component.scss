@@ -32,6 +32,7 @@ nav {
   display: block;
   border-radius: $minor-border-radius;
   transition: $quick-transition;
+  cursor: pointer;
 }
 
 .nav__links a.active {
@@ -125,7 +126,6 @@ nav {
 .nav__actions--sub-nav:hover,
 .nav__actions--sub-nav:focus-within {
   visibility: visible;
-  transition: $quick-transition;
   transform: translateX(0) translateY(0);
   -webkit-transform: translateX(0) translateY(0);
   opacity: 1;
