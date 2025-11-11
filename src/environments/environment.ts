@@ -8,4 +8,5 @@ export const environment = {
   vehiclePortalAdminSecret: 'development-admin-secret',
   baseTenantDomain: 'cue-rms.com',
   defaultOrgSlug: 'public',
+  stageTimerEdgeFunction: 'stage-timer',
 };

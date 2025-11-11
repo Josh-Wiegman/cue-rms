@@ -1,0 +1,444 @@
+@use '../../../style/colors.scss' as *;
+
+:host {
+  display: block;
+  height: 100%;
+}
+
+.stage-timer {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  padding: 2rem;
+  background-color: rgba($main-light-color, 0.92);
+  min-height: 100%;
+}
+
+.stage-timer__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.stage-timer__heading h1 {
+  font-size: 1.8rem;
+  margin: 0;
+}
+
+.stage-timer__heading p {
+  margin: 0.25rem 0 0;
+  color: rgba($main-text-color, 0.7);
+}
+
+.stage-timer__actions {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.btn {
+  border-radius: $minor-border-radius;
+  border: $main-border;
+  background-color: $main-light-color;
+  color: $main-text-color;
+  padding: 0.45rem 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: $quick-transition;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  text-decoration: none;
+}
+
+.btn:hover {
+  border-color: rgba($accent-color, 0.45);
+  color: $accent-color;
+}
+
+.btn--primary {
+  background-color: $accent-color;
+  border-color: $accent-color;
+  color: #fff;
+}
+
+.btn--primary:hover {
+  background-color: darken($accent-color, 5%);
+  border-color: darken($accent-color, 5%);
+  color: #fff;
+}
+
+.btn--secondary {
+  background-color: rgba($accent-color, 0.12);
+  border-color: rgba($accent-color, 0.32);
+  color: $accent-color;
+}
+
+.btn--danger {
+  background-color: rgba(#d93025, 0.12);
+  border-color: rgba(#d93025, 0.36);
+  color: #d93025;
+}
+
+.btn--danger:hover {
+  background-color: rgba(#d93025, 0.22);
+}
+
+.btn--ghost {
+  background-color: transparent;
+  border-color: transparent;
+  color: $accent-color;
+}
+
+.btn--ghost:hover {
+  background-color: rgba($accent-color, 0.12);
+}
+
+.stage-timer__form {
+  background-color: $main-light-color;
+  border-radius: $major-border-radius;
+  padding: 1.25rem;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.08);
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 1rem;
+}
+
+.form-grid label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  font-weight: 600;
+}
+
+.form-grid input,
+.notes__form textarea,
+.urgent-form textarea {
+  border-radius: $minor-border-radius;
+  border: $main-border;
+  padding: 0.6rem 0.75rem;
+  font-size: 0.95rem;
+  background-color: #fff;
+  transition: $quick-transition;
+}
+
+.form-grid input:focus,
+.notes__form textarea:focus,
+.urgent-form textarea:focus {
+  outline: none;
+  border-color: rgba($accent-color, 0.7);
+  box-shadow: 0 0 0 4px rgba($accent-color, 0.14);
+}
+
+.form-actions {
+  margin-top: 1rem;
+  display: flex;
+  gap: 0.75rem;
+}
+
+.stage-timer__content {
+  display: flex;
+  gap: 2rem;
+  align-items: flex-start;
+  flex: 1 1 auto;
+}
+
+.stage-timer__list {
+  flex: 1 1 60%;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 1.25rem;
+}
+
+.stage-timer__list--empty {
+  display: flex;
+  flex-direction: column;
+}
+
+.stage-timer__empty {
+  margin: 0;
+  padding: 1.5rem;
+  border-radius: $major-border-radius;
+  background-color: rgba($accent-color, 0.08);
+  color: rgba($main-text-color, 0.75);
+  text-align: center;
+}
+
+.timer-card {
+  background-color: $main-light-color;
+  border-radius: $major-border-radius;
+  border: 2px solid transparent;
+  padding: 1.25rem;
+  box-shadow: 0 16px 38px rgba(0, 0, 0, 0.08);
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  cursor: pointer;
+  position: relative;
+  transition: transform $quick-transition, box-shadow $quick-transition;
+}
+
+.timer-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.12);
+}
+
+.timer-card--selected {
+  border-color: rgba($accent-color, 0.4);
+  box-shadow: 0 18px 46px rgba($accent-color, 0.18);
+}
+
+.timer-card__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.timer-card__header h3 {
+  margin: 0;
+  font-size: 1.2rem;
+}
+
+.timer-card__status {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  padding: 0.25rem 0.5rem;
+  border-radius: 999px;
+  background-color: rgba($main-text-color, 0.1);
+  color: $main-text-color;
+}
+
+.status--running {
+  background-color: rgba(#00a76f, 0.16);
+  color: #007350;
+}
+
+.status--paused {
+  background-color: rgba(#fbbc05, 0.18);
+  color: #a96a00;
+}
+
+.status--completed {
+  background-color: rgba(#5f6368, 0.2);
+  color: #3c4043;
+}
+
+.timer-card__countdown {
+  font-size: 2.4rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.timer-card__meta {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+  color: rgba($main-text-color, 0.65);
+}
+
+.timer-card__progress {
+  height: 6px;
+  background-color: rgba($main-text-color, 0.1);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.timer-card__progress-bar {
+  height: 100%;
+  background: linear-gradient(90deg, $accent-color, lighten($accent-color, 10%));
+  transition: width 0.4s ease;
+}
+
+.timer-card__footer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.timer-card__urgent {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  background-color: rgba(#d93025, 0.18);
+  color: #d93025;
+  font-size: 0.7rem;
+  padding: 0.2rem 0.45rem;
+  border-radius: 999px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+}
+
+.stage-timer__detail {
+  flex: 1 1 40%;
+  background-color: $main-light-color;
+  border-radius: $major-border-radius;
+  padding: 1.75rem;
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.12);
+  position: sticky;
+  top: 2rem;
+  align-self: flex-start;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.detail__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+}
+
+.detail__header h2 {
+  margin: 0;
+}
+
+.detail__header p {
+  margin: 0.25rem 0 0;
+  color: rgba($main-text-color, 0.65);
+}
+
+.detail__status {
+  @extend .timer-card__status;
+}
+
+.detail__countdown {
+  font-size: 3.4rem;
+  font-weight: 700;
+  text-align: center;
+  letter-spacing: 0.06em;
+}
+
+.detail__progress-track {
+  height: 10px;
+  background-color: rgba($main-text-color, 0.1);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.detail__progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, $accent-color, lighten($accent-color, 15%));
+  transition: width 0.4s ease;
+}
+
+.detail__meta {
+  display: flex;
+  justify-content: space-between;
+  color: rgba($main-text-color, 0.6);
+  font-size: 0.9rem;
+  margin-top: 0.5rem;
+}
+
+.detail__controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.detail__section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.detail__section-header h3 {
+  margin: 0;
+}
+
+.detail__section-header p {
+  margin: 0.2rem 0 0;
+  color: rgba($main-text-color, 0.6);
+}
+
+.notes {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.notes__time {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: rgba($main-text-color, 0.55);
+}
+
+.notes__body {
+  display: block;
+  font-size: 0.95rem;
+}
+
+.notes__empty {
+  font-size: 0.9rem;
+  color: rgba($main-text-color, 0.5);
+}
+
+.notes__form,
+.urgent-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.urgent-form textarea {
+  background: rgba(#d93025, 0.04);
+  border-color: rgba(#d93025, 0.4);
+}
+
+.detail__section--urgent {
+  border-top: 1px solid rgba($main-text-color, 0.1);
+  padding-top: 1rem;
+}
+
+.urgent-note {
+  border-radius: $major-border-radius;
+  border: 1px solid rgba(#d93025, 0.4);
+  background: rgba(#d93025, 0.08);
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.urgent-note__message {
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.urgent-note__meta {
+  font-size: 0.8rem;
+  color: rgba(#d93025, 0.8);
+}
+
+.urgent-note--acknowledged {
+  border-color: rgba(#007350, 0.35);
+  background: rgba(#00a76f, 0.08);
+}
+
+.urgent-note--acknowledged .urgent-note__meta {
+  color: #007350;
+}
+
+@media (max-width: 1080px) {
+  .stage-timer__content {
+    flex-direction: column;
+  }
+
+  .stage-timer__detail {
+    position: relative;
+    top: 0;
+    width: 100%;
+  }
+}

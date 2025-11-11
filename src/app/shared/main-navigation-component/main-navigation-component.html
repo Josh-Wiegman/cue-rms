@@ -16,10 +16,25 @@
 
   <ul class="nav__links">
     @for (item of navItems; track item.label) {
-      <li>
-        <a [routerLink]="item.path" routerLinkActive="active">{{
-          item.label
-        }}</a>
+      <li [class.nav__item--group]="isGroup(item)">
+        @if (isGroup(item)) {
+          <div class="nav__group">
+            <div class="nav__group-label">{{ item.label }}</div>
+            <ul class="nav__group-links">
+              @for (child of item.children; track child.label) {
+                <li>
+                  <a [routerLink]="child.path" routerLinkActive="active">
+                    {{ child.label }}
+                  </a>
+                </li>
+              }
+            </ul>
+          </div>
+        } @else {
+          <a [routerLink]="item.path" routerLinkActive="active">{{
+            item.label
+          }}</a>
+        }
       </li>
     }
   </ul>

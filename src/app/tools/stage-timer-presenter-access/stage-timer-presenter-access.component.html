@@ -1,0 +1,47 @@
+<section class="presenter-access">
+  <div class="presenter-access__card">
+    <header class="presenter-access__header">
+      <h1>Presenter access</h1>
+      <p>Join an active stage timer by entering the unique presenter code.</p>
+    </header>
+
+    <form class="presenter-access__form" (ngSubmit)="submit($event)">
+      <label>
+        <span>Timer code</span>
+        <input
+          type="text"
+          name="codeInput"
+          [(ngModel)]="codeInput"
+          maxlength="8"
+          placeholder="e.g. ABC12"
+          autocomplete="off"
+          autocapitalize="characters"
+        />
+      </label>
+      <button type="submit" class="btn btn--primary">Open presenter view</button>
+    </form>
+    <p class="presenter-access__error" *ngIf="errorMessage">{{ errorMessage }}</p>
+
+    <section class="presenter-access__active" *ngIf="timers$ | async as timers">
+      <header>
+        <h2>Active timers</h2>
+        <p>Tap a timer below to jump straight into its presenter view.</p>
+      </header>
+      <ul>
+        <li *ngFor="let timer of timers; trackBy: trackByTimer">
+          <div class="timer-title">
+            <strong>{{ timer.name }}</strong>
+            <span>{{ timer.status | titlecase }}</span>
+          </div>
+          <div class="timer-code">Code · {{ timer.code }}</div>
+          <button type="button" class="btn" (click)="openTimer(timer)">
+            Open presenter
+          </button>
+        </li>
+        <li *ngIf="!timers.length" class="presenter-access__empty">
+          No active timers. <a (click)="goToDashboard()">Create one now.</a>
+        </li>
+      </ul>
+    </section>
+  </div>
+</section>

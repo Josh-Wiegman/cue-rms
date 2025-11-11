@@ -121,6 +121,13 @@ export const routes: Routes = [
     canActivate: [authGuard],
   },
   {
+    path: 'tools',
+    loadChildren: () =>
+      import('./tools/tools.routes').then((m) => m.ToolsRoutes),
+    title: 'Tools | Cue RMS',
+    canActivate: [authGuard],
+  },
+  {
     path: '**',
     component: NotFoundComponent,
     title: 'Page not found | Cue RMS',
