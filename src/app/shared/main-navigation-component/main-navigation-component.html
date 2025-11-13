@@ -28,18 +28,16 @@
     <div class="nav__actions--user">
       {{ user.displayName }} · L{{ user.permissionLevel }}
     </div>
-    <div class="nav__actions--more">
-      <img
-        src="more-vertical.svg"
-        alt="Account options"
-        title="Account options"
-      />
-      <ul class="nav__actions--sub-nav">
-        <li>
-          <a routerLink="/settings" routerLinkActive="active">Settings</a>
-        </li>
-        <li><button (click)="logout()">Sign out</button></li>
-      </ul>
-    </div>
+    <dropdown-menu
+      menuLabel="test"
+      iconPath="more-vertical.svg"
+      horizontal
+      iconOnly
+    >
+      <dropdown-menu-item routerLink="/settings" routerLinkActive="active"
+        >Settings</dropdown-menu-item
+      >
+      <dropdown-menu-item (click)="logout()">Sign out</dropdown-menu-item>
+    </dropdown-menu>
   </div>
 </nav>
