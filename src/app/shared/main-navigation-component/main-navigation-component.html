@@ -29,7 +29,7 @@
       {{ user.displayName }} · L{{ user.permissionLevel }}
     </div>
     <dropdown-menu
-      menuLabel="test"
+      menuLabel="Account Options"
       iconPath="more-vertical.svg"
       horizontal
       iconOnly
@@ -37,7 +37,7 @@
       <dropdown-menu-item routerLink="/settings" routerLinkActive="active"
         >Settings</dropdown-menu-item
       >
-      <dropdown-menu-item (click)="logout()">Sign out</dropdown-menu-item>
+      <dropdown-menu-item (onClick)="logout()">Sign out</dropdown-menu-item>
     </dropdown-menu>
   </div>
 </nav>

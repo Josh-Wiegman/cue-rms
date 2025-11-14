@@ -4,9 +4,9 @@
       <img [src]="iconPath" [alt]="menuLabel" />
     } @else if (iconPath) {
       <img [src]="iconPath" />
-      <p>{{ menuLabel }}</p>
+      <p style="padding-right: 0.75rem">{{ menuLabel }}</p>
     } @else {
-      <p>{{ menuLabel }}</p>
+      <p style="padding: 0 0.5rem">{{ menuLabel }}</p>
     }
   </div>
   <div

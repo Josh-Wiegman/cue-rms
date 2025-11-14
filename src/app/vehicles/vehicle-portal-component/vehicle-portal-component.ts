@@ -28,11 +28,20 @@ import {
   Vehicle,
   VehicleStatus,
 } from '../models/vehicle.model';
+import { DropdownMenuItem } from '../../shared/dropdown-menu/dropdown-menu-item/dropdown-menu-item';
+import { DropdownMenu } from '../../shared/dropdown-menu/dropdown-menu';
 
 @Component({
   selector: 'vehicle-portal-component',
   standalone: true,
-  imports: [CommonModule, FormsModule, ReactiveFormsModule, UiShellComponent],
+  imports: [
+    CommonModule,
+    FormsModule,
+    ReactiveFormsModule,
+    UiShellComponent,
+    DropdownMenuItem,
+    DropdownMenu,
+  ],
   templateUrl: './vehicle-portal-component.html',
   styleUrl: './vehicle-portal-component.scss',
 })

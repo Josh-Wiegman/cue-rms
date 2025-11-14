@@ -1,4 +1,4 @@
-import { Component, input } from '@angular/core';
+import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { Router } from '@angular/router';
 
 @Component({
@@ -8,14 +8,22 @@ import { Router } from '@angular/router';
   styleUrl: './dropdown-menu-item.scss',
 })
 export class DropdownMenuItem {
-  onClick = input();
-  routerLink = input<string>();
+  @Input()
+  routerLink?: string;
+  @Output()
+  onClick = new EventEmitter<void>();
+  @Input()
+  disabled?: boolean;
 
   constructor(private router: Router) {}
 
-  navigate() {
+  handleClick() {
+    if (this.disabled) return;
+
+    this.onClick?.emit();
+
     if (this.routerLink) {
-      this.router.navigate([this.routerLink()]);
+      this.router.navigate([this.routerLink]);
     }
   }
 }

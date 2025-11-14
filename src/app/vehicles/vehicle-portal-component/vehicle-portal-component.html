@@ -162,38 +162,30 @@
                 {{ selectedVehicle()?.location }}
               </p>
             </div>
-            <div class="vehicle__actions--more">
-              <img src="more-vertical.svg" alt="More" />
-              <ul class="vehicle__actions--sub-nav">
-                <li>
-                  <button
-                    (click)="markVehicleStatus('active')"
-                    [disabled]="selectedVehicle()?.status === 'active'"
-                  >
-                    Mark active
-                  </button>
-                </li>
-                <li>
-                  <button
-                    (click)="markVehicleStatus('unavailable')"
-                    [disabled]="selectedVehicle()?.status === 'unavailable'"
-                  >
-                    Mark unavailable
-                  </button>
-                </li>
-                <li>
-                  <button
-                    (click)="markVehicleStatus('archived')"
-                    [disabled]="selectedVehicle()?.status === 'archived'"
-                  >
-                    Archive vehicle
-                  </button>
-                </li>
-                <li>
-                  <button (click)="exportSelectedVehicle()">Export CSV</button>
-                </li>
-              </ul>
-            </div>
+            <dropdown-menu
+              menuLabel="Vehicle actions"
+              iconPath="more-vertical.svg"
+              iconOnly
+            >
+              <dropdown-menu-item
+                (onClick)="markVehicleStatus('active')"
+                [disabled]="selectedVehicle()?.status === 'active'"
+                >Mark active</dropdown-menu-item
+              >
+              <dropdown-menu-item
+                (onClick)="markVehicleStatus('unavailable')"
+                [disabled]="selectedVehicle()?.status === 'unavailable'"
+                >Mark unavailable</dropdown-menu-item
+              >
+              <dropdown-menu-item
+                (onClick)="markVehicleStatus('archived')"
+                [disabled]="selectedVehicle()?.status === 'archived'"
+                >Archive vehicle</dropdown-menu-item
+              >
+              <dropdown-menu-item (onClick)="exportSelectedVehicle()"
+                >Export CSV</dropdown-menu-item
+              >
+            </dropdown-menu>
           </header>
 
           <form

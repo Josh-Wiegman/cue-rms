@@ -1,3 +1,7 @@
-<button class="dropdown__menu__item" (click)="navigate()">
+<button
+  class="dropdown__menu__item"
+  (click)="handleClick()"
+  [disabled]="disabled"
+>
   <ng-content></ng-content>
 </button>

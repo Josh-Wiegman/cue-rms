@@ -7,11 +7,23 @@
   display: block;
   border-radius: $minor-border-radius-internal;
   transition: $quick-transition;
-  cursor: pointer;
   text-align: left;
 }
 
-.dropdown__menu__item:hover {
+.dropdown__menu__item:enabled {
+  cursor: pointer;
+}
+
+.dropdown__menu__item:enabled:hover {
   background-color: rgba($accent-color, 0.14);
   color: $accent-color;
+}
+
+.dropdown__menu__item button {
+  background: none;
+  border: none;
+}
+
+.dropdown__menu__item:disabled {
+  color: rgba($main-text-color, 0.5);
 }
