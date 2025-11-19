@@ -2,7 +2,7 @@ import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { Router } from '@angular/router';
 
 @Component({
-  selector: 'dropdown-menu-item',
+  selector: 'cg-dropdown-menu-item',
   imports: [],
   templateUrl: './dropdown-menu-item.html',
   styleUrl: './dropdown-menu-item.scss',

@@ -20,7 +20,7 @@
   height: 1.25rem;
   width: 1.25rem;
 }
-.dropdown__menu__more:hover {
+.dropdown__menu:hover > .dropdown__menu__more {
   background-color: rgba($accent-color, 0.16);
   color: $accent-color;
   transition: $quick-transition;

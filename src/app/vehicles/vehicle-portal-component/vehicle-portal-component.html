@@ -162,30 +162,30 @@
                 {{ selectedVehicle()?.location }}
               </p>
             </div>
-            <dropdown-menu
+            <cg-dropdown-menu
               menuLabel="Vehicle actions"
               iconPath="more-vertical.svg"
               iconOnly
             >
-              <dropdown-menu-item
+              <cg-dropdown-menu-item
                 (onClick)="markVehicleStatus('active')"
                 [disabled]="selectedVehicle()?.status === 'active'"
-                >Mark active</dropdown-menu-item
+                >Mark active</cg-dropdown-menu-item
               >
-              <dropdown-menu-item
+              <cg-dropdown-menu-item
                 (onClick)="markVehicleStatus('unavailable')"
                 [disabled]="selectedVehicle()?.status === 'unavailable'"
-                >Mark unavailable</dropdown-menu-item
+                >Mark unavailable</cg-dropdown-menu-item
               >
-              <dropdown-menu-item
+              <cg-dropdown-menu-item
                 (onClick)="markVehicleStatus('archived')"
                 [disabled]="selectedVehicle()?.status === 'archived'"
-                >Archive vehicle</dropdown-menu-item
+                >Archive vehicle</cg-dropdown-menu-item
               >
-              <dropdown-menu-item (onClick)="exportSelectedVehicle()"
-                >Export CSV</dropdown-menu-item
+              <cg-dropdown-menu-item (onClick)="exportSelectedVehicle()"
+                >Export CSV</cg-dropdown-menu-item
               >
-            </dropdown-menu>
+            </cg-dropdown-menu>
           </header>
 
           <form

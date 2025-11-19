@@ -1,7 +1,7 @@
 import { booleanAttribute, Component, Input } from '@angular/core';
 
 @Component({
-  selector: 'dropdown-menu',
+  selector: 'cg-dropdown-menu',
   imports: [],
   templateUrl: './dropdown-menu.html',
   styleUrl: './dropdown-menu.scss',

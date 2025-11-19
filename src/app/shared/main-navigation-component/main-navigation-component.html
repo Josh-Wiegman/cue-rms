@@ -28,16 +28,18 @@
     <div class="nav__actions--user">
       {{ user.displayName }} · L{{ user.permissionLevel }}
     </div>
-    <dropdown-menu
+    <cg-dropdown-menu
       menuLabel="Account Options"
       iconPath="more-vertical.svg"
       horizontal
       iconOnly
     >
-      <dropdown-menu-item routerLink="/settings" routerLinkActive="active"
-        >Settings</dropdown-menu-item
+      <cg-dropdown-menu-item routerLink="/settings" routerLinkActive="active"
+        >Settings</cg-dropdown-menu-item
       >
-      <dropdown-menu-item (onClick)="logout()">Sign out</dropdown-menu-item>
-    </dropdown-menu>
+      <cg-dropdown-menu-item (onClick)="logout()"
+        >Sign out</cg-dropdown-menu-item
+      >
+    </cg-dropdown-menu>
   </div>
 </nav>
