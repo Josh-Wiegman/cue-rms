@@ -1,0 +1,8 @@
+@use "../../../style/colors.scss" as *;
+
+.panel {
+  background-color: $main-light-color;
+  border-radius: $major-border-radius;
+  @include box-shadow;
+  padding: 1.25rem 1.5rem;
+}

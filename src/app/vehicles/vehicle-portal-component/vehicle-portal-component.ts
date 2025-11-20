@@ -30,6 +30,7 @@ import {
 } from '../models/vehicle.model';
 import { DropdownMenuItem } from '../../shared/dropdown-menu/dropdown-menu-item/dropdown-menu-item';
 import { DropdownMenu } from '../../shared/dropdown-menu/dropdown-menu';
+import { Panel } from '../../shared/panel/panel';
 
 @Component({
   selector: 'vehicle-portal-component',
@@ -41,6 +42,7 @@ import { DropdownMenu } from '../../shared/dropdown-menu/dropdown-menu';
     UiShellComponent,
     DropdownMenuItem,
     DropdownMenu,
+    Panel,
   ],
   templateUrl: './vehicle-portal-component.html',
   styleUrl: './vehicle-portal-component.scss',
