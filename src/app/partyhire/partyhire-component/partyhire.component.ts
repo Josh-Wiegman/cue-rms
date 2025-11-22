@@ -38,7 +38,10 @@ export class PartyHireComponent implements OnInit {
   private readonly partyHireService = inject(PartyHireService);
   private readonly orgBrandingService = inject(OrgBrandingService);
   private readonly authService = inject(AuthService);
+  private readonly timeStepMinutes = 15;
 
+  protected startTimeOpen = false;
+  protected endTimeOpen = false;
   protected inventory: PartyHireStockItem[] = [];
   protected orders: PartyHireOrder[] = [];
   protected groupedOrders: {
@@ -59,8 +62,13 @@ export class PartyHireComponent implements OnInit {
     contactEmail: ['', [Validators.required, Validators.email]],
     contactPhone: [''],
     eventName: ['', Validators.required],
-    startDate: ['', Validators.required],
+
+    // split date + time
+    startDate: ['', Validators.required], // type="date"
+    startTime: ['09:00', Validators.required], // HH:mm
     endDate: ['', Validators.required],
+    endTime: ['17:00', Validators.required],
+
     location: ['', Validators.required],
     deliveryMethod: ['pickup', Validators.required],
     notes: [''],
@@ -114,6 +122,36 @@ export class PartyHireComponent implements OnInit {
     group.get('searchTerm')?.setValue(stock.name);
   }
 
+  protected displayTimeLabel(controlName: 'startTime' | 'endTime'): string {
+    const value = this.orderForm.get(controlName)?.value as string | null;
+    return value || 'Select time';
+  }
+
+  protected setStartTime(value: string): void {
+    this.orderForm.patchValue({ startTime: value });
+    this.startTimeOpen = false;
+  }
+
+  protected setEndTime(value: string): void {
+    this.orderForm.patchValue({ endTime: value });
+    this.endTimeOpen = false;
+  }
+
+  private combineDateAndTime(date: string, time: string): string {
+    // date: "2025-11-22", time: "18:15"
+    if (!date || !time) return '';
+
+    return `${date}T${time}`; // matches datetime-local format
+  }
+
+  protected readonly timeSlots = Array.from({ length: 24 * 4 }, (_, i) => {
+    const hours = Math.floor(i / 4);
+    const minutes = (i % 4) * 15;
+    const pad = (n: number) => String(n).padStart(2, '0');
+    const value = `${pad(hours)}:${pad(minutes)}`;
+    return { value, label: value }; // you could format label as 12h if you want
+  });
+
   protected async submitOrder(): Promise<void> {
     if (this.orderForm.invalid) {
       this.orderForm.markAllAsTouched();
@@ -121,6 +159,16 @@ export class PartyHireComponent implements OnInit {
     }
 
     const value = this.orderForm.getRawValue();
+
+    const startDateTime = this.combineDateAndTime(
+      value.startDate ?? '',
+      value.startTime ?? '',
+    );
+    const endDateTime = this.combineDateAndTime(
+      value.endDate ?? '',
+      value.endTime ?? '',
+    );
+
     const items = (value.items ?? []).map((item) => ({
       stockId: Number(item?.['stockId']),
       quantity: Number(item?.['quantity']),
@@ -133,8 +181,8 @@ export class PartyHireComponent implements OnInit {
       contactEmail: value.contactEmail ?? '',
       contactPhone: value.contactPhone ?? '',
       eventName: value.eventName ?? '',
-      startDate: value.startDate ?? '',
-      endDate: value.endDate ?? '',
+      startDate: startDateTime,
+      endDate: endDateTime,
       location: value.location ?? '',
       deliveryMethod:
         (value.deliveryMethod as 'pickup' | 'delivery') ?? 'pickup',
@@ -149,8 +197,11 @@ export class PartyHireComponent implements OnInit {
     this.orderForm.reset({
       deliveryMethod: 'pickup',
       recipients: value.recipients,
+      startTime: '09:00',
+      endTime: '17:00',
       items: [],
     });
+
     this.itemsArray.push(this.buildItemGroup());
 
     this.showOrderModal = false;
@@ -180,6 +231,30 @@ export class PartyHireComponent implements OnInit {
   ): Promise<void> {
     await this.partyHireService.updateStatus(order.id, status);
     await this.refreshData();
+  }
+
+  protected snapToQuarterHour(controlName: 'startDate' | 'endDate'): void {
+    const control = this.orderForm.get(controlName);
+    const raw = control?.value as string | null;
+    if (!control || !raw) return;
+
+    // raw is e.g. "2025-11-22T18:07"
+    const date = new Date(raw);
+
+    const minutes = date.getMinutes();
+    const roundedMinutes =
+      Math.round(minutes / this.timeStepMinutes) * this.timeStepMinutes;
+
+    date.setMinutes(roundedMinutes, 0, 0);
+
+    // Format back to "yyyy-MM-ddTHH:mm" in *local* time
+    const pad = (n: number) => String(n).padStart(2, '0');
+    const localValue =
+      `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}` +
+      `T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+
+    control.setValue(localValue);
+    control.markAsDirty();
   }
 
   protected async saveReconciliation(order: PartyHireOrder): Promise<void> {

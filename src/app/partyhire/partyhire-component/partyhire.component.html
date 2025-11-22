@@ -37,13 +37,13 @@
               (click)="toggleArchived()"
               aria-label="Toggle archived orders"
             >
-              {{ showArchived ? 'Hide archived sales orders' : 'View archived sales orders' }}
+              {{
+                showArchived
+                  ? "Hide archived sales orders"
+                  : "View archived sales orders"
+              }}
             </button>
-            <button
-              type="button"
-              class="primary"
-              (click)="openOrderModal()"
-            >
+            <button type="button" class="primary" (click)="openOrderModal()">
               + Add sales order
             </button>
             <div class="calendar-message" *ngIf="calendarMessage">
@@ -61,7 +61,7 @@
           <div class="order-group">
             <div class="date-heading">
               <p class="eyebrow">{{ group.label }}</p>
-              <p class="muted">{{ group.date | date: 'fullDate' }}</p>
+              <p class="muted">{{ group.date | date: "fullDate" }}</p>
             </div>
             <div class="order-list">
               <article
@@ -87,8 +87,8 @@
                       >{{ order.status }}</span
                     >
                     <p class="muted">
-                      {{ order.startDate | date: 'mediumTime' }} →
-                      {{ order.endDate | date: 'mediumTime' }}
+                      {{ order.startDate | date: "mediumTime" }} →
+                      {{ order.endDate | date: "mediumTime" }}
                     </p>
                     <p class="muted">{{ order.location }}</p>
                   </div>
@@ -98,7 +98,10 @@
                     type="button"
                     class="ghost"
                     (click)="updateStatus(order, 'Collected')"
-                    [disabled]="order.status === 'Collected' || order.status === 'Returned'"
+                    [disabled]="
+                      order.status === 'Collected' ||
+                      order.status === 'Returned'
+                    "
                   >
                     Collected
                   </button>
@@ -149,7 +152,11 @@
               ×
             </button>
           </header>
-          <form class="modal__form" [formGroup]="orderForm" (ngSubmit)="submitOrder()">
+          <form
+            class="modal__form"
+            [formGroup]="orderForm"
+            (ngSubmit)="submitOrder()"
+          >
             <div class="form-grid">
               <label>
                 <span>Customer / company</span>
@@ -184,21 +191,63 @@
                 />
               </label>
               <label>
-                <span>Start</span>
-                <input
-                  type="datetime-local"
-                  formControlName="startDate"
-                  step="900"
-                />
+                <span>Start date</span>
+                <input type="date" formControlName="startDate" />
               </label>
+
               <label>
-                <span>Return</span>
-                <input
-                  type="datetime-local"
-                  formControlName="endDate"
-                  step="900"
-                />
+                <span>Start time</span>
+                <div class="time-select">
+                  <button
+                    type="button"
+                    class="time-select__trigger"
+                    (click)="startTimeOpen = !startTimeOpen"
+                  >
+                    {{ displayTimeLabel("startTime") }}
+                  </button>
+
+                  <div class="time-select__menu" *ngIf="startTimeOpen">
+                    <button
+                      type="button"
+                      class="time-select__option"
+                      *ngFor="let slot of timeSlots"
+                      (click)="setStartTime(slot.value)"
+                    >
+                      {{ slot.label }}
+                    </button>
+                  </div>
+                </div>
               </label>
+
+              <label>
+                <span>Return date</span>
+                <input type="date" formControlName="endDate" />
+              </label>
+
+              <label>
+                <span>Return time</span>
+                <div class="time-select">
+                  <button
+                    type="button"
+                    class="time-select__trigger"
+                    (click)="endTimeOpen = !endTimeOpen"
+                  >
+                    {{ displayTimeLabel("endTime") }}
+                  </button>
+
+                  <div class="time-select__menu" *ngIf="endTimeOpen">
+                    <button
+                      type="button"
+                      class="time-select__option"
+                      *ngFor="let slot of timeSlots"
+                      (click)="setEndTime(slot.value)"
+                    >
+                      {{ slot.label }}
+                    </button>
+                  </div>
+                </div>
+              </label>
+
               <label>
                 <span>Location</span>
                 <input
@@ -317,7 +366,8 @@
               <p class="eyebrow">{{ activeOrder!.reference }}</p>
               <h2 id="orderDetailTitle">{{ activeOrder!.eventName }}</h2>
               <p class="muted">
-                {{ activeOrder!.customerName }} • {{ activeOrder!.contactEmail }}
+                {{ activeOrder!.customerName }} •
+                {{ activeOrder!.contactEmail }}
               </p>
             </div>
             <div class="modal__header-actions">
@@ -342,8 +392,8 @@
               <div>
                 <p class="eyebrow">Schedule</p>
                 <p>
-                  {{ activeOrder!.startDate | date: 'medium' }} →
-                  {{ activeOrder!.endDate | date: 'medium' }}
+                  {{ activeOrder!.startDate | date: "medium" }} →
+                  {{ activeOrder!.endDate | date: "medium" }}
                 </p>
               </div>
               <div>
@@ -369,8 +419,8 @@
                 <p class="muted">
                   Attendees:
                   {{
-                    activeOrder!.calendarEvent.attendees.join(', ') ||
-                      'None listed'
+                    activeOrder!.calendarEvent.attendees.join(", ") ||
+                      "None listed"
                   }}
                 </p>
               </div>
@@ -420,8 +470,8 @@
               <div class="returns">
                 <p class="eyebrow">Returns & reconciliation</p>
                 <p class="muted">
-                  Status updates automatically when you save reconciliation. Predicted
-                  status: {{ computedReturnStatus(activeOrder!) }}.
+                  Status updates automatically when you save reconciliation.
+                  Predicted status: {{ computedReturnStatus(activeOrder!) }}.
                 </p>
                 <div class="return-grid">
                   <label *ngFor="let item of activeOrder!.items">
@@ -432,7 +482,11 @@
                       [max]="item.quantity"
                       [ngModel]="returnSheets[activeOrder!.id][item.stockId]"
                       (ngModelChange)="
-                        setReturnedQuantity(activeOrder!.id, item.stockId, $event)
+                        setReturnedQuantity(
+                          activeOrder!.id,
+                          item.stockId,
+                          $event
+                        )
                       "
                       name="return-{{ activeOrder!.id }}-{{ item.stockId }}"
                     />

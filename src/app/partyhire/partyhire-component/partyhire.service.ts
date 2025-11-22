@@ -393,14 +393,34 @@ export class PartyHireService {
     reference: string,
     total: number,
   ): string {
+    const pickup = new Date(payload.startDate);
+    const dropoff = new Date(payload.endDate);
+
+    const fmt = (d: Date) =>
+      d.toLocaleString('en-NZ', {
+        hour: 'numeric',
+        minute: '2-digit',
+        day: 'numeric',
+        month: 'long',
+      });
     return [
-      `Reference: ${reference}`,
-      `Customer: ${payload.customerName} (${payload.contactEmail})`,
+      `Customer Details:`,
+      `Order Reference: ${reference}`,
+      `Customer: ${payload.customerName}`,
+      `Phone: ${payload.contactPhone || '—'}`,
+      ``,
+      `Event Details:`,
       `Event: ${payload.eventName}`,
+      `Pickup Time: ${fmt(pickup)}`,
+      `Return Time: ${fmt(dropoff)}`,
       `Location: ${payload.location}`,
-      `Delivery: ${payload.deliveryMethod.toUpperCase()}`,
-      `Hire total: $${total.toFixed(2)}`,
-      payload.notes ? `Notes: ${payload.notes}` : null,
+      `Type: ${payload.deliveryMethod === 'pickup' ? 'Pick up' : 'Delivery'}`,
+      ``,
+      `Finances:`,
+      `Hire Total: $${total.toFixed(2)} incl GST`,
+      ``,
+      `Notes:`,
+      payload.notes ? `${payload.notes}` : `—`,
     ]
       .filter(Boolean)
       .join('\n');
