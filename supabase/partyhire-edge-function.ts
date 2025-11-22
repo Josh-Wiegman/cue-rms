@@ -4,10 +4,10 @@
 import { serve } from 'https://deno.land/std@0.177.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.2';
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
+const baseCorsHeaders = {
   'Access-Control-Allow-Headers':
-    'authorization, x-client-info, apikey, content-type, x-org-slug',
+    'authorization, x-client-info, apikey, content-type, x-org-slug, origin',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
 };
 
 type PartyHirePayload = {
@@ -16,6 +16,7 @@ type PartyHirePayload = {
   order?: Record<string, unknown>;
   status?: string;
   returns?: Record<string, number>;
+  origin?: string;
 };
 
 const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? '';
@@ -26,12 +27,17 @@ if (!supabaseUrl || !supabaseServiceRoleKey) {
 }
 
 serve(async (req) => {
-  if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
+  const requestOrigin = req.headers.get('origin');
+  if (req.method === 'OPTIONS') return new Response('ok', { headers: buildCorsHeaders(requestOrigin) });
 
+  let responseOrigin = requestOrigin ?? '*';
   try {
     const body = (await req.json()) as PartyHirePayload;
     const action = body?.action;
-    if (!action) return json({ error: 'Action is required' }, 400);
+    responseOrigin = requestOrigin ?? String(body.origin ?? '*');
+    if (!action) return json({ error: 'Action is required' }, 400, responseOrigin);
+
+    const origin = responseOrigin;
 
     const orgSlug = (req.headers.get('x-org-slug') ?? body.orgSlug ?? 'public').toLowerCase();
 
@@ -74,13 +80,13 @@ serve(async (req) => {
         );
         break;
       default:
-        return json({ error: `Unsupported action: ${action}` }, 400);
+        return json({ error: `Unsupported action: ${action}` }, 400, responseOrigin);
     }
 
-    return json(result ?? { ok: true });
+    return json(result ?? { ok: true }, 200, origin);
   } catch (error) {
     console.error('PartyHire edge error', error);
-    return json({ error: error?.message ?? 'Unexpected error' }, 500);
+    return json({ error: error?.message ?? 'Unexpected error' }, 500, responseOrigin);
   }
 });
 
@@ -448,9 +454,13 @@ function toCalendarDate(date: string): string {
   return `${year}${month}${day}T${hours}${minutes}${seconds}Z`;
 }
 
-function json(body: unknown, status = 200) {
+function buildCorsHeaders(origin?: string | null) {
+  return { ...baseCorsHeaders, 'Access-Control-Allow-Origin': origin ?? '*' };
+}
+
+function json(body: unknown, status = 200, origin?: string | null) {
   return new Response(JSON.stringify(body), {
     status,
-    headers: { 'content-type': 'application/json', ...corsHeaders },
+    headers: { 'content-type': 'application/json', ...buildCorsHeaders(origin) },
   });
 }

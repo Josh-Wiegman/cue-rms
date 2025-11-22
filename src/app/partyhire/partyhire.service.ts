@@ -128,6 +128,7 @@ export class PartyHireService {
 
   private readonly anonKey = environment.supabaseKey ?? '';
   private readonly baseUrl = this.buildBaseUrl();
+  private readonly origin = this.resolveOrigin();
 
   private readonly fallbackStock: PartyHireStockItem[] = structuredClone(DEFAULT_STOCK);
   private readonly fallbackOrders: PartyHireOrder[] = [];
@@ -430,6 +431,15 @@ export class PartyHireService {
     return order;
   }
 
+  private resolveOrigin(): string | undefined {
+    try {
+      return typeof window !== 'undefined' ? window.location.origin : undefined;
+    } catch (error) {
+      console.warn('PartyHire: unable to read window origin', error);
+      return undefined;
+    }
+  }
+
   private buildBaseUrl(): string {
     const root = environment.supabaseDataUrl.replace(/\/+$/, '');
     const fn = environment.partyHireEdgeFunction ?? 'partyhire';
@@ -447,6 +457,7 @@ export class PartyHireService {
     const headers: Record<string, string> = {
       'content-type': 'application/json',
       'x-org-slug': this.authService.orgSlug,
+      ...(this.origin ? { origin: this.origin } : {}),
       apikey: this.anonKey,
       authorization: `Bearer ${accessToken ?? this.anonKey}`,
     };
@@ -455,7 +466,7 @@ export class PartyHireService {
       const response = await fetch(this.baseUrl, {
         method: 'POST',
         headers,
-        body: JSON.stringify({ action, order, returns }),
+        body: JSON.stringify({ action, order, returns, origin: this.origin }),
       });
 
       if (!response.ok) {
