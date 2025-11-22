@@ -64,7 +64,7 @@ export class PartyHireComponent implements OnInit {
     location: ['', Validators.required],
     deliveryMethod: ['pickup', Validators.required],
     notes: [''],
-    recipients: ['operations@cue-rms.local'],
+    recipients: ['palmy_operations@gravityevents.co.nz'],
     items: this.fb.array([this.buildItemGroup()]),
   });
 
