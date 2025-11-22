@@ -64,7 +64,7 @@ export class PartyHireComponent implements OnInit {
     location: ['', Validators.required],
     deliveryMethod: ['pickup', Validators.required],
     notes: [''],
-    recipients: ['operations@cue-rms.local'],
+    recipients: ['palmy_operations@gravityevents.co.nz'],
     items: this.fb.array([this.buildItemGroup()]),
   });
 
@@ -325,11 +325,11 @@ export class PartyHireComponent implements OnInit {
     this.orders
       .filter((order) => this.showArchived || order.status !== 'Returned')
       .forEach((order) => {
-      const dateKey = new Date(order.startDate).toDateString();
-      const group = dateMap.get(dateKey) ?? [];
-      group.push(order);
-      dateMap.set(dateKey, group);
-    });
+        const dateKey = new Date(order.startDate).toDateString();
+        const group = dateMap.get(dateKey) ?? [];
+        group.push(order);
+        dateMap.set(dateKey, group);
+      });
 
     const sortedKeys = Array.from(dateMap.keys()).sort((a, b) => {
       const dateA = new Date(a).setHours(0, 0, 0, 0);
@@ -378,7 +378,8 @@ export class PartyHireComponent implements OnInit {
     const printWindow = window.open('', '_blank', 'width=900,height=1200');
     if (!printWindow) return;
 
-    printWindow.document.write(`<!doctype html><html><head><title>${title}</title>
+    printWindow.document
+      .write(`<!doctype html><html><head><title>${title}</title>
       <style>
         body { font-family: 'Inter', system-ui, -apple-system, sans-serif; margin: 0; padding: 1.5rem; color: #0f172a; }
         h1, h2, h3, h4 { margin: 0 0 0.35rem 0; }
