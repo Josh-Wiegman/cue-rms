@@ -9,7 +9,7 @@ import {
   Validators,
 } from '@angular/forms';
 import { CurrencyPipe, DatePipe } from '@angular/common';
-import { UiShellComponent } from '../shared/ui-shell/ui-shell-component';
+import { UiShellComponent } from '../../shared/ui-shell/ui-shell-component';
 import {
   PartyHireOrder,
   PartyHireOrderStatus,
@@ -120,7 +120,8 @@ export class PartyHireComponent implements OnInit {
       startDate: value.startDate ?? '',
       endDate: value.endDate ?? '',
       location: value.location ?? '',
-      deliveryMethod: (value.deliveryMethod as 'pickup' | 'delivery') ?? 'pickup',
+      deliveryMethod:
+        (value.deliveryMethod as 'pickup' | 'delivery') ?? 'pickup',
       notes: value.notes ?? '',
       recipients,
       items,
@@ -140,7 +141,10 @@ export class PartyHireComponent implements OnInit {
     this.initialiseReturnSheet(order);
   }
 
-  protected updateStatus(order: PartyHireOrder, status: PartyHireOrderStatus): void {
+  protected updateStatus(
+    order: PartyHireOrder,
+    status: PartyHireOrderStatus,
+  ): void {
     this.partyHireService.updateStatus(order.id, status);
     this.refreshData();
   }
@@ -157,7 +161,8 @@ export class PartyHireComponent implements OnInit {
   protected regenerateCalendar(order: PartyHireOrder): void {
     this.partyHireService.regenerateCalendar(order.id);
     this.refreshData();
-    this.calendarMessage = 'A fresh calendar invite has been generated for this order.';
+    this.calendarMessage =
+      'A fresh calendar invite has been generated for this order.';
   }
 
   protected printOrder(order: PartyHireOrder): void {
@@ -198,7 +203,10 @@ export class PartyHireComponent implements OnInit {
   private initialiseReturnSheet(order: PartyHireOrder): void {
     if (!this.returnSheets[order.id]) {
       this.returnSheets[order.id] = Object.fromEntries(
-        order.items.map((item) => [item.stockId, order.returnedItems?.[item.stockId] ?? item.quantity]),
+        order.items.map((item) => [
+          item.stockId,
+          order.returnedItems?.[item.stockId] ?? item.quantity,
+        ]),
       );
     }
   }
