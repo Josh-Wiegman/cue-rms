@@ -24,8 +24,10 @@ export class StageTimerDashboardComponent implements OnInit, OnDestroy {
   private subscription?: Subscription;
 
   protected timers$ = this.stageTimerService.timers$;
+
   protected selectedTimerId: string | null = null;
-  protected selected: StageTimer | null = null; // component-level selected
+  protected selectedTimer: StageTimer | null = null;
+
   protected showCreateForm = false;
   protected newTimerName = '';
   protected newTimerMinutes = 5;
@@ -35,26 +37,25 @@ export class StageTimerDashboardComponent implements OnInit, OnDestroy {
 
   async ngOnInit(): Promise<void> {
     await this.stageTimerService.loadTimers();
+
     this.subscription = this.timers$.subscribe((timers) => {
       if (!timers.length) {
         this.selectedTimerId = null;
-        this.selected = null;
+        this.selectedTimer = null;
         return;
       }
 
       if (this.selectedTimerId) {
-        const existing = timers.find(
-          (timer) => timer.id === this.selectedTimerId,
-        );
+        const existing = timers.find((t) => t.id === this.selectedTimerId);
         if (existing) {
-          this.selected = existing;
+          this.selectedTimer = existing;
           return;
         }
       }
 
-      const first = timers[0] ?? null;
-      this.selectedTimerId = first?.id ?? null;
-      this.selected = first;
+      const first = timers[0];
+      this.selectedTimerId = first.id;
+      this.selectedTimer = first;
     });
   }
 
@@ -72,7 +73,7 @@ export class StageTimerDashboardComponent implements OnInit, OnDestroy {
     };
     const timer = await this.stageTimerService.createTimer(payload);
     this.selectedTimerId = timer.id;
-    this.selected = timer;
+    this.selectedTimer = timer;
     this.showCreateForm = false;
     this.newTimerName = '';
     this.newTimerMinutes = 5;
@@ -81,7 +82,7 @@ export class StageTimerDashboardComponent implements OnInit, OnDestroy {
 
   protected selectTimer(timer: StageTimer): void {
     this.selectedTimerId = timer.id;
-    this.selected = timer;
+    this.selectedTimer = timer;
     this.noteDraft = '';
     this.urgentNoteDraft = '';
   }
@@ -115,10 +116,9 @@ export class StageTimerDashboardComponent implements OnInit, OnDestroy {
     this.noteDraft = '';
   }
 
-  // NOTE: allow null here because the template may pass selected: StageTimer | null
-  protected async addUrgentNote(timer: StageTimer | null): Promise<void> {
+  protected async addUrgentNote(timer: StageTimer): Promise<void> {
     const draft = this.urgentNoteDraft.trim();
-    if (!draft || !timer) return;
+    if (!draft) return;
     await this.stageTimerService.addUrgentNote(timer.id, draft);
     this.urgentNoteDraft = '';
   }
