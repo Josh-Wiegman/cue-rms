@@ -1,3 +1,5 @@
+@use "../../../style/colors.scss" as *;
+
 .partyhire {
   display: flex;
   flex-direction: column;
@@ -10,11 +12,11 @@
   justify-content: space-between;
   gap: 1rem;
   align-items: flex-start;
-  background: #0f172a;
-  color: #fff;
+  background: $hero-gradient;
+  color: $hero-text-color;
   padding: 1.5rem;
-  border-radius: 12px;
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
+  border-radius: $major-border-radius;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.18);
 }
 
 .status-legend {
@@ -31,32 +33,32 @@
   font-weight: 600;
   text-transform: uppercase;
   font-size: 0.75rem;
-  background: #e5e7eb;
-  color: #111827;
+  background: $main-border-color;
+  color: $main-text-color;
 
   &.prepped {
-    background: #dbeafe;
-    color: #1d4ed8;
+    background: rgba($accent-color, 0.12);
+    color: $accent-color;
   }
 
   &.collected {
-    background: #fff7ed;
-    color: #c2410c;
+    background: $warning-color;
+    color: $warning-text-light-color;
   }
 
   &.returned {
-    background: #dcfce7;
-    color: #15803d;
+    background: $success-color;
+    color: $success-text-light-color;
   }
 
   &.partial-return {
-    background: #fef9c3;
-    color: #854d0e;
+    background: rgba(246, 202, 94, 0.2);
+    color: $warning-text-light-color;
   }
 
   &.missing {
-    background: #fee2e2;
-    color: #b91c1c;
+    background: $fail-color;
+    color: $fail-text-light-color;
   }
 }
 
@@ -67,18 +69,18 @@
 }
 
 .card {
-  background: #fff;
-  border-radius: 12px;
+  background: $main-light-color;
+  border-radius: $major-border-radius;
   padding: 1.5rem;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
   display: flex;
   flex-direction: column;
   gap: 1.25rem;
 }
 
 .card.secondary {
-  background: #0b1224;
-  color: #e5e7eb;
+  background: $hero-dark-color;
+  color: $hero-text-color;
 }
 
 .card-heading {
@@ -100,15 +102,15 @@ label {
   gap: 0.35rem;
   font-weight: 600;
   font-size: 0.9rem;
-  color: inherit;
+  color: $main-text-color;
 }
 
 input,
 select,
 textarea {
   padding: 0.65rem 0.75rem;
-  border: 1px solid #cbd5e1;
-  border-radius: 8px;
+  border: 1px solid $main-border-color;
+  border-radius: $minor-border-radius;
   font-size: 0.95rem;
 }
 
@@ -123,10 +125,10 @@ textarea {
 .items-section,
 .order-items,
 .return-grid {
-  background: #f8fafc;
-  border-radius: 10px;
+  background: rgba($main-border-color, 0.35);
+  border-radius: $minor-border-radius;
   padding: 1rem;
-  border: 1px solid #e2e8f0;
+  border: 1px solid $main-border-color;
 }
 
 .section-heading {
@@ -137,7 +139,7 @@ textarea {
 }
 
 .helper {
-  color: #475569;
+  color: rgba($main-text-color, 0.65);
   margin-top: 0.15rem;
 }
 
@@ -161,16 +163,16 @@ textarea {
 
 button {
   padding: 0.65rem 1rem;
-  border-radius: 8px;
-  border: 1px solid #cbd5e1;
-  background: #fff;
+  border-radius: $minor-border-radius;
+  border: 1px solid $main-border-color;
+  background: $main-light-color;
   cursor: pointer;
   font-weight: 600;
-  color: #0f172a;
+  color: $main-text-color;
 
   &.primary {
-    background: linear-gradient(120deg, #2563eb, #6366f1);
-    color: #fff;
+    background: $hero-gradient-minor;
+    color: $hero-text-color;
     border: none;
   }
 
@@ -198,9 +200,9 @@ button {
   justify-content: space-between;
   align-items: center;
   padding: 0.65rem 0.75rem;
-  background: rgba(255, 255, 255, 0.06);
-  border-radius: 8px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba($hero-light-color, 0.1);
+  border-radius: $minor-border-radius;
+  border: 1px solid rgba($hero-light-color, 0.35);
 }
 
 .stock-name {
@@ -210,7 +212,7 @@ button {
 
 .stock-meta {
   margin: 0;
-  color: #cbd5e1;
+  color: rgba($hero-text-color, 0.75);
 }
 
 .stock-badges {
@@ -222,13 +224,13 @@ button {
 .pill {
   padding: 0.35rem 0.75rem;
   border-radius: 999px;
-  border: 1px solid #cbd5e1;
-  background: #0f172a;
-  color: #e2e8f0;
+  border: 1px solid rgba($hero-text-color, 0.4);
+  background: rgba($hero-dark-color, 0.85);
+  color: $hero-text-color;
 
   &.strong {
-    border-color: #10b981;
-    color: #10b981;
+    border-color: $success-text-light-color;
+    color: $success-text-light-color;
   }
 }
 
@@ -242,7 +244,7 @@ button {
   font-size: 0.85rem;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  color: #64748b;
+  color: rgba($main-text-color, 0.6);
   margin: 0;
 }
 
@@ -254,16 +256,16 @@ button {
 
 .empty {
   padding: 1rem;
-  background: #f8fafc;
-  border-radius: 10px;
-  color: #475569;
+  background: rgba($main-border-color, 0.4);
+  border-radius: $minor-border-radius;
+  color: rgba($main-text-color, 0.7);
 }
 
 .order-card {
-  background: #fff;
-  border-radius: 12px;
-  border: 1px solid #e2e8f0;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.05);
+  background: $main-light-color;
+  border-radius: $major-border-radius;
+  border: 1px solid $main-border-color;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.05);
   display: flex;
   flex-direction: column;
   gap: 1.25rem;
@@ -279,7 +281,7 @@ button {
 .doc-numbers {
   display: grid;
   gap: 0.15rem;
-  color: #475569;
+  color: rgba($main-text-color, 0.7);
 }
 
 .order-body {
@@ -289,8 +291,8 @@ button {
 }
 
 .order-items {
-  background: #0f172a;
-  color: #e2e8f0;
+  background: $hero-dark-color;
+  color: $hero-text-color;
 }
 
 .table-head,
@@ -302,17 +304,17 @@ button {
 
 .table-head {
   font-weight: 700;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  border-bottom: 1px solid rgba($hero-text-color, 0.2);
 }
 
 .table-row.total,
 .table-row.grand-total {
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  border-top: 1px solid rgba($hero-text-color, 0.2);
   font-weight: 700;
 }
 
 .table-row.grand-total {
-  color: #a5b4fc;
+  color: $accent-color;
 }
 
 .order-footer {
@@ -336,12 +338,12 @@ button {
   margin-top: 0.5rem;
   padding: 0.5rem 0.75rem;
   border-radius: 8px;
-  background: #f1f5f9;
-  border: 1px solid #e2e8f0;
+  background: rgba($main-border-color, 0.6);
+  border: 1px solid $main-border-color;
 }
 
 .muted {
-  color: #64748b;
+  color: rgba($main-text-color, 0.6);
   margin: 0.25rem 0;
 }
 
@@ -349,19 +351,19 @@ button {
 .secondary .stock-name,
 .secondary h3,
 .secondary h4 {
-  color: #e2e8f0;
+  color: $hero-text-color;
 }
 
 .secondary p {
-  color: #cbd5e1;
+  color: rgba($hero-text-color, 0.8);
 }
 
 .calendar-message {
-  background: #ecfeff;
-  color: #0ea5e9;
+  background: rgba($accent-color, 0.12);
+  color: $accent-color;
   padding: 0.5rem 0.75rem;
   border-radius: 8px;
-  border: 1px solid #bae6fd;
+  border: 1px solid rgba($accent-color, 0.3);
   max-width: 320px;
 }
 

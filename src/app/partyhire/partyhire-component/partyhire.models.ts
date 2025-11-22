@@ -8,11 +8,14 @@ export type PartyHireOrderStatus =
 
 export interface PartyHireStockItem {
   id: number;
+  sku?: string;
   name: string;
   category: string;
   total: number;
   allocated: number;
   unitPrice: number;
+  available?: number;
+  description?: string;
 }
 
 export interface PartyHireOrderItem {
@@ -20,6 +23,7 @@ export interface PartyHireOrderItem {
   name: string;
   quantity: number;
   unitPrice: number;
+  returnedQuantity?: number;
 }
 
 export interface PartyHireCalendarEvent {

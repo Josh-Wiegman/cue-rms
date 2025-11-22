@@ -39,6 +39,7 @@ export class PartyHireComponent implements OnInit {
   protected orders: PartyHireOrder[] = [];
   protected selectedPrintId: string | null = null;
   protected calendarMessage = '';
+  protected loading = false;
   protected readonly statusOptions: PartyHireOrderStatus[] = [
     'Prepped',
     'Collected',
@@ -72,7 +73,7 @@ export class PartyHireComponent implements OnInit {
   protected returnSheets: Record<string, Record<number, number>> = {};
 
   ngOnInit(): void {
-    this.refreshData();
+    void this.refreshData();
   }
 
   protected get itemsArray(): FormArray {
@@ -98,7 +99,7 @@ export class PartyHireComponent implements OnInit {
     return stock ? this.availableStock(stock) : 0;
   }
 
-  protected submitOrder(): void {
+  protected async submitOrder(): Promise<void> {
     if (this.orderForm.invalid) {
       this.orderForm.markAllAsTouched();
       return;
@@ -112,7 +113,7 @@ export class PartyHireComponent implements OnInit {
 
     const recipients = this.parseRecipients(value.recipients ?? '');
 
-    const order = this.partyHireService.createOrder({
+    const order = await this.partyHireService.createOrder({
       customerName: value.customerName ?? '',
       contactEmail: value.contactEmail ?? '',
       contactPhone: value.contactPhone ?? '',
@@ -137,30 +138,30 @@ export class PartyHireComponent implements OnInit {
     });
     this.itemsArray.push(this.buildItemGroup());
 
-    this.refreshData();
+    await this.refreshData();
     this.initialiseReturnSheet(order);
   }
 
-  protected updateStatus(
+  protected async updateStatus(
     order: PartyHireOrder,
     status: PartyHireOrderStatus,
-  ): void {
-    this.partyHireService.updateStatus(order.id, status);
-    this.refreshData();
+  ): Promise<void> {
+    await this.partyHireService.updateStatus(order.id, status);
+    await this.refreshData();
   }
 
-  protected applyReturnStatus(
+  protected async applyReturnStatus(
     order: PartyHireOrder,
     status: Extract<PartyHireOrderStatus, 'Returned' | 'Partial Return'>,
-  ): void {
+  ): Promise<void> {
     const returned = this.returnSheets[order.id] ?? {};
-    this.partyHireService.recordReturn(order.id, returned, status);
-    this.refreshData();
+    await this.partyHireService.recordReturn(order.id, returned, status);
+    await this.refreshData();
   }
 
-  protected regenerateCalendar(order: PartyHireOrder): void {
-    this.partyHireService.regenerateCalendar(order.id);
-    this.refreshData();
+  protected async regenerateCalendar(order: PartyHireOrder): Promise<void> {
+    await this.partyHireService.regenerateCalendar(order.id);
+    await this.refreshData();
     this.calendarMessage =
       'A fresh calendar invite has been generated for this order.';
   }
@@ -192,12 +193,16 @@ export class PartyHireComponent implements OnInit {
     return stock?.allocated ?? 0;
   }
 
-  private refreshData(): void {
-    this.inventory = this.partyHireService.listStock();
-    this.orders = this.partyHireService.listOrders();
-    for (const order of this.orders) {
-      this.initialiseReturnSheet(order);
-    }
+  private async refreshData(): Promise<void> {
+    this.loading = true;
+    const [inventory, orders] = await Promise.all([
+      this.partyHireService.listStock(),
+      this.partyHireService.listOrders(),
+    ]);
+    this.inventory = inventory;
+    this.orders = orders;
+    this.orders.forEach((order) => this.initialiseReturnSheet(order));
+    this.loading = false;
   }
 
   private initialiseReturnSheet(order: PartyHireOrder): void {

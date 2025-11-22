@@ -31,6 +31,7 @@
               {{ calendarMessage }}
             </div>
           </div>
+
           <div class="form-grid">
             <label>
               <span>Customer / company</span>
@@ -105,65 +106,66 @@
             </label>
           </div>
 
-          <div class="items-section">
-            <div class="section-heading">
-              <div>
-                <p class="eyebrow">Dry-hire items</p>
-                <h3>Allocate shared stock</h3>
-                <p class="helper">
-                  Stock is subtracted from the overall pool to keep the main RMS
-                  accurate.
-                </p>
+          <!-- ✅ wrap in formArrayName and use formGroupName -->
+          <div formArrayName="items">
+            <div
+              class="item-row"
+              *ngFor="
+                let item of itemsArray.controls;
+                let i = index;
+                trackBy: trackByControl
+              "
+              [formGroupName]="i"
+            >
+              <div class="item-select">
+                <label class="sr-only">Item</label>
+                <select formControlName="stockId">
+                  <option [ngValue]="null" disabled>Select an item</option>
+                  <option
+                    *ngFor="let stock of inventory; trackBy: trackByStockItem"
+                    [ngValue]="stock.id"
+                  >
+                    {{ stock.name }} ({{ stock.category }}) —
+                    {{ availableStock(stock) }} available
+                  </option>
+                </select>
               </div>
-              <button type="button" class="ghost" (click)="addItemRow()">
-                Add item
+              <div class="item-qty">
+                <label class="sr-only">Qty</label>
+                <input type="number" min="1" formControlName="quantity" />
+              </div>
+              <div class="item-available" *ngIf="item.value.stockId">
+                <small>
+                  Reserved: {{ totalAllocated(item.value.stockId) }} •
+                  Remaining:
+                  {{ remainingStock(item.value.stockId) }}
+                </small>
+              </div>
+              <button
+                type="button"
+                class="ghost"
+                (click)="removeItemRow(i)"
+                [disabled]="itemsArray.length === 1"
+              >
+                Remove
               </button>
             </div>
+          </div>
 
-            <!-- ✅ wrap in formArrayName and use formGroupName -->
-            <div formArrayName="items">
-              <div
-                class="item-row"
-                *ngFor="
-                  let item of itemsArray.controls;
-                  let i = index;
-                  trackBy: trackByControl
-                "
-                [formGroupName]="i"
-              >
-                <div class="item-select">
-                  <label class="sr-only">Item</label>
-                  <select formControlName="stockId">
-                    <option [ngValue]="null" disabled>Select an item</option>
-                    <option
-                      *ngFor="let stock of inventory; trackBy: trackByStockItem"
-                      [ngValue]="stock.id"
-                    >
-                      {{ stock.name }} ({{ stock.category }}) —
-                      {{ availableStock(stock) }} available
-                    </option>
-                  </select>
-                </div>
-                <div class="item-qty">
-                  <label class="sr-only">Qty</label>
-                  <input type="number" min="1" formControlName="quantity" />
-                </div>
-                <div class="item-available" *ngIf="item.value.stockId">
-                  <small>
-                    Reserved: {{ totalAllocated(item.value.stockId) }} •
-                    Remaining: {{ remainingStock(item.value.stockId) }}
-                  </small>
-                </div>
-                <button
-                  type="button"
-                  class="ghost"
-                  (click)="removeItemRow(i)"
-                  [disabled]="itemsArray.length === 1"
-                >
-                  Remove
-                </button>
-              </div>
-            </div>
+          <div class="actions">
+            <button type="submit" class="primary">Create sales order</button>
+            <button
+              type="button"
+              class="ghost"
+              (click)="
+                orderForm.reset({
+                  deliveryMethod: 'pickup',
+                  recipients: orderForm.value.recipients,
+                })
+              "
+            >
+              Clear
+            </button>
           </div>
         </form>
 
