@@ -101,6 +101,10 @@ export class MainNavigationComponent implements OnInit {
       label: 'Tools',
       children: [
         {
+          label: 'PartyHire Orders',
+          path: '/partyhire',
+        },
+        {
           label: 'Stage Timer',
           path: '/tools/stage-timer',
         },

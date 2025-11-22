@@ -40,6 +40,13 @@ export const routes: Routes = [
     canActivate: [authGuard],
   },
   {
+    path: 'partyhire',
+    loadComponent: () =>
+      import('./partyhire/partyhire.component').then((m) => m.PartyHireComponent),
+    title: 'PartyHire Orders | Cue RMS',
+    canActivate: [authGuard],
+  },
+  {
     path: 'crew',
     loadComponent: () =>
       import('./crew/crew-component/crew-component').then(

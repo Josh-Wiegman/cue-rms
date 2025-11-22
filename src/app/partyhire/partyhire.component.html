@@ -1,0 +1,278 @@
+<ui-shell>
+  <div class="partyhire">
+    <header class="page-header">
+      <div>
+        <p class="eyebrow">PartyHire dry-hire toolkit</p>
+        <h1>PartyHire Orders</h1>
+        <p>
+          Build partyhire sales orders that generate formatted quotes, invoices and Google Calendar
+          templates while reserving stock against the main inventory pool.
+        </p>
+      </div>
+      <div class="status-legend">
+        <span class="status-pill prepped">Prepped</span>
+        <span class="status-pill collected">Collected</span>
+        <span class="status-pill returned">Returned</span>
+        <span class="status-pill partial-return">Partial</span>
+        <span class="status-pill missing">Missing</span>
+      </div>
+    </header>
+
+    <section class="grid-layout">
+      <form class="card" [formGroup]="orderForm" (ngSubmit)="submitOrder()">
+        <div class="card-heading">
+          <div>
+            <p class="eyebrow">Create order</p>
+            <h2>Build a PartyHire sales order</h2>
+          </div>
+          <div class="calendar-message" *ngIf="calendarMessage">{{ calendarMessage }}</div>
+        </div>
+
+        <div class="form-grid">
+          <label>
+            <span>Customer / company</span>
+            <input type="text" formControlName="customerName" placeholder="Client name" />
+          </label>
+          <label>
+            <span>Contact email</span>
+            <input type="email" formControlName="contactEmail" placeholder="ops@example.com" />
+          </label>
+          <label>
+            <span>Contact phone</span>
+            <input type="tel" formControlName="contactPhone" placeholder="+64..." />
+          </label>
+          <label>
+            <span>Event name</span>
+            <input type="text" formControlName="eventName" placeholder="Birthday, Wedding..." />
+          </label>
+          <label>
+            <span>Start</span>
+            <input type="datetime-local" formControlName="startDate" />
+          </label>
+          <label>
+            <span>Return</span>
+            <input type="datetime-local" formControlName="endDate" />
+          </label>
+          <label>
+            <span>Location</span>
+            <input type="text" formControlName="location" placeholder="Venue / address" />
+          </label>
+          <label>
+            <span>Delivery method</span>
+            <select formControlName="deliveryMethod">
+              <option value="pickup">Pickup</option>
+              <option value="delivery">Delivery</option>
+            </select>
+          </label>
+          <label class="full-width">
+            <span>Calendar recipients (comma separated)</span>
+            <input type="text" formControlName="recipients" placeholder="team@company.com, crew@company.com" />
+          </label>
+          <label class="full-width">
+            <span>Notes for invoice / crew</span>
+            <textarea formControlName="notes" rows="2" placeholder="Access times, parking, delivery instructions"></textarea>
+          </label>
+        </div>
+
+        <div class="items-section">
+          <div class="section-heading">
+            <div>
+              <p class="eyebrow">Dry-hire items</p>
+              <h3>Allocate shared stock</h3>
+              <p class="helper">Stock is subtracted from the overall pool to keep the main RMS accurate.</p>
+            </div>
+            <button type="button" class="ghost" (click)="addItemRow()">Add item</button>
+          </div>
+
+            <div class="item-row" *ngFor="let item of itemsArray.controls; let i = index; trackBy: trackByControl" [formGroup]="item">
+            <div class="item-select">
+              <label class="sr-only">Item</label>
+              <select formControlName="stockId">
+                <option [ngValue]="null" disabled>Select an item</option>
+                <option *ngFor="let stock of inventory; trackBy: trackByStockItem" [ngValue]="stock.id">
+                  {{ stock.name }} ({{ stock.category }}) — {{ availableStock(stock) }} available
+                </option>
+              </select>
+            </div>
+            <div class="item-qty">
+              <label class="sr-only">Qty</label>
+              <input type="number" min="1" formControlName="quantity" />
+            </div>
+            <div class="item-available" *ngIf="item.value.stockId">
+              <small>Reserved: {{ totalAllocated(item.value.stockId) }} • Remaining: {{ remainingStock(item.value.stockId) }}</small>
+            </div>
+            <button type="button" class="ghost" (click)="removeItemRow(i)" [disabled]="itemsArray.length === 1">Remove</button>
+          </div>
+        </div>
+
+        <div class="actions">
+          <button type="submit" class="primary">Create sales order</button>
+          <button type="button" class="ghost" (click)="orderForm.reset({ deliveryMethod: 'pickup', recipients: orderForm.value.recipients })">Clear</button>
+        </div>
+      </form>
+
+      <div class="card secondary">
+        <div class="card-heading">
+          <div>
+            <p class="eyebrow">Stock snapshot</p>
+            <h3>PartyHire inventory bridge</h3>
+          </div>
+        </div>
+        <div class="stock-list">
+          <div class="stock-row" *ngFor="let item of inventory; trackBy: trackByStockItem">
+            <div>
+              <p class="stock-name">{{ item.name }}</p>
+              <p class="stock-meta">{{ item.category }}</p>
+            </div>
+            <div class="stock-badges">
+              <span class="pill">Total {{ item.total }}</span>
+              <span class="pill">Allocated {{ item.allocated }}</span>
+              <span class="pill strong">Free {{ availableStock(item) }}</span>
+            </div>
+          </div>
+        </div>
+        <div class="info-panel">
+          <h4>Automatic calendar entries</h4>
+          <p>
+            Every order builds a Google Calendar template with the formatted summary, location and attendee list.
+            Send it instantly to subscribed users or re-open it from the order card to re-send.
+          </p>
+          <h4>Printable sales paperwork</h4>
+          <p>
+            Use the "Print sales order" action on any card to output the quote/invoice format with item lines, totals
+            and status legend.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <section class="orders">
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">Orders</p>
+          <h2>Sales orders, quotes & status</h2>
+        </div>
+      </div>
+
+      <p class="empty" *ngIf="orders.length === 0">
+        No partyhire orders yet. Add a sales order to reserve stock and build calendar invites.
+      </p>
+
+      <article
+        *ngFor="let order of orders; trackBy: trackByOrder"
+        class="order-card"
+        [class.print-ready]="selectedPrintId === order.id"
+      >
+        <header>
+          <div>
+            <p class="eyebrow">{{ order.reference }}</p>
+            <h3>{{ order.eventName }}</h3>
+            <p class="muted">{{ order.customerName }} • {{ order.contactEmail }}</p>
+          </div>
+          <div class="order-meta">
+            <span class="status-pill" [class]="'status-pill ' + statusClass(order.status)">{{ order.status }}</span>
+            <div class="doc-numbers">
+              <span>Quote: {{ order.quoteNumber }}</span>
+              <span>Invoice: {{ order.invoiceNumber }}</span>
+            </div>
+          </div>
+        </header>
+
+        <div class="order-body">
+          <div class="order-details">
+            <h4>Schedule & logistics</h4>
+            <p><strong>Start:</strong> {{ order.startDate | date: 'medium' }}</p>
+            <p><strong>Return:</strong> {{ order.endDate | date: 'medium' }}</p>
+            <p><strong>Location:</strong> {{ order.location }}</p>
+            <p><strong>Delivery:</strong> {{ order.deliveryMethod | titlecase }}</p>
+            <p *ngIf="order.notes"><strong>Notes:</strong> {{ order.notes }}</p>
+            <div class="calendar-block">
+              <p class="muted">Google Calendar template:</p>
+              <a [href]="order.calendarEvent.googleCalendarUrl" target="_blank" rel="noreferrer">Add to calendar</a>
+              <p class="muted">Attendees: {{ order.calendarEvent.attendees.join(', ') || 'None listed' }}</p>
+            </div>
+          </div>
+
+          <div class="order-items">
+            <div class="table-head">
+              <span>Item</span>
+              <span>Qty</span>
+              <span>Unit</span>
+              <span>Total</span>
+            </div>
+            <div class="table-row" *ngFor="let item of order.items">
+              <span>{{ item.name }}</span>
+              <span>{{ item.quantity }}</span>
+              <span>{{ item.unitPrice | currency }}</span>
+              <span>{{ item.quantity * item.unitPrice | currency }}</span>
+            </div>
+            <div class="table-row total">
+              <span>Subtotal</span>
+              <span></span>
+              <span></span>
+              <span>{{ order.totals.subtotal | currency }}</span>
+            </div>
+            <div class="table-row">
+              <span>GST (15%)</span>
+              <span></span>
+              <span></span>
+              <span>{{ order.totals.gst | currency }}</span>
+            </div>
+            <div class="table-row grand-total">
+              <span>Order total</span>
+              <span></span>
+              <span></span>
+              <span>{{ order.totals.total | currency }}</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="order-footer">
+          <div class="status-actions">
+            <p class="eyebrow">Status</p>
+            <div class="button-group">
+              <button
+                *ngFor="let status of statusOptions"
+                type="button"
+                [class.primary]="order.status === status"
+                (click)="updateStatus(order, status)"
+              >
+                {{ status }}
+              </button>
+            </div>
+          </div>
+
+          <div class="returns">
+            <p class="eyebrow">Returns & reconciliation</p>
+            <div class="return-grid">
+              <label *ngFor="let item of order.items">
+                <span>{{ item.name }} (out: {{ item.quantity }})</span>
+                <input
+                  type="number"
+                  min="0"
+                  [max]="item.quantity"
+                  [(ngModel)]="returnSheets[order.id][item.stockId]"
+                  name="return-{{ order.id }}-{{ item.stockId }}"
+                />
+              </label>
+            </div>
+            <div class="button-group">
+              <button type="button" class="primary" (click)="applyReturnStatus(order, 'Returned')">
+                Mark as returned
+              </button>
+              <button type="button" (click)="applyReturnStatus(order, 'Partial Return')">
+                Save partial return
+              </button>
+              <button type="button" (click)="updateStatus(order, 'Missing')">Mark missing</button>
+            </div>
+          </div>
+
+          <div class="actions">
+            <button type="button" class="ghost" (click)="regenerateCalendar(order)">Resend calendar invite</button>
+            <button type="button" class="primary" (click)="printOrder(order)">Print sales order</button>
+          </div>
+        </div>
+      </article>
+    </section>
+  </div>
+</ui-shell>

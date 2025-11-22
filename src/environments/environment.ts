@@ -9,4 +9,5 @@ export const environment = {
   baseTenantDomain: 'cue-rms.com',
   defaultOrgSlug: 'public',
   stageTimerEdgeFunction: 'stage-timer',
+  partyHireEdgeFunction: 'partyhire',
 };
