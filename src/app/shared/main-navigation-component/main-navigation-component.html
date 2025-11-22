@@ -37,6 +37,23 @@
         }
       </li>
     }
+    <li>
+      <div class="nav__group">
+        <div class="nav__group-label">Tools</div>
+        <ul class="nav__group-links">
+          <li>
+            <a [routerLink]="/stage-timer" routerLinkActive="active">
+              Stage Timer
+            </a>
+          </li>
+          <li>
+            <a [routerLink]="/partyhire" routerLinkActive="active">
+              PartyHire Orders
+            </a>
+          </li>
+        </ul>
+      </div>
+    </li>
   </ul>
 
   <div class="nav__actions" *ngIf="user$ | async as user">
