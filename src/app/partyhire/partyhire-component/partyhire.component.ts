@@ -16,6 +16,8 @@ import {
   PartyHireStockItem,
 } from './partyhire.models';
 import { PartyHireService } from './partyhire.service';
+import { OrgBrandingService } from '../../shared/org-branding/org-branding.service';
+import { AuthService } from '../../auth/auth.service';
 
 @Component({
   selector: 'partyhire-component',
@@ -34,6 +36,8 @@ import { PartyHireService } from './partyhire.service';
 export class PartyHireComponent implements OnInit {
   private readonly fb = inject(FormBuilder);
   private readonly partyHireService = inject(PartyHireService);
+  private readonly orgBrandingService = inject(OrgBrandingService);
+  private readonly authService = inject(AuthService);
 
   protected inventory: PartyHireStockItem[] = [];
   protected orders: PartyHireOrder[] = [];
@@ -46,21 +50,9 @@ export class PartyHireComponent implements OnInit {
   protected activeOrder: PartyHireOrder | null = null;
   protected calendarMessage = '';
   protected loading = false;
-  protected readonly statusOptions: PartyHireOrderStatus[] = [
-    'Prepped',
-    'Collected',
-    'Returned',
-    'Partial Return',
-    'Missing',
-  ];
-  protected readonly statusDescription: Record<PartyHireOrderStatus, string> = {
-    Draft: 'Draft',
-    Prepped: 'Prepped',
-    Collected: 'Collected',
-    Returned: 'Returned',
-    'Partial Return': 'Partial Return',
-    Missing: 'Missing',
-  };
+  protected showArchived = false;
+  protected orgName = 'Company Name';
+  protected orgLogoUrl: string | null = null;
 
   protected orderForm = this.fb.group({
     customerName: ['', Validators.required],
@@ -78,8 +70,8 @@ export class PartyHireComponent implements OnInit {
 
   protected returnSheets: Record<string, Record<number, number>> = {};
 
-  ngOnInit(): void {
-    void this.refreshData();
+  async ngOnInit(): Promise<void> {
+    await Promise.all([this.refreshData(), this.loadBranding()]);
   }
 
   protected get itemsArray(): FormArray {
@@ -183,13 +175,25 @@ export class PartyHireComponent implements OnInit {
     await this.refreshData();
   }
 
-  protected async applyReturnStatus(
-    order: PartyHireOrder,
-    status: Extract<PartyHireOrderStatus, 'Returned' | 'Partial Return'>,
-  ): Promise<void> {
+  protected async saveReconciliation(order: PartyHireOrder): Promise<void> {
     const returned = this.returnSheets[order.id] ?? {};
-    await this.partyHireService.recordReturn(order.id, returned, status);
+    const fullyReturned = order.items.every(
+      (item) => (returned[item.stockId] ?? 0) >= item.quantity,
+    );
+    const newStatus: PartyHireOrderStatus = fullyReturned
+      ? 'Returned'
+      : 'Partial Return';
+
+    await this.partyHireService.recordReturn(order.id, returned, newStatus);
     await this.refreshData();
+
+    const updatedOrder = this.orders.find((o) => o.id === order.id) ?? null;
+    if (!this.showArchived && updatedOrder?.status === 'Returned') {
+      this.activeOrder = null;
+      return;
+    }
+
+    this.activeOrder = updatedOrder;
   }
 
   protected async regenerateCalendar(order: PartyHireOrder): Promise<void> {
@@ -226,6 +230,49 @@ export class PartyHireComponent implements OnInit {
     return status.toLowerCase().replaceAll(' ', '-');
   }
 
+  protected toggleArchived(): void {
+    this.showArchived = !this.showArchived;
+    this.groupedOrders = this.buildGroupedOrders();
+
+    if (!this.showArchived && this.activeOrder?.status === 'Returned') {
+      this.activeOrder = null;
+    }
+  }
+
+  protected setReturnedQuantity(
+    orderId: string,
+    stockId: number,
+    value: string | number,
+  ): void {
+    const parsed = Math.max(0, Number(value) || 0);
+    this.returnSheets[orderId] = {
+      ...(this.returnSheets[orderId] ?? {}),
+      [stockId]: parsed,
+    };
+  }
+
+  protected computedReturnStatus(order: PartyHireOrder): PartyHireOrderStatus {
+    const returned = this.returnSheets[order.id] ?? {};
+    const fullyReturned = order.items.every(
+      (item) => (returned[item.stockId] ?? 0) >= item.quantity,
+    );
+    return fullyReturned ? 'Returned' : 'Partial Return';
+  }
+
+  private async loadBranding(): Promise<void> {
+    try {
+      const branding = await this.orgBrandingService.getBranding(
+        this.authService.orgSlug,
+      );
+      if (branding) {
+        this.orgName = branding.name;
+        this.orgLogoUrl = branding.logoUrl;
+      }
+    } catch (error) {
+      console.error('Failed to load branding', error);
+    }
+  }
+
   private async refreshData(): Promise<void> {
     this.loading = true;
     const [inventory, orders] = await Promise.all([
@@ -247,7 +294,7 @@ export class PartyHireComponent implements OnInit {
       this.returnSheets[order.id] = Object.fromEntries(
         order.items.map((item) => [
           item.stockId,
-          order.returnedItems?.[item.stockId] ?? item.quantity,
+          order.returnedItems?.[item.stockId] ?? item.returnedQuantity ?? 0,
         ]),
       );
     }
@@ -275,7 +322,9 @@ export class PartyHireComponent implements OnInit {
   }[] {
     const dateMap = new Map<string, PartyHireOrder[]>();
 
-    this.orders.forEach((order) => {
+    this.orders
+      .filter((order) => this.showArchived || order.status !== 'Returned')
+      .forEach((order) => {
       const dateKey = new Date(order.startDate).toDateString();
       const group = dateMap.get(dateKey) ?? [];
       group.push(order);
@@ -333,7 +382,10 @@ export class PartyHireComponent implements OnInit {
       <style>
         body { font-family: 'Inter', system-ui, -apple-system, sans-serif; margin: 0; padding: 1.5rem; color: #0f172a; }
         h1, h2, h3, h4 { margin: 0 0 0.35rem 0; }
-        .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #0f172a; padding-bottom: 0.75rem; margin-bottom: 1rem; }
+        .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #0f172a; padding-bottom: 0.75rem; margin-bottom: 1rem; gap: 1rem; }
+        .brand { display: flex; align-items: center; gap: 0.75rem; }
+        .brand__logo { max-height: 54px; max-width: 160px; object-fit: contain; }
+        .brand__fallback { font-weight: 700; font-size: 1.1rem; color: #0f172a; }
         .pill { display: inline-flex; padding: 0.25rem 0.75rem; border-radius: 999px; background: #0ea5e9; color: #0b1726; font-weight: 600; }
         .meta { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 0.5rem; margin-bottom: 1rem; }
         .meta strong { display: block; color: #0f172a; margin-bottom: 0.15rem; }
@@ -342,6 +394,8 @@ export class PartyHireComponent implements OnInit {
         th { background: #0f172a; color: #e2e8f0; }
         .total-row { font-weight: 700; }
         .accent { color: #0ea5e9; }
+        .checkbox-cell { width: 36px; text-align: center; }
+        .checkbox-box { width: 18px; height: 18px; border: 2px solid #0f172a; display: inline-block; border-radius: 4px; }
       </style>
     </head><body>${body}</body></html>`);
     printWindow.document.close();
@@ -367,6 +421,13 @@ export class PartyHireComponent implements OnInit {
 
     return `
       <div class="header">
+        <div class="brand">
+          ${
+            this.orgLogoUrl
+              ? `<img class="brand__logo" src="${this.orgLogoUrl}" alt="${this.orgName} logo" />`
+              : `<span class="brand__fallback">${this.orgName}</span>`
+          }
+        </div>
         <div>
           <p class="pill">${order.status}</p>
           <h1>Sales order ${order.reference}</h1>
@@ -405,16 +466,23 @@ export class PartyHireComponent implements OnInit {
       .map(
         (item) => `
           <tr>
-            <td>${item.name}</td>
+            <td class="checkbox-cell"><span class="checkbox-box"></span></td>
             <td>${item.quantity}</td>
-            <td>${item.unitPrice.toFixed(2)}</td>
-            <td>${(item.quantity * item.unitPrice).toFixed(2)}</td>
+            <td>${item.name}</td>
+            <td>${this.lookupSku(item.stockId)}</td>
           </tr>`,
       )
       .join('');
 
     return `
       <div class="header">
+        <div class="brand">
+          ${
+            this.orgLogoUrl
+              ? `<img class="brand__logo" src="${this.orgLogoUrl}" alt="${this.orgName} logo" />`
+              : `<span class="brand__fallback">${this.orgName}</span>`
+          }
+        </div>
         <div>
           <p class="pill">Pick list</p>
           <h1>${order.eventName}</h1>
@@ -431,10 +499,15 @@ export class PartyHireComponent implements OnInit {
       </div>
       <table>
         <thead>
-          <tr><th>Item</th><th>Qty</th><th>Unit price</th><th>Line total</th></tr>
+          <tr><th class="checkbox-cell"></th><th>Qty</th><th>Item</th><th>SKU</th></tr>
         </thead>
         <tbody>${items}</tbody>
       </table>
     `;
+  }
+
+  private lookupSku(stockId: number): string {
+    const item = this.inventory.find((stock) => stock.id === stockId);
+    return item?.sku || '—';
   }
 }

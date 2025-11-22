@@ -33,6 +33,14 @@
           <div class="section-actions">
             <button
               type="button"
+              class="ghost"
+              (click)="toggleArchived()"
+              aria-label="Toggle archived orders"
+            >
+              {{ showArchived ? 'Hide archived sales orders' : 'View archived sales orders' }}
+            </button>
+            <button
+              type="button"
               class="primary"
               (click)="openOrderModal()"
             >
@@ -86,6 +94,14 @@
                   </div>
                 </button>
                 <div class="order-row__actions">
+                  <button
+                    type="button"
+                    class="ghost"
+                    (click)="updateStatus(order, 'Collected')"
+                    [disabled]="order.status === 'Collected' || order.status === 'Returned'"
+                  >
+                    Collected
+                  </button>
                   <button
                     type="button"
                     class="ghost"
@@ -392,22 +408,12 @@
             </div>
 
             <div class="order-detail__footer">
-              <div class="status-actions">
-                <p class="eyebrow">Status</p>
-                <div class="button-group">
-                  <button
-                    *ngFor="let status of statusOptions"
-                    type="button"
-                    [class.primary]="activeOrder!.status === status"
-                    (click)="updateStatus(activeOrder!, status)"
-                  >
-                    {{ status }}
-                  </button>
-                </div>
-              </div>
-
               <div class="returns">
                 <p class="eyebrow">Returns & reconciliation</p>
+                <p class="muted">
+                  Status updates automatically when you save reconciliation. Predicted
+                  status: {{ computedReturnStatus(activeOrder!) }}.
+                </p>
                 <div class="return-grid">
                   <label *ngFor="let item of activeOrder!.items">
                     <span>{{ item.name }} (out: {{ item.quantity }})</span>
@@ -415,7 +421,10 @@
                       type="number"
                       min="0"
                       [max]="item.quantity"
-                      [(ngModel)]="returnSheets[activeOrder!.id][item.stockId]"
+                      [ngModel]="returnSheets[activeOrder!.id][item.stockId]"
+                      (ngModelChange)="
+                        setReturnedQuantity(activeOrder!.id, item.stockId, $event)
+                      "
                       name="return-{{ activeOrder!.id }}-{{ item.stockId }}"
                     />
                   </label>
@@ -424,21 +433,9 @@
                   <button
                     type="button"
                     class="primary"
-                    (click)="applyReturnStatus(activeOrder!, 'Returned')"
+                    (click)="saveReconciliation(activeOrder!)"
                   >
-                    Mark as returned
-                  </button>
-                  <button
-                    type="button"
-                    (click)="applyReturnStatus(activeOrder!, 'Partial Return')"
-                  >
-                    Save partial return
-                  </button>
-                  <button
-                    type="button"
-                    (click)="updateStatus(activeOrder!, 'Missing')"
-                  >
-                    Mark missing
+                    Save reconciliation
                   </button>
                 </div>
               </div>
