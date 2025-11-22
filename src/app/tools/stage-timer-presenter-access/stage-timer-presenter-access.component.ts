@@ -1,4 +1,4 @@
-import { AsyncPipe, NgFor, NgIf } from '@angular/common';
+import { AsyncPipe, NgFor, NgIf, TitleCasePipe } from '@angular/common';
 import { Component, OnInit, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -8,7 +8,7 @@ import { StageTimerService } from '../stage-timer.service';
 @Component({
   selector: 'stage-timer-presenter-access',
   standalone: true,
-  imports: [AsyncPipe, FormsModule, NgFor, NgIf],
+  imports: [AsyncPipe, FormsModule, NgFor, NgIf, TitleCasePipe],
   templateUrl: './stage-timer-presenter-access.component.html',
   styleUrl: './stage-timer-presenter-access.component.scss',
 })
@@ -34,12 +34,18 @@ export class StageTimerPresenterAccessComponent implements OnInit {
 
     const timer = this.stageTimerService.getTimerByCode(code);
     if (!timer) {
-      this.errorMessage = 'No timer found for that code. Check the code and try again.';
+      this.errorMessage =
+        'No timer found for that code. Check the code and try again.';
       return;
     }
 
     this.errorMessage = '';
-    await this.router.navigate(['/tools', 'stage-timer', 'presenter', timer.code]);
+    await this.router.navigate([
+      '/tools',
+      'stage-timer',
+      'presenter',
+      timer.code,
+    ]);
   }
 
   protected async goToDashboard(): Promise<void> {
@@ -47,7 +53,12 @@ export class StageTimerPresenterAccessComponent implements OnInit {
   }
 
   protected async openTimer(timer: StageTimer): Promise<void> {
-    await this.router.navigate(['/tools', 'stage-timer', 'presenter', timer.code]);
+    await this.router.navigate([
+      '/tools',
+      'stage-timer',
+      'presenter',
+      timer.code,
+    ]);
   }
 
   protected trackByTimer(_: number, timer: StageTimer): string {

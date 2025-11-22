@@ -42,7 +42,9 @@ export const routes: Routes = [
   {
     path: 'partyhire',
     loadComponent: () =>
-      import('./partyhire/partyhire.component').then((m) => m.PartyHireComponent),
+      import('./partyhire/partyhire-component/partyhire.component').then(
+        (m) => m.PartyHireComponent,
+      ),
     title: 'PartyHire Orders | Cue RMS',
     canActivate: [authGuard],
   },

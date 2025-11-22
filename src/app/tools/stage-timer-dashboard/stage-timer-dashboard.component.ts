@@ -14,15 +14,7 @@ import { StageTimerService } from '../stage-timer.service';
 @Component({
   selector: 'stage-timer-dashboard',
   standalone: true,
-  imports: [
-    AsyncPipe,
-    DatePipe,
-    FormsModule,
-    NgClass,
-    NgFor,
-    NgIf,
-    RouterLink,
-  ],
+  imports: [AsyncPipe, DatePipe, FormsModule, NgClass, NgFor, NgIf, RouterLink],
   templateUrl: './stage-timer-dashboard.component.html',
   styleUrl: './stage-timer-dashboard.component.scss',
 })
@@ -32,7 +24,10 @@ export class StageTimerDashboardComponent implements OnInit, OnDestroy {
   private subscription?: Subscription;
 
   protected timers$ = this.stageTimerService.timers$;
+
   protected selectedTimerId: string | null = null;
+  protected selectedTimer: StageTimer | null = null;
+
   protected showCreateForm = false;
   protected newTimerName = '';
   protected newTimerMinutes = 5;
@@ -42,20 +37,25 @@ export class StageTimerDashboardComponent implements OnInit, OnDestroy {
 
   async ngOnInit(): Promise<void> {
     await this.stageTimerService.loadTimers();
+
     this.subscription = this.timers$.subscribe((timers) => {
       if (!timers.length) {
         this.selectedTimerId = null;
+        this.selectedTimer = null;
         return;
       }
 
       if (this.selectedTimerId) {
-        const stillExists = timers.some(
-          (timer) => timer.id === this.selectedTimerId,
-        );
-        if (stillExists) return;
+        const existing = timers.find((t) => t.id === this.selectedTimerId);
+        if (existing) {
+          this.selectedTimer = existing;
+          return;
+        }
       }
 
-      this.selectedTimerId = timers[0]?.id ?? null;
+      const first = timers[0];
+      this.selectedTimerId = first.id;
+      this.selectedTimer = first;
     });
   }
 
@@ -73,6 +73,7 @@ export class StageTimerDashboardComponent implements OnInit, OnDestroy {
     };
     const timer = await this.stageTimerService.createTimer(payload);
     this.selectedTimerId = timer.id;
+    this.selectedTimer = timer;
     this.showCreateForm = false;
     this.newTimerName = '';
     this.newTimerMinutes = 5;
@@ -81,6 +82,7 @@ export class StageTimerDashboardComponent implements OnInit, OnDestroy {
 
   protected selectTimer(timer: StageTimer): void {
     this.selectedTimerId = timer.id;
+    this.selectedTimer = timer;
     this.noteDraft = '';
     this.urgentNoteDraft = '';
   }
@@ -125,9 +127,17 @@ export class StageTimerDashboardComponent implements OnInit, OnDestroy {
     await this.stageTimerService.clearUrgentNote(timer.id);
   }
 
-  protected async openPresenter(timer: StageTimer, event: Event): Promise<void> {
+  protected async openPresenter(
+    timer: StageTimer,
+    event: Event,
+  ): Promise<void> {
     event.stopPropagation();
-    await this.router.navigate(['/tools', 'stage-timer', 'presenter', timer.code]);
+    await this.router.navigate([
+      '/tools',
+      'stage-timer',
+      'presenter',
+      timer.code,
+    ]);
   }
 
   protected async openPresenterAccess(event: Event): Promise<void> {
@@ -164,8 +174,9 @@ export class StageTimerDashboardComponent implements OnInit, OnDestroy {
   }
 
   protected notesFor(timer: StageTimer): StageTimerNote[] {
-    return [...timer.notes].sort((a, b) =>
-      new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+    return [...timer.notes].sort(
+      (a, b) =>
+        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
     );
   }
 

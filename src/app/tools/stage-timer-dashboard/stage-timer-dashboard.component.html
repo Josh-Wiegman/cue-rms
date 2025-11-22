@@ -5,8 +5,12 @@
       <p>Monitor, create, and control timers across your master scene.</p>
     </div>
     <div class="stage-timer__actions">
-      <button type="button" class="btn btn--primary" (click)="toggleCreateForm()">
-        {{ showCreateForm ? 'Close form' : 'New timer' }}
+      <button
+        type="button"
+        class="btn btn--primary"
+        (click)="toggleCreateForm()"
+      >
+        {{ showCreateForm ? "Close form" : "New timer" }}
       </button>
       <a
         class="btn btn--ghost"
@@ -62,7 +66,10 @@
   </form>
 
   <div class="stage-timer__content" *ngIf="timers$ | async as timers">
-    <div class="stage-timer__list" [class.stage-timer__list--empty]="!timers.length">
+    <div
+      class="stage-timer__list"
+      [class.stage-timer__list--empty]="!timers.length"
+    >
       <article
         class="timer-card"
         *ngFor="let timer of timers; trackBy: trackByTimer"
@@ -71,13 +78,20 @@
       >
         <header class="timer-card__header">
           <h3>{{ timer.name }}</h3>
-          <span class="timer-card__status" [ngClass]="'status--' + timer.status">
+          <span
+            class="timer-card__status"
+            [ngClass]="'status--' + timer.status"
+          >
             {{ timerStatusBadge(timer) }}
           </span>
         </header>
-        <div class="timer-card__countdown">{{ formatTime(timer.remainingSeconds) }}</div>
+        <div class="timer-card__countdown">
+          {{ formatTime(timer.remainingSeconds) }}
+        </div>
         <div class="timer-card__meta">
-          <div class="timer-card__code">Code · <strong>{{ timer.code }}</strong></div>
+          <div class="timer-card__code">
+            Code · <strong>{{ timer.code }}</strong>
+          </div>
           <div class="timer-card__scene">Scene · Master</div>
         </div>
         <div class="timer-card__progress">
@@ -87,10 +101,22 @@
           ></div>
         </div>
         <footer class="timer-card__footer">
-          <button type="button" class="btn btn--secondary" (click)="toggleTimer(timer, $event)">
-            {{ timer.status === 'running' ? 'Pause' : timer.status === 'completed' ? 'Restart' : 'Start' }}
+          <button
+            type="button"
+            class="btn btn--secondary"
+            (click)="toggleTimer(timer, $event)"
+          >
+            {{
+              timer.status === "running"
+                ? "Pause"
+                : timer.status === "completed"
+                  ? "Restart"
+                  : "Start"
+            }}
           </button>
-          <button type="button" class="btn" (click)="resetTimer(timer, $event)">Reset</button>
+          <button type="button" class="btn" (click)="resetTimer(timer, $event)">
+            Reset
+          </button>
           <button
             type="button"
             class="btn"
@@ -108,7 +134,10 @@
             Delete
           </button>
         </footer>
-        <div class="timer-card__urgent" *ngIf="timer.urgentNote && !timer.urgentNote.acknowledgedAt">
+        <div
+          class="timer-card__urgent"
+          *ngIf="timer.urgentNote && !timer.urgentNote.acknowledgedAt"
+        >
           <span>Urgent note active</span>
         </div>
       </article>
@@ -117,99 +146,128 @@
       </p>
     </div>
 
-    <aside class="stage-timer__detail" *ngIf="selectedTimerId as selectedId">
-      <ng-container *ngIf="timers.find((timer) => timer.id === selectedId) as selected">
-        <header class="detail__header">
-          <div>
-            <h2>{{ selected.name }}</h2>
-            <p>Code · <strong>{{ selected.code }}</strong></p>
-          </div>
-          <span class="detail__status" [ngClass]="'status--' + selected.status">
-            {{ timerStatusBadge(selected) }}
-          </span>
+    <!-- Detail pane uses selectedTimer, narrowed by *ngIf -->
+    <aside class="stage-timer__detail" *ngIf="selectedTimer as selected">
+      <header class="detail__header">
+        <div>
+          <h2>{{ selected.name }}</h2>
+          <p>
+            Code · <strong>{{ selected.code }}</strong>
+          </p>
+        </div>
+        <span class="detail__status" [ngClass]="'status--' + selected.status">
+          {{ timerStatusBadge(selected) }}
+        </span>
+      </header>
+
+      <div class="detail__countdown">
+        {{ formatTime(selected.remainingSeconds) }}
+      </div>
+      <div class="detail__progress">
+        <div class="detail__progress-track">
+          <div
+            class="detail__progress-fill"
+            [style.width.%]="timerProgress(selected)"
+          ></div>
+        </div>
+        <div class="detail__meta">
+          <span>Duration · {{ formatTime(selected.durationSeconds) }}</span>
+          <span>Remaining · {{ formatTime(selected.remainingSeconds) }}</span>
+        </div>
+      </div>
+
+      <div class="detail__controls">
+        <button
+          type="button"
+          class="btn btn--primary"
+          (click)="toggleTimer(selected, $event)"
+        >
+          {{ selected.status === "running" ? "Pause timer" : "Start timer" }}
+        </button>
+
+        <button
+          type="button"
+          class="btn"
+          (click)="resetTimer(selected, $event)"
+        >
+          Reset timer
+        </button>
+        <button
+          type="button"
+          class="btn"
+          (click)="openPresenter(selected, $event)"
+        >
+          Open presenter
+        </button>
+      </div>
+
+      <section class="detail__section">
+        <header class="detail__section-header">
+          <h3>Notes</h3>
+          <p>Keep everyone aligned with running notes.</p>
         </header>
+        <ul class="notes" *ngIf="notesFor(selected) as notes">
+          <li *ngFor="let note of notes">
+            <span class="notes__time">{{
+              note.createdAt | date: "shortTime"
+            }}</span>
+            <span class="notes__body">{{ note.body }}</span>
+          </li>
+          <li *ngIf="!notes.length" class="notes__empty">No notes yet.</li>
+        </ul>
+        <form class="notes__form" (ngSubmit)="addNote(selected)">
+          <textarea
+            name="noteDraft"
+            [(ngModel)]="noteDraft"
+            rows="3"
+            placeholder="Add a note for this timer..."
+          ></textarea>
+          <button type="submit" class="btn btn--secondary">Add note</button>
+        </form>
+      </section>
 
-        <div class="detail__countdown">{{ formatTime(selected.remainingSeconds) }}</div>
-        <div class="detail__progress">
-          <div class="detail__progress-track">
-            <div
-              class="detail__progress-fill"
-              [style.width.%]="timerProgress(selected)"
-            ></div>
-          </div>
-          <div class="detail__meta">
-            <span>Duration · {{ formatTime(selected.durationSeconds) }}</span>
-            <span>Remaining · {{ formatTime(selected.remainingSeconds) }}</span>
-          </div>
-        </div>
-
-        <div class="detail__controls">
-          <button type="button" class="btn btn--primary" (click)="toggleTimer(selected, $event)">
-            {{ selected.status === 'running' ? 'Pause timer' : 'Start timer' }}
-          </button>
-          <button type="button" class="btn" (click)="resetTimer(selected, $event)">
-            Reset timer
-          </button>
-          <button type="button" class="btn" (click)="openPresenter(selected, $event)">
-            Open presenter
-          </button>
-        </div>
-
-        <section class="detail__section">
-          <header class="detail__section-header">
-            <h3>Notes</h3>
-            <p>Keep everyone aligned with running notes.</p>
-          </header>
-          <ul class="notes" *ngIf="notesFor(selected) as notes">
-            <li *ngFor="let note of notes">
-              <span class="notes__time">{{ note.createdAt | date: 'shortTime' }}</span>
-              <span class="notes__body">{{ note.body }}</span>
-            </li>
-            <li *ngIf="!notes.length" class="notes__empty">No notes yet.</li>
-          </ul>
-          <form class="notes__form" (ngSubmit)="addNote(selected)">
-            <textarea
-              name="noteDraft"
-              [(ngModel)]="noteDraft"
-              rows="3"
-              placeholder="Add a note for this timer..."
-            ></textarea>
-            <button type="submit" class="btn btn--secondary">Add note</button>
-          </form>
-        </section>
-
-        <section class="detail__section detail__section--urgent">
-          <header class="detail__section-header">
-            <h3>Urgent note</h3>
-            <p>Send high-priority alerts to the presenter instantly.</p>
-          </header>
-          <ng-container *ngIf="urgentNoteFor(selected) as urgent; else urgentForm">
-            <div class="urgent-note" [class.urgent-note--acknowledged]="urgent.acknowledgedAt">
-              <div class="urgent-note__message">{{ urgent.body }}</div>
-              <div class="urgent-note__meta">
-                Sent {{ urgent.createdAt | date: 'shortTime' }}
-                <span *ngIf="urgent.acknowledgedAt">
-                  · Acknowledged {{ urgent.acknowledgedAt | date: 'shortTime' }}
-                </span>
-              </div>
-              <button type="button" class="btn btn--ghost" (click)="clearUrgent(selected)">
-                Clear urgent note
-              </button>
+      <section class="detail__section detail__section--urgent">
+        <header class="detail__section-header">
+          <h3>Urgent note</h3>
+          <p>Send high-priority alerts to the presenter instantly.</p>
+        </header>
+        <ng-container
+          *ngIf="urgentNoteFor(selected) as urgent; else urgentForm"
+        >
+          <div
+            class="urgent-note"
+            [class.urgent-note--acknowledged]="urgent.acknowledgedAt"
+          >
+            <div class="urgent-note__message">{{ urgent.body }}</div>
+            <div class="urgent-note__meta">
+              Sent {{ urgent.createdAt | date: "shortTime" }}
+              <span *ngIf="urgent.acknowledgedAt">
+                · Acknowledged {{ urgent.acknowledgedAt | date: "shortTime" }}
+              </span>
             </div>
-          </ng-container>
-          <ng-template #urgentForm>
-            <form class="urgent-form" (ngSubmit)="addUrgentNote(selected)">
-              <textarea
-                name="urgentDraft"
-                [(ngModel)]="urgentNoteDraft"
-                rows="3"
-                placeholder="Alert the presenter to an urgent change..."
-              ></textarea>
-              <button type="submit" class="btn btn--danger">Send urgent note</button>
-            </form>
-          </ng-template>
-        </section>
-      </ng-container>
+            <button
+              type="button"
+              class="btn btn--ghost"
+              (click)="clearUrgent(selected)"
+            >
+              Clear urgent note
+            </button>
+          </div>
+        </ng-container>
+        <ng-template #urgentForm>
+          <form class="urgent-form" (ngSubmit)="addUrgentNote(selected)">
+            <textarea
+              name="urgentDraft"
+              [(ngModel)]="urgentNoteDraft"
+              rows="3"
+              placeholder="Alert the presenter to an urgent change..."
+            ></textarea>
+            <button type="submit" class="btn btn--danger">
+              Send urgent note
+            </button>
+          </form>
+        </ng-template>
+      </section>
     </aside>
   </div>
 </section>
