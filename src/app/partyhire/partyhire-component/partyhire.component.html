@@ -20,265 +20,367 @@
         </div>
       </header>
 
-      <section class="grid-layout">
-        <form class="card" [formGroup]="orderForm" (ngSubmit)="submitOrder()">
-          <div class="card-heading">
-            <div>
-              <p class="eyebrow">Create order</p>
-              <h2>Build a PartyHire sales order</h2>
-            </div>
-            <div class="calendar-message" *ngIf="calendarMessage">
-              {{ calendarMessage }}
-            </div>
-          </div>
-
-          <div class="form-grid">
-            <label>
-              <span>Customer / company</span>
-              <input
-                type="text"
-                formControlName="customerName"
-                placeholder="Client name"
-              />
-            </label>
-            <label>
-              <span>Contact email</span>
-              <input
-                type="email"
-                formControlName="contactEmail"
-                placeholder="ops@example.com"
-              />
-            </label>
-            <label>
-              <span>Contact phone</span>
-              <input
-                type="tel"
-                formControlName="contactPhone"
-                placeholder="+64..."
-              />
-            </label>
-            <label>
-              <span>Event name</span>
-              <input
-                type="text"
-                formControlName="eventName"
-                placeholder="Birthday, Wedding..."
-              />
-            </label>
-            <label>
-              <span>Start</span>
-              <input type="datetime-local" formControlName="startDate" />
-            </label>
-            <label>
-              <span>Return</span>
-              <input type="datetime-local" formControlName="endDate" />
-            </label>
-            <label>
-              <span>Location</span>
-              <input
-                type="text"
-                formControlName="location"
-                placeholder="Venue / address"
-              />
-            </label>
-            <label>
-              <span>Delivery method</span>
-              <select formControlName="deliveryMethod">
-                <option value="pickup">Pickup</option>
-                <option value="delivery">Delivery</option>
-              </select>
-            </label>
-            <label class="full-width">
-              <span>Calendar recipients (comma separated)</span>
-              <input
-                type="text"
-                formControlName="recipients"
-                placeholder="team@company.com, crew@company.com"
-              />
-            </label>
-            <label class="full-width">
-              <span>Notes for invoice / crew</span>
-              <textarea
-                formControlName="notes"
-                rows="2"
-                placeholder="Access times, parking, delivery instructions"
-              ></textarea>
-            </label>
-          </div>
-
-          <!-- ✅ wrap in formArrayName and use formGroupName -->
-          <div formArrayName="items">
-            <div
-              class="item-row"
-              *ngFor="
-                let item of itemsArray.controls;
-                let i = index;
-                trackBy: trackByControl
-              "
-              [formGroupName]="i"
-            >
-              <div class="item-select">
-                <label class="sr-only">Item</label>
-                <select formControlName="stockId">
-                  <option [ngValue]="null" disabled>Select an item</option>
-                  <option
-                    *ngFor="let stock of inventory; trackBy: trackByStockItem"
-                    [ngValue]="stock.id"
-                  >
-                    {{ stock.name }} ({{ stock.category }}) —
-                    {{ availableStock(stock) }} available
-                  </option>
-                </select>
-              </div>
-              <div class="item-qty">
-                <label class="sr-only">Qty</label>
-                <input type="number" min="1" formControlName="quantity" />
-              </div>
-              <div class="item-available" *ngIf="item.value.stockId">
-                <small>
-                  Reserved: {{ totalAllocated(item.value.stockId) }} •
-                  Remaining:
-                  {{ remainingStock(item.value.stockId) }}
-                </small>
-              </div>
-              <button
-                type="button"
-                class="ghost"
-                (click)="removeItemRow(i)"
-                [disabled]="itemsArray.length === 1"
-              >
-                Remove
-              </button>
-            </div>
-          </div>
-
-          <div class="actions">
-            <button type="submit" class="primary">Create sales order</button>
-            <button
-              type="button"
-              class="ghost"
-              (click)="
-                orderForm.reset({
-                  deliveryMethod: 'pickup',
-                  recipients: orderForm.value.recipients,
-                })
-              "
-            >
-              Clear
-            </button>
-          </div>
-        </form>
-
-        <div class="card secondary">
-          <div class="card-heading">
-            <div>
-              <p class="eyebrow">Stock snapshot</p>
-              <h3>PartyHire inventory bridge</h3>
-            </div>
-          </div>
-          <div class="stock-list">
-            <div
-              class="stock-row"
-              *ngFor="let item of inventory; trackBy: trackByStockItem"
-            >
-              <div>
-                <p class="stock-name">{{ item.name }}</p>
-                <p class="stock-meta">{{ item.category }}</p>
-              </div>
-              <div class="stock-badges">
-                <span class="pill">Total {{ item.total }}</span>
-                <span class="pill">Allocated {{ item.allocated }}</span>
-                <span class="pill strong">Free {{ availableStock(item) }}</span>
-              </div>
-            </div>
-          </div>
-          <div class="info-panel">
-            <h4>Automatic calendar entries</h4>
-            <p>
-              Every order builds a Google Calendar template with the formatted
-              summary, location and attendee list. Send it instantly to
-              subscribed users or re-open it from the order card to re-send.
-            </p>
-            <h4>Printable sales paperwork</h4>
-            <p>
-              Use the "Print sales order" action on any card to output the
-              quote/invoice format with item lines, totals and status legend.
-            </p>
-          </div>
-        </div>
-      </section>
-
       <section class="orders">
         <div class="section-heading">
           <div>
             <p class="eyebrow">Orders</p>
             <h2>Sales orders, quotes & status</h2>
+            <p class="muted">
+              Orders are grouped by the event date. Today's bookings are pinned
+              to the top for faster access.
+            </p>
+          </div>
+          <div class="section-actions">
+            <button
+              type="button"
+              class="ghost"
+              (click)="toggleArchived()"
+              aria-label="Toggle archived orders"
+            >
+              {{ showArchived ? 'Hide archived sales orders' : 'View archived sales orders' }}
+            </button>
+            <button
+              type="button"
+              class="primary"
+              (click)="openOrderModal()"
+            >
+              + Add sales order
+            </button>
+            <div class="calendar-message" *ngIf="calendarMessage">
+              {{ calendarMessage }}
+            </div>
           </div>
         </div>
 
-        <p class="empty" *ngIf="orders.length === 0">
+        <p class="empty" *ngIf="groupedOrders.length === 0">
           No partyhire orders yet. Add a sales order to reserve stock and build
           calendar invites.
         </p>
 
-        <article
-          *ngFor="let order of orders; trackBy: trackByOrder"
-          class="order-card"
-          [class.print-ready]="selectedPrintId === order.id"
+        <ng-container *ngFor="let group of groupedOrders">
+          <div class="order-group">
+            <div class="date-heading">
+              <p class="eyebrow">{{ group.label }}</p>
+              <p class="muted">{{ group.date | date: 'fullDate' }}</p>
+            </div>
+            <div class="order-list">
+              <article
+                *ngFor="let order of group.orders; trackBy: trackByOrder"
+                class="order-row"
+              >
+                <button
+                  type="button"
+                  class="order-summary"
+                  (click)="openOrderDetail(order)"
+                >
+                  <div>
+                    <p class="eyebrow">{{ order.reference }}</p>
+                    <h3>{{ order.eventName }}</h3>
+                    <p class="muted">
+                      {{ order.customerName }} • {{ order.contactEmail }}
+                    </p>
+                  </div>
+                  <div class="order-summary__meta">
+                    <span
+                      class="status-pill"
+                      [class]="'status-pill ' + statusClass(order.status)"
+                      >{{ order.status }}</span
+                    >
+                    <p class="muted">
+                      {{ order.startDate | date: 'mediumTime' }} →
+                      {{ order.endDate | date: 'mediumTime' }}
+                    </p>
+                    <p class="muted">{{ order.location }}</p>
+                  </div>
+                </button>
+                <div class="order-row__actions">
+                  <button
+                    type="button"
+                    class="ghost"
+                    (click)="updateStatus(order, 'Collected')"
+                    [disabled]="order.status === 'Collected' || order.status === 'Returned'"
+                  >
+                    Collected
+                  </button>
+                  <button
+                    type="button"
+                    class="ghost"
+                    (click)="printSalesOrder(order)"
+                  >
+                    Print sales order
+                  </button>
+                  <button
+                    type="button"
+                    class="ghost"
+                    (click)="printPickList(order)"
+                  >
+                    Print pick list
+                  </button>
+                </div>
+              </article>
+            </div>
+          </div>
+        </ng-container>
+      </section>
+
+      <div
+        class="modal-backdrop"
+        *ngIf="showOrderModal"
+        (click)="closeOrderModal()"
+      >
+        <div
+          class="modal"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="orderModalTitle"
+          (click)="$event.stopPropagation()"
         >
-          <header>
+          <header class="modal__header">
             <div>
-              <p class="eyebrow">{{ order.reference }}</p>
-              <h3>{{ order.eventName }}</h3>
+              <p class="eyebrow">Create order</p>
+              <h2 id="orderModalTitle">Build a PartyHire sales order</h2>
+            </div>
+            <button
+              type="button"
+              class="modal__close"
+              aria-label="Close order form"
+              (click)="closeOrderModal()"
+            >
+              ×
+            </button>
+          </header>
+          <form class="modal__form" [formGroup]="orderForm" (ngSubmit)="submitOrder()">
+            <div class="form-grid">
+              <label>
+                <span>Customer / company</span>
+                <input
+                  type="text"
+                  formControlName="customerName"
+                  placeholder="Client name"
+                />
+              </label>
+              <label>
+                <span>Contact email</span>
+                <input
+                  type="email"
+                  formControlName="contactEmail"
+                  placeholder="ops@example.com"
+                />
+              </label>
+              <label>
+                <span>Contact phone</span>
+                <input
+                  type="tel"
+                  formControlName="contactPhone"
+                  placeholder="+64..."
+                />
+              </label>
+              <label>
+                <span>Event name</span>
+                <input
+                  type="text"
+                  formControlName="eventName"
+                  placeholder="Birthday, Wedding..."
+                />
+              </label>
+              <label>
+                <span>Start</span>
+                <input
+                  type="datetime-local"
+                  formControlName="startDate"
+                  step="900"
+                />
+              </label>
+              <label>
+                <span>Return</span>
+                <input
+                  type="datetime-local"
+                  formControlName="endDate"
+                  step="900"
+                />
+              </label>
+              <label>
+                <span>Location</span>
+                <input
+                  type="text"
+                  formControlName="location"
+                  placeholder="Venue / address"
+                />
+              </label>
+              <label>
+                <span>Delivery method</span>
+                <select formControlName="deliveryMethod">
+                  <option value="pickup">Pickup</option>
+                  <option value="delivery">Delivery</option>
+                </select>
+              </label>
+              <label class="full-width">
+                <span>Calendar recipients (comma separated)</span>
+                <input
+                  type="text"
+                  formControlName="recipients"
+                  placeholder="team@company.com, crew@company.com"
+                />
+              </label>
+              <label class="full-width">
+                <span>Notes for invoice / crew</span>
+                <textarea
+                  formControlName="notes"
+                  rows="2"
+                  placeholder="Access times, parking, delivery instructions"
+                ></textarea>
+              </label>
+            </div>
+
+            <div class="item-form" formArrayName="items">
+              <p class="eyebrow">Products</p>
+              <div
+                class="item-row"
+                *ngFor="
+                  let item of itemsArray.controls;
+                  let i = index;
+                  trackBy: trackByControl
+                "
+                [formGroupName]="i"
+              >
+                <div class="item-search">
+                  <label>Search product</label>
+                  <input
+                    type="search"
+                    class="item-search__input"
+                    formControlName="searchTerm"
+                    placeholder="Type to search products"
+                    (input)="itemsArray.at(i).get('stockId')?.setValue(null)"
+                  />
+                  <div class="suggestions" *ngIf="filteredInventory(i).length">
+                    <button
+                      type="button"
+                      class="suggestion"
+                      *ngFor="let stock of filteredInventory(i)"
+                      (click)="selectStock(i, stock)"
+                    >
+                      <span class="suggestion__name">{{ stock.name }}</span>
+                      <span class="suggestion__meta">{{ stock.category }}</span>
+                    </button>
+                  </div>
+                </div>
+
+                <label>
+                  <span>Qty</span>
+                  <input
+                    type="number"
+                    formControlName="quantity"
+                    min="1"
+                    placeholder="0"
+                  />
+                </label>
+
+                <button
+                  type="button"
+                  class="ghost"
+                  (click)="removeItemRow(i)"
+                  [disabled]="itemsArray.length === 1"
+                >
+                  Remove
+                </button>
+              </div>
+
+              <button type="button" class="ghost" (click)="addItemRow()">
+                + Add another item
+              </button>
+            </div>
+
+            <div class="actions">
+              <button type="submit" class="primary">Create sales order</button>
+              <button type="button" class="ghost" (click)="closeOrderModal()">
+                Cancel
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <div
+        class="modal-backdrop"
+        *ngIf="activeOrder"
+        (click)="closeOrderDetail()"
+      >
+        <div
+          class="modal modal--wide"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="orderDetailTitle"
+          (click)="$event.stopPropagation()"
+        >
+          <header class="modal__header">
+            <div>
+              <p class="eyebrow">{{ activeOrder!.reference }}</p>
+              <h2 id="orderDetailTitle">{{ activeOrder!.eventName }}</h2>
               <p class="muted">
-                {{ order.customerName }} • {{ order.contactEmail }}
+                {{ activeOrder!.customerName }} • {{ activeOrder!.contactEmail }}
               </p>
             </div>
-            <div class="order-meta">
+            <div class="modal__header-actions">
               <span
                 class="status-pill"
-                [class]="'status-pill ' + statusClass(order.status)"
-                >{{ order.status }}</span
+                [class]="'status-pill ' + statusClass(activeOrder!.status)"
+                >{{ activeOrder!.status }}</span
               >
-              <div class="doc-numbers">
-                <span>Quote: {{ order.quoteNumber }}</span>
-                <span>Invoice: {{ order.invoiceNumber }}</span>
-              </div>
+              <button
+                type="button"
+                class="modal__close"
+                aria-label="Close order"
+                (click)="closeOrderDetail()"
+              >
+                ×
+              </button>
             </div>
           </header>
 
-          <div class="order-body">
-            <div class="order-details">
-              <h4>Schedule & logistics</h4>
-              <p>
-                <strong>Start:</strong> {{ order.startDate | date: "medium" }}
-              </p>
-              <p>
-                <strong>Return:</strong> {{ order.endDate | date: "medium" }}
-              </p>
-              <p><strong>Location:</strong> {{ order.location }}</p>
-              <p>
-                <strong>Delivery:</strong>
-                {{ order.deliveryMethod | titlecase }}
-              </p>
-              <p *ngIf="order.notes">
-                <strong>Notes:</strong> {{ order.notes }}
-              </p>
-              <div class="calendar-block">
-                <p class="muted">Google Calendar template:</p>
-                <a
-                  [href]="order.calendarEvent.googleCalendarUrl"
-                  target="_blank"
-                  rel="noreferrer"
-                  >Add to calendar</a
-                >
+          <div class="order-detail">
+            <div class="order-detail__meta">
+              <div>
+                <p class="eyebrow">Schedule</p>
+                <p>
+                  {{ activeOrder!.startDate | date: 'medium' }} →
+                  {{ activeOrder!.endDate | date: 'medium' }}
+                </p>
+              </div>
+              <div>
+                <p class="eyebrow">Location</p>
+                <p>{{ activeOrder!.location }}</p>
+              </div>
+              <div>
+                <p class="eyebrow">Delivery</p>
+                <p>{{ activeOrder!.deliveryMethod | titlecase }}</p>
+              </div>
+              <div>
+                <p class="eyebrow">Quote / Invoice</p>
+                <p>
+                  Quote {{ activeOrder!.quoteNumber }} • Invoice
+                  {{ activeOrder!.invoiceNumber }}
+                </p>
+              </div>
+            </div>
+
+            <div class="calendar-block">
+              <div>
+                <p class="eyebrow">Calendar</p>
                 <p class="muted">
                   Attendees:
                   {{
-                    order.calendarEvent.attendees.join(", ") || "None listed"
+                    activeOrder!.calendarEvent.attendees.join(', ') ||
+                      'None listed'
                   }}
                 </p>
               </div>
+              <a
+                class="primary"
+                [href]="activeOrder!.calendarEvent.googleCalendarUrl"
+                target="_blank"
+                rel="noreferrer"
+                >Add to calendar</a
+              >
             </div>
 
             <div class="order-items">
@@ -288,7 +390,7 @@
                 <span>Unit</span>
                 <span>Total</span>
               </div>
-              <div class="table-row" *ngFor="let item of order.items">
+              <div class="table-row" *ngFor="let item of activeOrder!.items">
                 <span>{{ item.name }}</span>
                 <span>{{ item.quantity }}</span>
                 <span>{{ item.unitPrice | currency }}</span>
@@ -298,87 +400,84 @@
                 <span>Subtotal</span>
                 <span></span>
                 <span></span>
-                <span>{{ order.totals.subtotal | currency }}</span>
+                <span>{{ activeOrder!.totals.subtotal | currency }}</span>
               </div>
               <div class="table-row">
                 <span>GST (15%)</span>
                 <span></span>
                 <span></span>
-                <span>{{ order.totals.gst | currency }}</span>
+                <span>{{ activeOrder!.totals.gst | currency }}</span>
               </div>
               <div class="table-row grand-total">
                 <span>Order total</span>
                 <span></span>
                 <span></span>
-                <span>{{ order.totals.total | currency }}</span>
+                <span>{{ activeOrder!.totals.total | currency }}</span>
+              </div>
+            </div>
+
+            <div class="order-detail__footer">
+              <div class="returns">
+                <p class="eyebrow">Returns & reconciliation</p>
+                <p class="muted">
+                  Status updates automatically when you save reconciliation. Predicted
+                  status: {{ computedReturnStatus(activeOrder!) }}.
+                </p>
+                <div class="return-grid">
+                  <label *ngFor="let item of activeOrder!.items">
+                    <span>{{ item.name }} (out: {{ item.quantity }})</span>
+                    <input
+                      type="number"
+                      min="0"
+                      [max]="item.quantity"
+                      [ngModel]="returnSheets[activeOrder!.id][item.stockId]"
+                      (ngModelChange)="
+                        setReturnedQuantity(activeOrder!.id, item.stockId, $event)
+                      "
+                      name="return-{{ activeOrder!.id }}-{{ item.stockId }}"
+                    />
+                  </label>
+                </div>
+                <div class="button-group">
+                  <button
+                    type="button"
+                    class="primary"
+                    (click)="saveReconciliation(activeOrder!)"
+                  >
+                    Save reconciliation
+                  </button>
+                </div>
+              </div>
+
+              <div class="order-detail__actions">
+                <button
+                  type="button"
+                  class="ghost"
+                  (click)="regenerateCalendar(activeOrder!)"
+                >
+                  Resend calendar invite
+                </button>
+                <div class="button-group">
+                  <button
+                    type="button"
+                    class="ghost"
+                    (click)="printPickList(activeOrder!)"
+                  >
+                    Print pick list
+                  </button>
+                  <button
+                    type="button"
+                    class="primary"
+                    (click)="printSalesOrder(activeOrder!)"
+                  >
+                    Print sales order
+                  </button>
+                </div>
               </div>
             </div>
           </div>
-
-          <div class="order-footer">
-            <div class="status-actions">
-              <p class="eyebrow">Status</p>
-              <div class="button-group">
-                <button
-                  *ngFor="let status of statusOptions"
-                  type="button"
-                  [class.primary]="order.status === status"
-                  (click)="updateStatus(order, status)"
-                >
-                  {{ status }}
-                </button>
-              </div>
-            </div>
-
-            <div class="returns">
-              <p class="eyebrow">Returns & reconciliation</p>
-              <div class="return-grid">
-                <label *ngFor="let item of order.items">
-                  <span>{{ item.name }} (out: {{ item.quantity }})</span>
-                  <input
-                    type="number"
-                    min="0"
-                    [max]="item.quantity"
-                    [(ngModel)]="returnSheets[order.id][item.stockId]"
-                    name="return-{{ order.id }}-{{ item.stockId }}"
-                  />
-                </label>
-              </div>
-              <div class="button-group">
-                <button
-                  type="button"
-                  class="primary"
-                  (click)="applyReturnStatus(order, 'Returned')"
-                >
-                  Mark as returned
-                </button>
-                <button
-                  type="button"
-                  (click)="applyReturnStatus(order, 'Partial Return')"
-                >
-                  Save partial return
-                </button>
-                <button type="button" (click)="updateStatus(order, 'Missing')">
-                  Mark missing
-                </button>
-              </div>
-            </div>
-
-            <div class="actions">
-              <button
-                type="button"
-                class="ghost"
-                (click)="regenerateCalendar(order)"
-              >
-                Resend calendar invite
-              </button>
-              <button type="button" class="primary" (click)="printOrder(order)">
-                Print sales order
-              </button>
-            </div>
-          </div>
-        </article>
-      </section>
+        </div>
+      </div>
     </div>
   </content>
 </ui-shell>
