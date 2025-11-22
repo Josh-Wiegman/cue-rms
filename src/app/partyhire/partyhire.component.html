@@ -5,8 +5,9 @@
         <p class="eyebrow">PartyHire dry-hire toolkit</p>
         <h1>PartyHire Orders</h1>
         <p>
-          Build partyhire sales orders that generate formatted quotes, invoices and Google Calendar
-          templates while reserving stock against the main inventory pool.
+          Build partyhire sales orders that generate formatted quotes, invoices
+          and Google Calendar templates while reserving stock against the main
+          inventory pool.
         </p>
       </div>
       <div class="status-legend">
@@ -25,25 +26,42 @@
             <p class="eyebrow">Create order</p>
             <h2>Build a PartyHire sales order</h2>
           </div>
-          <div class="calendar-message" *ngIf="calendarMessage">{{ calendarMessage }}</div>
+          <div class="calendar-message" *ngIf="calendarMessage">
+            {{ calendarMessage }}
+          </div>
         </div>
-
         <div class="form-grid">
           <label>
             <span>Customer / company</span>
-            <input type="text" formControlName="customerName" placeholder="Client name" />
+            <input
+              type="text"
+              formControlName="customerName"
+              placeholder="Client name"
+            />
           </label>
           <label>
             <span>Contact email</span>
-            <input type="email" formControlName="contactEmail" placeholder="ops@example.com" />
+            <input
+              type="email"
+              formControlName="contactEmail"
+              placeholder="ops@example.com"
+            />
           </label>
           <label>
             <span>Contact phone</span>
-            <input type="tel" formControlName="contactPhone" placeholder="+64..." />
+            <input
+              type="tel"
+              formControlName="contactPhone"
+              placeholder="+64..."
+            />
           </label>
           <label>
             <span>Event name</span>
-            <input type="text" formControlName="eventName" placeholder="Birthday, Wedding..." />
+            <input
+              type="text"
+              formControlName="eventName"
+              placeholder="Birthday, Wedding..."
+            />
           </label>
           <label>
             <span>Start</span>
@@ -55,7 +73,11 @@
           </label>
           <label>
             <span>Location</span>
-            <input type="text" formControlName="location" placeholder="Venue / address" />
+            <input
+              type="text"
+              formControlName="location"
+              placeholder="Venue / address"
+            />
           </label>
           <label>
             <span>Delivery method</span>
@@ -66,11 +88,19 @@
           </label>
           <label class="full-width">
             <span>Calendar recipients (comma separated)</span>
-            <input type="text" formControlName="recipients" placeholder="team@company.com, crew@company.com" />
+            <input
+              type="text"
+              formControlName="recipients"
+              placeholder="team@company.com, crew@company.com"
+            />
           </label>
           <label class="full-width">
             <span>Notes for invoice / crew</span>
-            <textarea formControlName="notes" rows="2" placeholder="Access times, parking, delivery instructions"></textarea>
+            <textarea
+              formControlName="notes"
+              rows="2"
+              placeholder="Access times, parking, delivery instructions"
+            ></textarea>
           </label>
         </div>
 
@@ -79,35 +109,60 @@
             <div>
               <p class="eyebrow">Dry-hire items</p>
               <h3>Allocate shared stock</h3>
-              <p class="helper">Stock is subtracted from the overall pool to keep the main RMS accurate.</p>
+              <p class="helper">
+                Stock is subtracted from the overall pool to keep the main RMS
+                accurate.
+              </p>
             </div>
-            <button type="button" class="ghost" (click)="addItemRow()">Add item</button>
+            <button type="button" class="ghost" (click)="addItemRow()">
+              Add item
+            </button>
           </div>
 
-            <div class="item-row" *ngFor="let item of itemsArray.controls; let i = index; trackBy: trackByControl" [formGroup]="item">
-            <div class="item-select">
-              <label class="sr-only">Item</label>
-              <select formControlName="stockId">
-                <option [ngValue]="null" disabled>Select an item</option>
-                <option *ngFor="let stock of inventory; trackBy: trackByStockItem" [ngValue]="stock.id">
-                  {{ stock.name }} ({{ stock.category }}) — {{ availableStock(stock) }} available
-                </option>
-              </select>
+          <!-- ✅ wrap in formArrayName and use formGroupName -->
+          <div formArrayName="items">
+            <div
+              class="item-row"
+              *ngFor="
+                let item of itemsArray.controls;
+                let i = index;
+                trackBy: trackByControl
+              "
+              [formGroupName]="i"
+            >
+              <div class="item-select">
+                <label class="sr-only">Item</label>
+                <select formControlName="stockId">
+                  <option [ngValue]="null" disabled>Select an item</option>
+                  <option
+                    *ngFor="let stock of inventory; trackBy: trackByStockItem"
+                    [ngValue]="stock.id"
+                  >
+                    {{ stock.name }} ({{ stock.category }}) —
+                    {{ availableStock(stock) }} available
+                  </option>
+                </select>
+              </div>
+              <div class="item-qty">
+                <label class="sr-only">Qty</label>
+                <input type="number" min="1" formControlName="quantity" />
+              </div>
+              <div class="item-available" *ngIf="item.value.stockId">
+                <small>
+                  Reserved: {{ totalAllocated(item.value.stockId) }} •
+                  Remaining: {{ remainingStock(item.value.stockId) }}
+                </small>
+              </div>
+              <button
+                type="button"
+                class="ghost"
+                (click)="removeItemRow(i)"
+                [disabled]="itemsArray.length === 1"
+              >
+                Remove
+              </button>
             </div>
-            <div class="item-qty">
-              <label class="sr-only">Qty</label>
-              <input type="number" min="1" formControlName="quantity" />
-            </div>
-            <div class="item-available" *ngIf="item.value.stockId">
-              <small>Reserved: {{ totalAllocated(item.value.stockId) }} • Remaining: {{ remainingStock(item.value.stockId) }}</small>
-            </div>
-            <button type="button" class="ghost" (click)="removeItemRow(i)" [disabled]="itemsArray.length === 1">Remove</button>
           </div>
-        </div>
-
-        <div class="actions">
-          <button type="submit" class="primary">Create sales order</button>
-          <button type="button" class="ghost" (click)="orderForm.reset({ deliveryMethod: 'pickup', recipients: orderForm.value.recipients })">Clear</button>
         </div>
       </form>
 
@@ -119,7 +174,10 @@
           </div>
         </div>
         <div class="stock-list">
-          <div class="stock-row" *ngFor="let item of inventory; trackBy: trackByStockItem">
+          <div
+            class="stock-row"
+            *ngFor="let item of inventory; trackBy: trackByStockItem"
+          >
             <div>
               <p class="stock-name">{{ item.name }}</p>
               <p class="stock-meta">{{ item.category }}</p>
@@ -134,13 +192,14 @@
         <div class="info-panel">
           <h4>Automatic calendar entries</h4>
           <p>
-            Every order builds a Google Calendar template with the formatted summary, location and attendee list.
-            Send it instantly to subscribed users or re-open it from the order card to re-send.
+            Every order builds a Google Calendar template with the formatted
+            summary, location and attendee list. Send it instantly to subscribed
+            users or re-open it from the order card to re-send.
           </p>
           <h4>Printable sales paperwork</h4>
           <p>
-            Use the "Print sales order" action on any card to output the quote/invoice format with item lines, totals
-            and status legend.
+            Use the "Print sales order" action on any card to output the
+            quote/invoice format with item lines, totals and status legend.
           </p>
         </div>
       </div>
@@ -155,7 +214,8 @@
       </div>
 
       <p class="empty" *ngIf="orders.length === 0">
-        No partyhire orders yet. Add a sales order to reserve stock and build calendar invites.
+        No partyhire orders yet. Add a sales order to reserve stock and build
+        calendar invites.
       </p>
 
       <article
@@ -167,10 +227,16 @@
           <div>
             <p class="eyebrow">{{ order.reference }}</p>
             <h3>{{ order.eventName }}</h3>
-            <p class="muted">{{ order.customerName }} • {{ order.contactEmail }}</p>
+            <p class="muted">
+              {{ order.customerName }} • {{ order.contactEmail }}
+            </p>
           </div>
           <div class="order-meta">
-            <span class="status-pill" [class]="'status-pill ' + statusClass(order.status)">{{ order.status }}</span>
+            <span
+              class="status-pill"
+              [class]="'status-pill ' + statusClass(order.status)"
+              >{{ order.status }}</span
+            >
             <div class="doc-numbers">
               <span>Quote: {{ order.quoteNumber }}</span>
               <span>Invoice: {{ order.invoiceNumber }}</span>
@@ -181,15 +247,27 @@
         <div class="order-body">
           <div class="order-details">
             <h4>Schedule & logistics</h4>
-            <p><strong>Start:</strong> {{ order.startDate | date: 'medium' }}</p>
-            <p><strong>Return:</strong> {{ order.endDate | date: 'medium' }}</p>
+            <p>
+              <strong>Start:</strong> {{ order.startDate | date: "medium" }}
+            </p>
+            <p><strong>Return:</strong> {{ order.endDate | date: "medium" }}</p>
             <p><strong>Location:</strong> {{ order.location }}</p>
-            <p><strong>Delivery:</strong> {{ order.deliveryMethod | titlecase }}</p>
+            <p>
+              <strong>Delivery:</strong> {{ order.deliveryMethod | titlecase }}
+            </p>
             <p *ngIf="order.notes"><strong>Notes:</strong> {{ order.notes }}</p>
             <div class="calendar-block">
               <p class="muted">Google Calendar template:</p>
-              <a [href]="order.calendarEvent.googleCalendarUrl" target="_blank" rel="noreferrer">Add to calendar</a>
-              <p class="muted">Attendees: {{ order.calendarEvent.attendees.join(', ') || 'None listed' }}</p>
+              <a
+                [href]="order.calendarEvent.googleCalendarUrl"
+                target="_blank"
+                rel="noreferrer"
+                >Add to calendar</a
+              >
+              <p class="muted">
+                Attendees:
+                {{ order.calendarEvent.attendees.join(", ") || "None listed" }}
+              </p>
             </div>
           </div>
 
@@ -257,19 +335,36 @@
               </label>
             </div>
             <div class="button-group">
-              <button type="button" class="primary" (click)="applyReturnStatus(order, 'Returned')">
+              <button
+                type="button"
+                class="primary"
+                (click)="applyReturnStatus(order, 'Returned')"
+              >
                 Mark as returned
               </button>
-              <button type="button" (click)="applyReturnStatus(order, 'Partial Return')">
+              <button
+                type="button"
+                (click)="applyReturnStatus(order, 'Partial Return')"
+              >
                 Save partial return
               </button>
-              <button type="button" (click)="updateStatus(order, 'Missing')">Mark missing</button>
+              <button type="button" (click)="updateStatus(order, 'Missing')">
+                Mark missing
+              </button>
             </div>
           </div>
 
           <div class="actions">
-            <button type="button" class="ghost" (click)="regenerateCalendar(order)">Resend calendar invite</button>
-            <button type="button" class="primary" (click)="printOrder(order)">Print sales order</button>
+            <button
+              type="button"
+              class="ghost"
+              (click)="regenerateCalendar(order)"
+            >
+              Resend calendar invite
+            </button>
+            <button type="button" class="primary" (click)="printOrder(order)">
+              Print sales order
+            </button>
           </div>
         </div>
       </article>
