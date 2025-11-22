@@ -512,7 +512,6 @@ export class PartyHireComponent implements OnInit {
           }
         </div>
         <div>
-          <p class="pill">${order.status}</p>
           <h1>Sales order ${order.reference}</h1>
           <p class="accent">Quote ${order.quoteNumber} • Invoice ${order.invoiceNumber}</p>
         </div>

@@ -398,32 +398,32 @@ export class PartyHireService {
 
     const fmt = (d: Date) =>
       d.toLocaleString('en-NZ', {
-        hour: 'numeric',
+        timeZone: 'Pacific/Auckland',
+        hour: '2-digit',
         minute: '2-digit',
         day: 'numeric',
         month: 'long',
       });
+
     return [
       `Customer Details:`,
       `Order Reference: ${reference}`,
       `Customer: ${payload.customerName}`,
       `Phone: ${payload.contactPhone || '—'}`,
-      ``,
+      ` `, // force blank line
       `Event Details:`,
       `Event: ${payload.eventName}`,
       `Pickup Time: ${fmt(pickup)}`,
       `Return Time: ${fmt(dropoff)}`,
       `Location: ${payload.location}`,
       `Type: ${payload.deliveryMethod === 'pickup' ? 'Pick up' : 'Delivery'}`,
-      ``,
+      ` `,
       `Finances:`,
       `Hire Total: $${total.toFixed(2)} incl GST`,
-      ``,
+      ` `,
       `Notes:`,
       payload.notes ? `${payload.notes}` : `—`,
-    ]
-      .filter(Boolean)
-      .join('\n');
+    ].join('\n');
   }
 
   private googleCalendarUrl(
@@ -448,16 +448,18 @@ export class PartyHireService {
     return `https://calendar.google.com/calendar/render?${params.toString()}`;
   }
 
-  private toCalendarDate(date: string): string {
-    const value = new Date(date);
-    const pad = (num: number) => String(num).padStart(2, '0');
-    const year = value.getUTCFullYear();
-    const month = pad(value.getUTCMonth() + 1);
-    const day = pad(value.getUTCDate());
-    const hours = pad(value.getUTCHours());
-    const minutes = pad(value.getUTCMinutes());
-    const seconds = pad(value.getUTCSeconds());
-    return `${year}${month}${day}T${hours}${minutes}${seconds}Z`;
+  private toCalendarDate(dateIso: string): string {
+    const d = new Date(dateIso);
+    const pad = (n: number) => String(n).padStart(2, '0');
+
+    const year = d.getFullYear();
+    const month = pad(d.getMonth() + 1);
+    const day = pad(d.getDate());
+    const hours = pad(d.getHours());
+    const minutes = pad(d.getMinutes());
+    const seconds = pad(d.getSeconds());
+
+    return `${year}${month}${day}T${hours}${minutes}${seconds}`;
   }
 
   private reserveStock(items: PartyHireOrderItem[]): void {
