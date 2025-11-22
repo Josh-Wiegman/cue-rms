@@ -188,7 +188,7 @@ textarea {
 
 .item-row {
   display: grid;
-  grid-template-columns: 1.4fr 0.5fr auto;
+  grid-template-columns: 2fr 0.45fr auto;
   align-items: start;
   gap: 0.5rem;
   padding: 0.5rem 0;
@@ -196,6 +196,10 @@ textarea {
 
 .item-search {
   position: relative;
+
+  .item-search__input {
+    width: 100%;
+  }
 }
 
 .suggestions {

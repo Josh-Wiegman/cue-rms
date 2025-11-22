@@ -91,14 +91,16 @@ export class PartyHireComponent implements OnInit {
     const searchTerm =
       (this.itemsArray.at(index).get('searchTerm')?.value as string) ?? '';
 
-    if (!searchTerm.trim()) return this.inventory;
+    if (!searchTerm.trim()) return [];
 
     const term = searchTerm.toLowerCase();
-    return this.inventory.filter(
-      (item) =>
-        item.name.toLowerCase().includes(term) ||
-        item.category.toLowerCase().includes(term),
-    );
+    return this.inventory
+      .filter(
+        (item) =>
+          item.name.toLowerCase().includes(term) ||
+          item.category.toLowerCase().includes(term),
+      )
+      .slice(0, 3);
   }
 
   protected selectStock(index: number, stock: PartyHireStockItem): void {
@@ -325,11 +327,11 @@ export class PartyHireComponent implements OnInit {
     this.orders
       .filter((order) => this.showArchived || order.status !== 'Returned')
       .forEach((order) => {
-        const dateKey = new Date(order.startDate).toDateString();
-        const group = dateMap.get(dateKey) ?? [];
-        group.push(order);
-        dateMap.set(dateKey, group);
-      });
+      const dateKey = new Date(order.startDate).toDateString();
+      const group = dateMap.get(dateKey) ?? [];
+      group.push(order);
+      dateMap.set(dateKey, group);
+    });
 
     const sortedKeys = Array.from(dateMap.keys()).sort((a, b) => {
       const dateA = new Date(a).setHours(0, 0, 0, 0);
@@ -378,8 +380,7 @@ export class PartyHireComponent implements OnInit {
     const printWindow = window.open('', '_blank', 'width=900,height=1200');
     if (!printWindow) return;
 
-    printWindow.document
-      .write(`<!doctype html><html><head><title>${title}</title>
+    printWindow.document.write(`<!doctype html><html><head><title>${title}</title>
       <style>
         body { font-family: 'Inter', system-ui, -apple-system, sans-serif; margin: 0; padding: 1.5rem; color: #0f172a; }
         h1, h2, h3, h4 { margin: 0 0 0.35rem 0; }

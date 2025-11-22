@@ -185,11 +185,19 @@
               </label>
               <label>
                 <span>Start</span>
-                <input type="datetime-local" formControlName="startDate" />
+                <input
+                  type="datetime-local"
+                  formControlName="startDate"
+                  step="900"
+                />
               </label>
               <label>
                 <span>Return</span>
-                <input type="datetime-local" formControlName="endDate" />
+                <input
+                  type="datetime-local"
+                  formControlName="endDate"
+                  step="900"
+                />
               </label>
               <label>
                 <span>Location</span>
@@ -239,6 +247,7 @@
                   <label>Search product</label>
                   <input
                     type="search"
+                    class="item-search__input"
                     formControlName="searchTerm"
                     placeholder="Type to search products"
                     (input)="itemsArray.at(i).get('stockId')?.setValue(null)"
@@ -247,7 +256,7 @@
                     <button
                       type="button"
                       class="suggestion"
-                      *ngFor="let stock of filteredInventory(i) | slice: 0:5"
+                      *ngFor="let stock of filteredInventory(i)"
                       (click)="selectStock(i, stock)"
                     >
                       <span class="suggestion__name">{{ stock.name }}</span>
