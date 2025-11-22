@@ -170,6 +170,8 @@ export class PartyHireService {
       'create_order',
       {
         ...payload,
+        startDate: new Date(payload.startDate).toISOString(),
+        endDate: new Date(payload.endDate).toISOString(),
         items: payload.items.map((item) => ({
           ...item,
           unitPrice: this.getFallbackUnitPrice(item.stockId),
@@ -318,8 +320,8 @@ export class PartyHireService {
       contactEmail: payload.contactEmail,
       contactPhone: payload.contactPhone,
       eventName: payload.eventName,
-      startDate: payload.startDate,
-      endDate: payload.endDate,
+      startDate: new Date(payload.startDate).toISOString(),
+      endDate: new Date(payload.endDate).toISOString(),
       location: payload.location,
       deliveryMethod: payload.deliveryMethod,
       notes: payload.notes,
@@ -369,8 +371,8 @@ export class PartyHireService {
     const summary = `PartyHire: ${payload.eventName} (${reference})`;
     const description = this.calendarDescription(payload, reference, total);
     const googleCalendarUrl = this.googleCalendarUrl(
-      payload.startDate,
-      payload.endDate,
+      new Date(payload.startDate).toISOString(),
+      new Date(payload.endDate).toISOString(),
       summary,
       description,
       payload.location,

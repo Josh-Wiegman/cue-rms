@@ -87,9 +87,13 @@
                       >{{ order.status }}</span
                     >
                     <p class="muted">
-                      {{ order.startDate | date: "mediumTime" }} →
-                      {{ order.endDate | date: "mediumTime" }}
+                      {{
+                        order.startDate | date: "h:mm a" : "Pacific/Auckland"
+                      }}
+                      →
+                      {{ order.endDate | date: "h:mm a" : "Pacific/Auckland" }}
                     </p>
+
                     <p class="muted">{{ order.location }}</p>
                   </div>
                 </button>
@@ -392,8 +396,13 @@
               <div>
                 <p class="eyebrow">Schedule</p>
                 <p>
-                  {{ activeOrder!.startDate | date: "medium" }} →
-                  {{ activeOrder!.endDate | date: "medium" }}
+                  {{
+                    activeOrder!.startDate | date: "medium" : "Pacific/Auckland"
+                  }}
+                  →
+                  {{
+                    activeOrder!.endDate | date: "medium" : "Pacific/Auckland"
+                  }}
                 </p>
               </div>
               <div>
