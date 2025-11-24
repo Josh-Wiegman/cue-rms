@@ -1,7 +1,7 @@
 <button
-  class="dropdown__menu__item"
+  [class]="['simple-button', buttonStyle]"
   (click)="handleClick()"
   [disabled]="disabled"
 >
-  <ng-content />
+  <p>{{ buttonLabel }}</p>
 </button>

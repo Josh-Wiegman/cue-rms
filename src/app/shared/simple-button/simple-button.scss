@@ -1,0 +1,57 @@
+@use "../../../style/colors.scss" as *;
+
+.simple-button {
+  border-radius: $minor-border-radius;
+  transition: $quick-transition;
+  font-weight: 600;
+
+  p {
+    padding: 0.5rem 0.95rem;
+    border-radius: $minor-border-radius;
+    transition: $quick-transition;
+  }
+
+  &.primary {
+    background: $hero-gradient-minor;
+    color: $hero-text-color;
+    border: none;
+  }
+
+  &.secondary {
+    border: $minor-border;
+    background: none;
+  }
+
+  &.tertiary {
+    background-color: rgba($main-text-color, 0.06);
+    border: none;
+  }
+
+  &.ghost {
+    background: transparent;
+    border: none;
+    color: $accent-color;
+  }
+}
+
+.simple-button:enabled:hover {
+  transition: $medium-transition;
+  cursor: pointer;
+
+  &.primary > p {
+    background-color: rgba($hero-dark-color, 0.3);
+  }
+
+  &.secondary {
+    border-color: rgba($accent-color, 0.6);
+    background: none;
+  }
+
+  &.tertiary {
+    background-color: rgba($main-text-color, 0.2);
+  }
+
+  &.ghost {
+    background-color: rgba($accent-color, 0.12);
+  }
+}

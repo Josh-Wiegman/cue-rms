@@ -12,11 +12,31 @@
           </p>
         </div>
         <div class="status-legend">
-          <cg-pill label="Prepped" state="accent" hero></cg-pill>
-          <cg-pill label="Collected" state="warning" hero></cg-pill>
-          <cg-pill label="Returned" state="success" hero></cg-pill>
-          <cg-pill label="Partial" state="warning" hero> </cg-pill>
-          <cg-pill label="Missing" state="error" hero></cg-pill>
+          <cg-pill
+            label="Prepped"
+            [state]="mapStatusToPillState('Prepped')"
+            hero
+          />
+          <cg-pill
+            label="Collected"
+            [state]="mapStatusToPillState('Collected')"
+            hero
+          />
+          <cg-pill
+            label="Returned"
+            [state]="mapStatusToPillState('Returned')"
+            hero
+          />
+          <cg-pill
+            label="Partial"
+            [state]="mapStatusToPillState('Partial Return')"
+            hero
+          />
+          <cg-pill
+            label="Missing"
+            [state]="mapStatusToPillState('Missing')"
+            hero
+          />
         </div>
       </header>
 
@@ -31,21 +51,21 @@
             </p>
           </div>
           <div class="section-actions">
-            <button
-              type="button"
-              class="ghost"
-              (click)="toggleArchived()"
-              aria-label="Toggle archived orders"
-            >
-              {{
+            <cg-simple-button
+              [buttonLabel]="
                 showArchived
-                  ? "Hide archived sales orders"
-                  : "View archived sales orders"
-              }}
-            </button>
-            <button type="button" class="primary" (click)="openOrderModal()">
-              + Add sales order
-            </button>
+                  ? 'Hide archived sales orders'
+                  : 'View archived sales orders'
+              "
+              buttonStyle="ghost"
+              (onClick)="toggleArchived()"
+              aria-label="Toggle archived orders"
+            />
+            <cg-simple-button
+              buttonLabel="+ Add sales order"
+              buttonStyle="primary"
+              (onClick)="openOrderModal()"
+            />
             <div class="calendar-message" *ngIf="calendarMessage">
               {{ calendarMessage }}
             </div>
@@ -84,7 +104,7 @@
                       <cg-pill
                         label="{{ order.status }}"
                         [state]="mapStatusToPillState(order.status)"
-                      ></cg-pill>
+                      />
                       <p class="muted">
                         {{
                           order.startDate | date: "h:mm a" : "Pacific/Auckland"
@@ -99,31 +119,25 @@
                     </div>
                   </button>
                   <div class="order-row__actions">
-                    <button
-                      type="button"
-                      class="ghost"
-                      (click)="updateStatus(order, 'Collected')"
+                    <cg-simple-button
+                      buttonLabel="Collected"
+                      buttonStyle="secondary"
+                      (onClick)="updateStatus(order, 'Collected')"
                       [disabled]="
                         order.status === 'Collected' ||
                         order.status === 'Returned'
                       "
-                    >
-                      Collected
-                    </button>
-                    <button
-                      type="button"
-                      class="ghost"
-                      (click)="printSalesOrder(order)"
-                    >
-                      Print sales order
-                    </button>
-                    <button
-                      type="button"
-                      class="ghost"
-                      (click)="printPickList(order)"
-                    >
-                      Print pick list
-                    </button>
+                    />
+                    <cg-simple-button
+                      buttonLabel="Print sales order"
+                      buttonStyle="secondary"
+                      (onClick)="printSalesOrder(order)"
+                    />
+                    <cg-simple-button
+                      buttonLabel="Print pick list"
+                      buttonStyle="secondary"
+                      (onClick)="printPickList(order)"
+                    />
                   </div>
                 </div>
               </cg-panel>
@@ -158,11 +172,7 @@
               ×
             </button>
           </header>
-          <form
-            class="modal__form"
-            [formGroup]="orderForm"
-            (ngSubmit)="submitOrder()"
-          >
+          <form class="modal__form" [formGroup]="orderForm">
             <div class="form-grid">
               <label>
                 <span>Customer / company</span>
@@ -330,26 +340,32 @@
                   />
                 </label>
 
-                <button
-                  type="button"
-                  class="ghost"
-                  (click)="removeItemRow(i)"
+                <cg-simple-button
+                  buttonLabel="Remove"
+                  buttonStyle="tertiary"
+                  (onClick)="removeItemRow(i)"
                   [disabled]="itemsArray.length === 1"
-                >
-                  Remove
-                </button>
+                />
               </div>
 
-              <button type="button" class="ghost" (click)="addItemRow()">
-                + Add another item
-              </button>
+              <cg-simple-button
+                buttonLabel="+ Add another item"
+                buttonStyle="secondary"
+                (onClick)="addItemRow()"
+              />
             </div>
 
             <div class="actions">
-              <button type="submit" class="primary">Create sales order</button>
-              <button type="button" class="ghost" (click)="closeOrderModal()">
-                Cancel
-              </button>
+              <cg-simple-button
+                buttonLabel="Create sales order"
+                buttonStyle="primary"
+                (onClick)="submitOrder()"
+              />
+              <cg-simple-button
+                buttonLabel="Cancel"
+                buttonStyle="ghost"
+                (onClick)="closeOrderModal()"
+              />
             </div>
           </form>
         </div>
@@ -380,7 +396,7 @@
               <cg-pill
                 label="{{ activeOrder!.status }}"
                 [state]="mapStatusToPillState(activeOrder!.status)"
-              ></cg-pill>
+              />
               <button
                 type="button"
                 class="modal__close"
@@ -503,39 +519,31 @@
                   </label>
                 </div>
                 <div class="button-group">
-                  <button
-                    type="button"
-                    class="primary"
-                    (click)="saveReconciliation(activeOrder!)"
-                  >
-                    Save reconciliation
-                  </button>
+                  <cg-simple-button
+                    buttonLabel="Save reconciliation"
+                    buttonStyle="primary"
+                    (onClick)="saveReconciliation(activeOrder!)"
+                  />
                 </div>
               </div>
 
               <div class="order-detail__actions">
-                <button
-                  type="button"
-                  class="ghost"
-                  (click)="regenerateCalendar(activeOrder!)"
-                >
-                  Resend calendar invite
-                </button>
+                <cg-simple-button
+                  buttonLabel="Resend calendar invite"
+                  buttonStyle="secondary"
+                  (onClick)="regenerateCalendar(activeOrder!)"
+                />
                 <div class="button-group">
-                  <button
-                    type="button"
-                    class="ghost"
-                    (click)="printPickList(activeOrder!)"
-                  >
-                    Print pick list
-                  </button>
-                  <button
-                    type="button"
-                    class="primary"
-                    (click)="printSalesOrder(activeOrder!)"
-                  >
-                    Print sales order
-                  </button>
+                  <cg-simple-button
+                    buttonLabel="Print pick list"
+                    buttonStyle="secondary"
+                    (onClick)="printPickList(activeOrder!)"
+                  />
+                  <cg-simple-button
+                    buttonLabel="Print sales order"
+                    buttonStyle="tertiary"
+                    (onClick)="printSalesOrder(activeOrder!)"
+                  />
                 </div>
               </div>
             </div>
