@@ -8,13 +8,13 @@ $main-light-color: rgb(255, 255, 255);
 $main-border-color: rgb(226, 231, 239);
 $main-text-color: rgb(31, 42, 68);
 
-$fail-color: rgba(218, 68, 62, 0.3);
-$fail-text-light-color: rgb(174, 41, 36);
+$error-color: rgb(218, 68, 62);
+$error-text-light-color: rgb(174, 41, 36);
 
-$success-color: rgba(104, 188, 95, 0.3);
+$success-color: rgb(104, 188, 95);
 $success-text-light-color: rgb(27, 116, 61);
 
-$warning-color: rgba(246, 202, 94, 0.45);
+$warning-color: rgb(246, 202, 94);
 $warning-text-light-color: rgb(173, 132, 31);
 
 $accent-color: rgb(99, 102, 241);
@@ -26,6 +26,7 @@ $main-gradient: linear-gradient(140deg, $main-dark-color, $main-light-color);
 
 // Borders
 $main-border: 2px solid $main-border-color;
+$minor-border: 1px solid $main-border-color;
 $minor-border-radius: 0.6rem;
 $minor-border-radius-internal: 0.4rem;
 $major-border-radius: 1rem;
@@ -36,7 +37,18 @@ $medium-transition: 0.3s ease;
 
 // Effects
 @mixin box-shadow {
-  box-shadow: 0px 2px 4px 0px rgba(0, 0, 0, 0.15);
-  -webkit-box-shadow: 0px 2px 4px 0px rgba(0, 0, 0, 0.15);
-  -moz-box-shadow: 0px 2px 4px 0px rgba(0, 0, 0, 0.15);
+  box-shadow: 0px 4px 16px rgba($hero-dark-color, 0.05);
+  -webkit-box-shadow: 0px 4px 16px rgba(0, 0, 0, 0.05);
+  -moz-box-shadow: 0px 4px 16px rgba(0, 0, 0, 0.05);
 }
+
+// Fonts
+@font-face {
+  font-family: Manrope;
+  src: url(Manrope-VariableFont_wght.ttf);
+}
+
+$font-sans: Manrope, Helvetica, Arial, sans-serif;
+
+$normal-text: 0.95rem;
+$small-text: 0.75rem;

@@ -24,44 +24,6 @@
   gap: 0.5rem;
 }
 
-.status-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.25rem 0.75rem;
-  border-radius: 999px;
-  font-weight: 600;
-  text-transform: uppercase;
-  font-size: 0.75rem;
-  background: $main-border-color;
-  color: $main-text-color;
-
-  &.prepped {
-    background: rgba($accent-color, 0.12);
-    color: $accent-color;
-  }
-
-  &.collected {
-    background: $warning-color;
-    color: $warning-text-light-color;
-  }
-
-  &.returned {
-    background: $success-color;
-    color: $success-text-light-color;
-  }
-
-  &.partial-return {
-    background: rgba(246, 202, 94, 0.2);
-    color: $warning-text-light-color;
-  }
-
-  &.missing {
-    background: $fail-color;
-    color: $fail-text-light-color;
-  }
-}
-
 .orders {
   display: flex;
   flex-direction: column;
@@ -106,12 +68,7 @@
 .order-row {
   display: flex;
   align-items: stretch;
-  gap: 0.75rem;
-  padding: 1rem;
-  border: 1px solid $main-border-color;
-  border-radius: $major-border-radius;
-  background: $main-light-color;
-  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.05);
+  gap: 2rem;
 }
 
 .order-summary {

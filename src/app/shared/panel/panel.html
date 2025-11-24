@@ -1,3 +1,7 @@
-<div class="panel" style="border-radius: {{ this.borderRadii[borderRadius] }};">
-  <ng-content></ng-content>
+<div
+  class="panel"
+  style="border-radius: {{ this.borderRadii[borderRadius] }};"
+  [class]="this.hero ? 'hero' : 'main'"
+>
+  <ng-content />
 </div>

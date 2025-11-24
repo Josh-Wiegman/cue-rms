@@ -1,9 +1,14 @@
 <div class="dropdown__menu">
   <div class="dropdown__menu__more">
     @if (iconOnly && iconPath) {
-      <img [src]="iconPath" [alt]="menuLabel" />
+      <svg>
+        <use [attr.href]="iconPath" />
+        <desc>{{ menuLabel }}</desc>
+      </svg>
     } @else if (iconPath) {
-      <img [src]="iconPath" />
+      <svg>
+        <use [attr.href]="iconPath" />
+      </svg>
       <p style="padding-right: 0.75rem">{{ menuLabel }}</p>
     } @else {
       <p style="padding: 0 0.5rem">{{ menuLabel }}</p>
@@ -15,6 +20,6 @@
       horizontal ? 'dropdown__menu--horizontal' : 'dropdown__menu--vertical'
     "
   >
-    <ng-content></ng-content>
+    <ng-content />
   </div>
 </div>

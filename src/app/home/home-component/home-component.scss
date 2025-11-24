@@ -1,8 +1,7 @@
-.dashboard {
+content {
   display: flex;
   flex-direction: column;
   gap: 2.5rem;
-  padding: 2.5rem 3rem;
   color: #0f172a;
 }
 
@@ -13,11 +12,6 @@
   gap: 2rem;
 }
 
-.dashboard__header h1 {
-  margin: 0;
-  font-size: 2.25rem;
-}
-
 .dashboard__header p {
   margin: 0.5rem 0 0;
   color: #475569;
@@ -26,7 +20,11 @@
 }
 
 .dashboard__header-meta {
-  background: linear-gradient(135deg, rgba(56, 189, 248, 0.12), rgba(99, 102, 241, 0.22));
+  background: linear-gradient(
+    135deg,
+    rgba(56, 189, 248, 0.12),
+    rgba(99, 102, 241, 0.22)
+  );
   border-radius: 1rem;
   padding: 1rem 1.25rem;
   display: flex;
@@ -67,12 +65,16 @@
 }
 
 .stat-card::after {
-  content: '';
+  content: "";
   position: absolute;
   inset: auto auto 0 0;
   width: 120px;
   height: 120px;
-  background: radial-gradient(circle at bottom left, rgba(59, 130, 246, 0.2), transparent 65%);
+  background: radial-gradient(
+    circle at bottom left,
+    rgba(59, 130, 246, 0.2),
+    transparent 65%
+  );
   pointer-events: none;
 }
 
@@ -145,7 +147,11 @@
 }
 
 .panel--notes {
-  background: linear-gradient(135deg, rgba(56, 189, 248, 0.08), rgba(129, 140, 248, 0.12));
+  background: linear-gradient(
+    135deg,
+    rgba(56, 189, 248, 0.08),
+    rgba(129, 140, 248, 0.12)
+  );
 }
 
 .panel__header {
@@ -174,7 +180,9 @@
   background: linear-gradient(135deg, #0ea5e9, #6366f1);
   color: #ffffff;
   box-shadow: 0 16px 32px -24px rgba(14, 165, 233, 0.75);
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
 }
 
 .panel__action:hover {
@@ -411,62 +419,62 @@
   color: #1f2937;
 }
 
-.badge[data-status='confirmed'] {
+.badge[data-status="confirmed"] {
   background: rgba(34, 197, 94, 0.18);
   color: #047857;
 }
 
-.badge[data-status='hold'] {
+.badge[data-status="hold"] {
   background: rgba(251, 191, 36, 0.22);
   color: #92400e;
 }
 
-.badge[data-status='draft'] {
+.badge[data-status="draft"] {
   background: rgba(148, 163, 184, 0.25);
   color: #334155;
 }
 
-.badge[data-stage='pulling'] {
+.badge[data-stage="pulling"] {
   background: rgba(59, 130, 246, 0.18);
   color: #1d4ed8;
 }
 
-.badge[data-stage='qa'] {
+.badge[data-stage="qa"] {
   background: rgba(251, 191, 36, 0.22);
   color: #b45309;
 }
 
-.badge[data-stage='staged'] {
+.badge[data-stage="staged"] {
   background: rgba(34, 197, 94, 0.2);
   color: #047857;
 }
 
-.badge[data-logistics='on-dock'] {
+.badge[data-logistics="on-dock"] {
   background: rgba(96, 165, 250, 0.2);
   color: #1d4ed8;
 }
 
-.badge[data-logistics='en-route'] {
+.badge[data-logistics="en-route"] {
   background: rgba(56, 189, 248, 0.2);
   color: #0e7490;
 }
 
-.badge[data-logistics='returned'] {
+.badge[data-logistics="returned"] {
   background: rgba(74, 222, 128, 0.2);
   color: #047857;
 }
 
-.badge[data-service='in-repair'] {
+.badge[data-service="in-repair"] {
   background: rgba(249, 115, 22, 0.2);
   color: #9a3412;
 }
 
-.badge[data-service='awaiting-parts'] {
+.badge[data-service="awaiting-parts"] {
   background: rgba(217, 119, 6, 0.2);
   color: #92400e;
 }
 
-.badge[data-service='cleared'] {
+.badge[data-service="cleared"] {
   background: rgba(34, 197, 94, 0.2);
   color: #047857;
 }

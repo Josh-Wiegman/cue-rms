@@ -1,4 +1,4 @@
-import { Component, Input } from '@angular/core';
+import { booleanAttribute, Component, Input } from '@angular/core';
 
 @Component({
   selector: 'cg-panel',
@@ -15,4 +15,7 @@ export class Panel {
   };
   @Input()
   borderRadius: keyof typeof this.borderRadii = 'normal';
+
+  @Input({ transform: booleanAttribute })
+  hero?: boolean;
 }
