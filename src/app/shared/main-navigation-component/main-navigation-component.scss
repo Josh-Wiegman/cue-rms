@@ -47,14 +47,11 @@ nav {
   gap: 0.2rem;
 }
 
-.nav__links li,
-.nav__actions--sub-nav li {
+.nav__links li {
   width: 100%;
 }
 
-.nav__links a,
-.nav__actions--sub-nav a,
-.nav__actions--sub-nav button {
+.nav__links a {
   padding: 0.5rem 0.8rem;
   color: $main-text-color;
   text-decoration: none;
@@ -68,9 +65,7 @@ nav {
   background-color: rgba($accent-color, 0.08);
 }
 
-.nav__links a:hover,
-.nav__actions--sub-nav a:hover,
-.nav__actions--sub-nav button:hover {
+.nav__links a:hover {
   background-color: rgba($accent-color, 0.14);
   color: $accent-color;
 }
@@ -87,78 +82,6 @@ nav {
 .nav__actions--user {
   font-weight: 600;
   font-size: 0.9rem;
-}
-
-.nav__actions--more {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: 2rem;
-  width: 2rem;
-  border-radius: $minor-border-radius;
-  cursor: pointer;
-  background: none;
-  border: none;
-}
-
-.nav__actions--more img {
-  height: 1.25rem;
-  height: 1.25rem;
-}
-
-.nav__actions--more:hover {
-  background-color: rgba($accent-color, 0.16);
-  color: $accent-color;
-  transition: $quick-transition;
-}
-
-.nav__actions--sub-nav {
-  position: absolute;
-  z-index: 999;
-  list-style-type: none;
-  visibility: hidden;
-  bottom: 1rem;
-  background-color: $main-light-color;
-  border: $main-border;
-  border-radius: $minor-border-radius;
-  padding: 1rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-  width: 200px;
-  left: 260px;
-  transform: translateX(-10px) translateY(0);
-  -webkit-transform: translateX(-10px) translateY(0);
-  opacity: 0;
-  transition: $medium-transition;
-}
-
-.nav__actions--sub-nav::before {
-  content: "";
-  position: absolute;
-  bottom: 0;
-  left: -15px;
-  height: 100%;
-  width: 15px;
-}
-
-.nav__actions--sub-nav li {
-  width: 100%;
-}
-
-.nav__actions--sub-nav button {
-  text-align-last: left;
-  width: 100%;
-}
-
-.nav__actions--more:hover > .nav__actions--sub-nav,
-.nav__actions--sub-nav:hover,
-.nav__actions--sub-nav:focus-within {
-  visibility: visible;
-  transform: translateX(0) translateY(0);
-  -webkit-transform: translateX(0) translateY(0);
-  opacity: 1;
-  transition: $medium-transition;
 }
 
 .nav__brand {
