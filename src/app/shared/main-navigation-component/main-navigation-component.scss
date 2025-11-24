@@ -19,6 +19,34 @@ nav {
   font-size: 1rem;
 }
 
+.nav__item--group {
+  padding-bottom: 0.5rem;
+}
+
+.nav__group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.nav__group-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: rgba($main-text-color, 0.7);
+  padding: 0.25rem 0.8rem;
+}
+
+.nav__group-links {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
 .nav__links li,
 .nav__actions--sub-nav li {
   width: 100%;

@@ -40,6 +40,15 @@ export const routes: Routes = [
     canActivate: [authGuard],
   },
   {
+    path: 'partyhire',
+    loadComponent: () =>
+      import('./partyhire/partyhire-component/partyhire.component').then(
+        (m) => m.PartyHireComponent,
+      ),
+    title: 'PartyHire Orders | Cue RMS',
+    canActivate: [authGuard],
+  },
+  {
     path: 'crew',
     loadComponent: () =>
       import('./crew/crew-component/crew-component').then(
@@ -118,6 +127,13 @@ export const routes: Routes = [
         (m) => m.KnowledgeBaseRoutes,
       ),
     title: 'KBase | Cue RMS',
+    canActivate: [authGuard],
+  },
+  {
+    path: 'tools',
+    loadChildren: () =>
+      import('./tools/tools.routes').then((m) => m.ToolsRoutes),
+    title: 'Tools | Cue RMS',
     canActivate: [authGuard],
   },
   {

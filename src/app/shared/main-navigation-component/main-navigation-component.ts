@@ -8,11 +8,19 @@ import { OrgBrandingService } from '../org-branding/org-branding.service';
 import { DropdownMenu } from '../dropdown-menu/dropdown-menu';
 import { DropdownMenuItem } from '../dropdown-menu/dropdown-menu-item/dropdown-menu-item';
 
-type NavigationItem = {
+type NavigationLink = {
   label: string;
   path: string;
   available?: boolean;
 };
+
+type NavigationGroup = {
+  label: string;
+  children: NavigationLink[];
+  available?: boolean;
+};
+
+type NavigationItem = NavigationLink | NavigationGroup;
 
 @Component({
   selector: 'main-navigation-component',
@@ -58,7 +66,7 @@ export class MainNavigationComponent implements OnInit {
       );
       const items = Array.isArray(response) ? response : [];
 
-      this.navItems = items
+      const flattened = items
         .filter((item) => item && item.available !== false)
         .map((item) => ({
           label: item.label ?? '',
@@ -66,9 +74,11 @@ export class MainNavigationComponent implements OnInit {
           available: item.available,
         }))
         .filter((item) => item.label && item.path);
+
+      this.navItems = [...flattened, this.createToolsNavigation()];
     } catch (error) {
       console.error('Failed to load navigation items', error);
-      this.navItems = [];
+      this.navItems = [this.createToolsNavigation()];
     }
   }
 
@@ -89,5 +99,25 @@ export class MainNavigationComponent implements OnInit {
       this.orgName = 'Company Name';
       this.orgLogoUrl = null;
     }
+  }
+
+  protected isGroup(item: NavigationItem): item is NavigationGroup {
+    return 'children' in item && Array.isArray(item.children);
+  }
+
+  private createToolsNavigation(): NavigationGroup {
+    return {
+      label: 'Tools',
+      children: [
+        {
+          label: 'PartyHire Orders',
+          path: '/partyhire',
+        },
+        {
+          label: 'Stage Timer',
+          path: '/tools/stage-timer',
+        },
+      ],
+    };
   }
 }
