@@ -13,7 +13,7 @@ export class Pill {
   label!: string;
 
   @Input()
-  state: State = 'default';
+  state: PillState = 'default';
 
   @Input({ transform: booleanAttribute })
   hero?: boolean;

@@ -64,66 +64,69 @@
               <p class="muted">{{ group.date | date: "fullDate" }}</p>
             </div>
             <div class="order-list">
-              <article
+              <cg-panel
                 *ngFor="let order of group.orders; trackBy: trackByOrder"
-                class="order-row"
               >
-                <button
-                  type="button"
-                  class="order-summary"
-                  (click)="openOrderDetail(order)"
-                >
-                  <div>
-                    <p class="eyebrow">{{ order.reference }}</p>
-                    <h3>{{ order.eventName }}</h3>
-                    <p class="muted">
-                      {{ order.customerName }} • {{ order.contactEmail }}
-                    </p>
-                  </div>
-                  <div class="order-summary__meta">
-                    <cg-pill
-                      label="{{ order.status }}"
-                      [state]="mapStatusToPillState(order.status)"
-                    ></cg-pill>
-                    <p class="muted">
-                      {{
-                        order.startDate | date: "h:mm a" : "Pacific/Auckland"
-                      }}
-                      →
-                      {{ order.endDate | date: "h:mm a" : "Pacific/Auckland" }}
-                    </p>
+                <div class="order-row">
+                  <button
+                    type="button"
+                    class="order-summary"
+                    (click)="openOrderDetail(order)"
+                  >
+                    <div>
+                      <p class="eyebrow">{{ order.reference }}</p>
+                      <h3>{{ order.eventName }}</h3>
+                      <p class="muted">
+                        {{ order.customerName }} • {{ order.contactEmail }}
+                      </p>
+                    </div>
+                    <div class="order-summary__meta">
+                      <cg-pill
+                        label="{{ order.status }}"
+                        [state]="mapStatusToPillState(order.status)"
+                      ></cg-pill>
+                      <p class="muted">
+                        {{
+                          order.startDate | date: "h:mm a" : "Pacific/Auckland"
+                        }}
+                        →
+                        {{
+                          order.endDate | date: "h:mm a" : "Pacific/Auckland"
+                        }}
+                      </p>
 
-                    <p class="muted">{{ order.location }}</p>
+                      <p class="muted">{{ order.location }}</p>
+                    </div>
+                  </button>
+                  <div class="order-row__actions">
+                    <button
+                      type="button"
+                      class="ghost"
+                      (click)="updateStatus(order, 'Collected')"
+                      [disabled]="
+                        order.status === 'Collected' ||
+                        order.status === 'Returned'
+                      "
+                    >
+                      Collected
+                    </button>
+                    <button
+                      type="button"
+                      class="ghost"
+                      (click)="printSalesOrder(order)"
+                    >
+                      Print sales order
+                    </button>
+                    <button
+                      type="button"
+                      class="ghost"
+                      (click)="printPickList(order)"
+                    >
+                      Print pick list
+                    </button>
                   </div>
-                </button>
-                <div class="order-row__actions">
-                  <button
-                    type="button"
-                    class="ghost"
-                    (click)="updateStatus(order, 'Collected')"
-                    [disabled]="
-                      order.status === 'Collected' ||
-                      order.status === 'Returned'
-                    "
-                  >
-                    Collected
-                  </button>
-                  <button
-                    type="button"
-                    class="ghost"
-                    (click)="printSalesOrder(order)"
-                  >
-                    Print sales order
-                  </button>
-                  <button
-                    type="button"
-                    class="ghost"
-                    (click)="printPickList(order)"
-                  >
-                    Print pick list
-                  </button>
                 </div>
-              </article>
+              </cg-panel>
             </div>
           </div>
         </ng-container>

@@ -19,6 +19,7 @@ import { PartyHireService } from './partyhire.service';
 import { OrgBrandingService } from '../../shared/org-branding/org-branding.service';
 import { AuthService } from '../../auth/auth.service';
 import { Pill, PillState } from '../../shared/pill/pill';
+import { Panel } from '../../shared/panel/panel';
 
 @Component({
   selector: 'partyhire-component',
@@ -31,6 +32,7 @@ import { Pill, PillState } from '../../shared/pill/pill';
     CurrencyPipe,
     DatePipe,
     Pill,
+    Panel,
   ],
   templateUrl: './partyhire.component.html',
   styleUrl: './partyhire.component.scss',

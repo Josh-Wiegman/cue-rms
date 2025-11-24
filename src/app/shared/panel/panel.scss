@@ -3,6 +3,7 @@
 .panel {
   border-radius: $major-border-radius;
   @include box-shadow;
+  border: $minor-border;
   padding: 1.25rem 1.5rem;
 }
 
