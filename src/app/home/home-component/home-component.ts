@@ -1,6 +1,7 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { UiShellComponent } from '../../shared/ui-shell/ui-shell-component';
+import { Panel } from '../../shared/panel/panel';
 
 type TrendDirection = 'up' | 'down';
 
@@ -75,7 +76,7 @@ interface CrewNote {
 
 @Component({
   selector: 'home-component',
-  imports: [CommonModule, UiShellComponent],
+  imports: [CommonModule, UiShellComponent, Panel],
   templateUrl: './home-component.html',
   styleUrl: './home-component.scss',
 })

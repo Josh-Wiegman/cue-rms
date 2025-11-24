@@ -13,9 +13,9 @@ main-navigation-component {
   padding: 1.25rem;
 }
 
-#content {
+.content {
   grid-column: 2;
-  padding: 2.5rem;
+  padding: 2.5rem 3rem;
   overflow-x: hidden;
   background: $main-gradient;
 }
