@@ -12,11 +12,11 @@
           </p>
         </div>
         <div class="status-legend">
-          <span class="status-pill prepped">Prepped</span>
-          <span class="status-pill collected">Collected</span>
-          <span class="status-pill returned">Returned</span>
-          <span class="status-pill partial-return">Partial</span>
-          <span class="status-pill missing">Missing</span>
+          <cg-pill label="Prepped" state="accent" hero></cg-pill>
+          <cg-pill label="Collected" state="warning" hero></cg-pill>
+          <cg-pill label="Returned" state="success" hero></cg-pill>
+          <cg-pill label="Partial" state="warning" hero> </cg-pill>
+          <cg-pill label="Missing" state="error" hero></cg-pill>
         </div>
       </header>
 
@@ -81,11 +81,10 @@
                     </p>
                   </div>
                   <div class="order-summary__meta">
-                    <span
-                      class="status-pill"
-                      [class]="'status-pill ' + statusClass(order.status)"
-                      >{{ order.status }}</span
-                    >
+                    <cg-pill
+                      label="{{ order.status }}"
+                      [state]="mapStatusToPillState(order.status)"
+                    ></cg-pill>
                     <p class="muted">
                       {{
                         order.startDate | date: "h:mm a" : "Pacific/Auckland"
@@ -375,11 +374,10 @@
               </p>
             </div>
             <div class="modal__header-actions">
-              <span
-                class="status-pill"
-                [class]="'status-pill ' + statusClass(activeOrder!.status)"
-                >{{ activeOrder!.status }}</span
-              >
+              <cg-pill
+                label="{{ activeOrder!.status }}"
+                [state]="mapStatusToPillState(activeOrder!.status)"
+              ></cg-pill>
               <button
                 type="button"
                 class="modal__close"
