@@ -6,7 +6,6 @@
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
-  padding: 2rem;
   color: colors.$main-text-color;
 
   h1,
@@ -41,10 +40,6 @@
   gap: 1rem;
 
   .stat {
-    background: white;
-    padding: 1rem;
-    border-radius: 0.75rem;
-    @include effects.box-shadow;
     min-width: 120px;
 
     .stat__label {
@@ -83,17 +78,8 @@
   gap: 2rem;
 }
 
-.panel {
-  background: white;
-  border-radius: 1rem;
-  @include effects.box-shadow;
-  display: flex;
-  flex-direction: column;
-  max-height: 100%;
-}
-
 .panel__header {
-  padding: 1.25rem 1.5rem 0;
+  padding-bottom: 1rem;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -292,7 +278,7 @@
 }
 
 .panel__form {
-  padding: 1.5rem;
+  padding: 1.5rem 0;
   border-top: 1px solid rgba(colors.$main-text-color, 0.08);
   display: flex;
   flex-direction: column;
@@ -484,39 +470,6 @@ table {
   &.status-archived {
     background: rgba(120, 120, 120, 0.18);
     color: #555;
-  }
-}
-
-.status-actions {
-  display: flex;
-  gap: 0.5rem;
-
-  button {
-    padding: 0.5rem 1rem;
-    border-radius: 0.6rem;
-    border: 1px solid rgba(colors.$main-text-color, 0.2);
-    background: white;
-    cursor: pointer;
-    font-weight: 500;
-
-    &:hover:not(:disabled) {
-      background: rgba(colors.$main-text-color, 0.1);
-    }
-
-    &:disabled {
-      opacity: 0.5;
-      cursor: not-allowed;
-    }
-  }
-
-  .status-actions__export {
-    background: colors.$hero-gradient-minor;
-    color: colors.$hero-text-color;
-    margin-left: 0.5rem;
-
-    &:hover:not(:disabled) {
-      background: darken(colors.$main-text-color, 6%);
-    }
   }
 }
 
@@ -761,10 +714,6 @@ table {
 @media (max-width: 1200px) {
   .portal-grid {
     grid-template-columns: 1fr;
-  }
-
-  .status-actions {
-    flex-wrap: wrap;
   }
 }
 
