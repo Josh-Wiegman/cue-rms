@@ -8,7 +8,8 @@ import { Component, EventEmitter, Input, Output } from '@angular/core';
 })
 export class SimpleButton {
   @Input()
-  buttonStyle: 'primary' | 'secondary' | 'tertiary' | 'ghost' = 'ghost';
+  buttonStyle: 'primary' | 'secondary' | 'tertiary' | 'ghost' | 'destructive' =
+    'ghost';
 
   @Input({ required: true })
   buttonLabel!: string;

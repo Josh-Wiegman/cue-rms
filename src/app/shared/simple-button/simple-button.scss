@@ -4,6 +4,7 @@
   border-radius: $minor-border-radius;
   transition: $quick-transition;
   font-weight: 600;
+  border: none;
 
   p {
     padding: 0.5rem 0.95rem;
@@ -14,24 +15,31 @@
   &.primary {
     background: $hero-gradient-minor;
     color: $hero-text-color;
-    border: none;
   }
 
   &.secondary {
-    border: $minor-border;
+    box-shadow: inset 0 0 0 2px $main-border-color;
     background: none;
   }
 
   &.tertiary {
     background-color: rgba($main-text-color, 0.06);
-    border: none;
   }
 
   &.ghost {
     background: transparent;
-    border: none;
     color: $accent-color;
   }
+
+  &.destructive {
+    background-color: rgba($error-color, 0.12);
+    color: $error-color;
+    box-shadow: inset 0 0 0 2px rgba($error-color, 0.38);
+  }
+}
+
+.simple-button:disabled {
+  opacity: 0.8;
 }
 
 .simple-button:enabled:hover {
@@ -43,8 +51,9 @@
   }
 
   &.secondary {
-    border-color: rgba($accent-color, 0.6);
-    background: none;
+    box-shadow: inset 0 0 0 2px rgba($accent-color, 0.6);
+    color: $accent-color;
+    background-color: rgba($accent-color, 0.1);
   }
 
   &.tertiary {
@@ -53,5 +62,10 @@
 
   &.ghost {
     background-color: rgba($accent-color, 0.12);
+  }
+
+  &.destructive {
+    background-color: rgba($error-color, 0.22);
+    box-shadow: inset 0 0 0 2px rgba($error-color, 0.38);
   }
 }

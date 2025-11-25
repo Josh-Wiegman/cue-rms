@@ -1,16 +1,9 @@
-@use '../../../style/colors.scss' as *;
+@use "../../../style/colors.scss" as *;
 
-:host {
-  display: block;
-  height: 100%;
-}
-
-.stage-timer {
+.stage-timer-container {
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
-  padding: 2rem;
-  background-color: rgba($main-light-color, 0.92);
   min-height: 100%;
 }
 
@@ -18,7 +11,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 1rem;
+  gap: 2rem;
   flex-wrap: wrap;
 }
 
@@ -36,71 +29,6 @@
   display: flex;
   gap: 0.75rem;
   align-items: center;
-}
-
-.btn {
-  border-radius: $minor-border-radius;
-  border: $main-border;
-  background-color: $main-light-color;
-  color: $main-text-color;
-  padding: 0.45rem 0.9rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: $quick-transition;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  text-decoration: none;
-}
-
-.btn:hover {
-  border-color: rgba($accent-color, 0.45);
-  color: $accent-color;
-}
-
-.btn--primary {
-  background-color: $accent-color;
-  border-color: $accent-color;
-  color: #fff;
-}
-
-.btn--primary:hover {
-  background-color: darken($accent-color, 5%);
-  border-color: darken($accent-color, 5%);
-  color: #fff;
-}
-
-.btn--secondary {
-  background-color: rgba($accent-color, 0.12);
-  border-color: rgba($accent-color, 0.32);
-  color: $accent-color;
-}
-
-.btn--danger {
-  background-color: rgba(#d93025, 0.12);
-  border-color: rgba(#d93025, 0.36);
-  color: #d93025;
-}
-
-.btn--danger:hover {
-  background-color: rgba(#d93025, 0.22);
-}
-
-.btn--ghost {
-  background-color: transparent;
-  border-color: transparent;
-  color: $accent-color;
-}
-
-.btn--ghost:hover {
-  background-color: rgba($accent-color, 0.12);
-}
-
-.stage-timer__form {
-  background-color: $main-light-color;
-  border-radius: $major-border-radius;
-  padding: 1.25rem;
-  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.08);
 }
 
 .form-grid {
@@ -125,6 +53,10 @@
   font-size: 0.95rem;
   background-color: #fff;
   transition: $quick-transition;
+}
+
+textarea {
+  resize: vertical;
 }
 
 .form-grid input:focus,
@@ -170,27 +102,13 @@
 }
 
 .timer-card {
-  background-color: $main-light-color;
-  border-radius: $major-border-radius;
-  border: 2px solid transparent;
-  padding: 1.25rem;
-  box-shadow: 0 16px 38px rgba(0, 0, 0, 0.08);
+  cursor: pointer;
+}
+
+.timer-card__content {
   display: flex;
   flex-direction: column;
   gap: 0.85rem;
-  cursor: pointer;
-  position: relative;
-  transition: transform $quick-transition, box-shadow $quick-transition;
-}
-
-.timer-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.12);
-}
-
-.timer-card--selected {
-  border-color: rgba($accent-color, 0.4);
-  box-shadow: 0 18px 46px rgba($accent-color, 0.18);
 }
 
 .timer-card__header {
@@ -254,7 +172,11 @@
 
 .timer-card__progress-bar {
   height: 100%;
-  background: linear-gradient(90deg, $accent-color, lighten($accent-color, 10%));
+  background: linear-gradient(
+    90deg,
+    $accent-color,
+    lighten($accent-color, 10%)
+  );
   transition: width 0.4s ease;
 }
 
@@ -278,14 +200,13 @@
 }
 
 .stage-timer__detail {
-  flex: 1 1 40%;
-  background-color: $main-light-color;
-  border-radius: $major-border-radius;
-  padding: 1.75rem;
-  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.12);
   position: sticky;
-  top: 2rem;
+  top: 0.5rem;
   align-self: flex-start;
+}
+
+.stage-timer__detail__content {
+  flex: 1 1 40%;
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
@@ -327,7 +248,11 @@
 
 .detail__progress-fill {
   height: 100%;
-  background: linear-gradient(90deg, $accent-color, lighten($accent-color, 15%));
+  background: linear-gradient(
+    90deg,
+    $accent-color,
+    lighten($accent-color, 15%)
+  );
   transition: width 0.4s ease;
 }
 
@@ -349,6 +274,8 @@
   display: flex;
   flex-direction: column;
   gap: 0.85rem;
+  border-top: $minor-border;
+  padding-top: 1rem;
 }
 
 .detail__section-header h3 {
@@ -392,14 +319,15 @@
   gap: 0.6rem;
 }
 
-.urgent-form textarea {
-  background: rgba(#d93025, 0.04);
-  border-color: rgba(#d93025, 0.4);
-}
-
 .detail__section--urgent {
-  border-top: 1px solid rgba($main-text-color, 0.1);
-  padding-top: 1rem;
+  border-color: rgba($error-color, 0.2);
+
+  .detail__section-header h3 {
+    color: $error-text-light-color;
+  }
+  .detail__section-header p {
+    color: rgba($error-text-light-color, 0.6);
+  }
 }
 
 .urgent-note {
