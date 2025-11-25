@@ -258,25 +258,6 @@
   gap: 1rem;
 }
 
-.presenter-view__urgent-footer button {
-  border: none;
-  border-radius: 999px;
-  padding: 0.6rem 1.6rem;
-  font-weight: 700;
-  cursor: pointer;
-  background: #d93025;
-  color: #fff;
-  transition: $quick-transition;
-}
-
-.presenter-view__urgent--acknowledged .presenter-view__urgent-footer button {
-  background: #00a76f;
-}
-
-.presenter-view__urgent-footer button:hover {
-  filter: brightness(0.92);
-}
-
 .presenter-view__urgent-footer .ack {
   font-size: 0.85rem;
   color: rgba(#d93025, 0.9);

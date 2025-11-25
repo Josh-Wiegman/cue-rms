@@ -2,14 +2,12 @@
 
 .simple-button {
   border-radius: $minor-border-radius;
-  transition: $quick-transition;
   font-weight: 600;
   border: none;
 
   p {
     padding: 0.5rem 0.95rem;
     border-radius: $minor-border-radius;
-    transition: $quick-transition;
   }
 
   &.primary {

@@ -2,13 +2,26 @@ import { AsyncPipe, DatePipe, NgClass, NgFor, NgIf } from '@angular/common';
 import { Component, OnInit, inject } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { map, switchMap, tap } from 'rxjs';
-import { StageTimer, StageTimerNote, StageTimerUrgentNote } from '../stage-timer.models';
+import {
+  StageTimer,
+  StageTimerNote,
+  StageTimerUrgentNote,
+} from '../stage-timer.models';
 import { StageTimerService } from '../stage-timer.service';
+import { SimpleButton } from '../../shared/simple-button/simple-button';
 
 @Component({
   selector: 'stage-timer-presenter',
   standalone: true,
-  imports: [AsyncPipe, DatePipe, NgClass, NgFor, NgIf, RouterLink],
+  imports: [
+    AsyncPipe,
+    DatePipe,
+    NgClass,
+    NgFor,
+    NgIf,
+    RouterLink,
+    SimpleButton,
+  ],
   templateUrl: './stage-timer-presenter.component.html',
   styleUrl: './stage-timer-presenter.component.scss',
 })
@@ -50,8 +63,9 @@ export class StageTimerPresenterComponent implements OnInit {
   }
 
   protected notesFor(timer: StageTimer): StageTimerNote[] {
-    return [...timer.notes].sort((a, b) =>
-      new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
+    return [...timer.notes].sort(
+      (a, b) =>
+        new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
     );
   }
 
