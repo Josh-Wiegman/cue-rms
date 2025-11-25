@@ -18,4 +18,13 @@ export class Panel {
 
   @Input({ transform: booleanAttribute })
   hero?: boolean;
+
+  @Input({ transform: booleanAttribute })
+  selected?: boolean;
+
+  @Input({ transform: booleanAttribute })
+  hoverable?: boolean;
+
+  @Input({ transform: booleanAttribute })
+  sticky?: boolean;
 }

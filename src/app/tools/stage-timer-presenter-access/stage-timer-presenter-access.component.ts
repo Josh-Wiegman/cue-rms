@@ -4,11 +4,12 @@ import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { StageTimer } from '../stage-timer.models';
 import { StageTimerService } from '../stage-timer.service';
+import { SimpleButton } from '../../shared/simple-button/simple-button';
 
 @Component({
   selector: 'stage-timer-presenter-access',
   standalone: true,
-  imports: [AsyncPipe, FormsModule, NgFor, NgIf, TitleCasePipe],
+  imports: [AsyncPipe, FormsModule, NgFor, NgIf, TitleCasePipe, SimpleButton],
   templateUrl: './stage-timer-presenter-access.component.html',
   styleUrl: './stage-timer-presenter-access.component.scss',
 })
@@ -24,8 +25,7 @@ export class StageTimerPresenterAccessComponent implements OnInit {
     await this.stageTimerService.loadTimers();
   }
 
-  protected async submit(event: SubmitEvent): Promise<void> {
-    event.preventDefault();
+  protected async submit(): Promise<void> {
     const code = this.codeInput.trim().toUpperCase();
     if (!code) {
       this.errorMessage = 'Enter a timer code to open the presenter view.';

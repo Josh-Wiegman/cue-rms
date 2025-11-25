@@ -5,6 +5,11 @@
   @include box-shadow;
   border: $minor-border;
   padding: 1.25rem 1.5rem;
+  transition: $quick-transition;
+
+  &.sticky {
+    position: sticky;
+  }
 }
 
 .main {
@@ -13,4 +18,13 @@
 
 .hero {
   background: $hero-gradient;
+}
+
+.selected {
+  box-shadow: inset 0 0 0 1px $accent-color;
+  background-color: rgba($accent-color, 0.02);
+}
+
+.hoverable:hover {
+  transform: translateY(-4px);
 }
