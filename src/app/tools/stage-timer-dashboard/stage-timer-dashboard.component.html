@@ -146,11 +146,9 @@
     </div>
 
     <!-- Detail pane uses selectedTimer, narrowed by *ngIf -->
-    <cg-panel class="stage-timer__detail">
-      <aside
-        class="stage-timer__detail__content"
-        *ngIf="selectedTimer as selected"
-      >
+
+    <cg-panel class="stage-timer__detail" *ngIf="selectedTimer as selected">
+      <aside class="stage-timer__detail__content">
         <header class="detail__header">
           <div>
             <h2>{{ selected.name }}</h2>
