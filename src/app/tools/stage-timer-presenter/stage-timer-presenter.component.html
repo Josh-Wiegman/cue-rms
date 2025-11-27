@@ -5,12 +5,10 @@
       <h1>{{ timer.name }}</h1>
     </div>
     <div class="presenter-view__header-actions">
-      <span
-        class="presenter-view__status"
-        [ngClass]="'status--' + timer.status"
-      >
-        {{ timerStatus(timer) }}
-      </span>
+      <cg-pill
+        [label]="timerStatus(timer)"
+        [state]="mapStatusToPillState(timer.status)"
+      />
       <cg-simple-button
         buttonLabel="Back to Stage Timer"
         buttonStyle="ghost"

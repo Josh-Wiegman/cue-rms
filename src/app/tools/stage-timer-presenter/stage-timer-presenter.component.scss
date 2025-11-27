@@ -3,17 +3,6 @@
 .presenter-view {
   min-height: 100%;
   padding: 2.5rem;
-  background:
-    radial-gradient(
-      circle at top right,
-      rgba($accent-color, 0.08),
-      transparent
-    ),
-    linear-gradient(
-      180deg,
-      rgba($main-light-color, 0.96),
-      rgba($main-light-color, 0.9)
-    );
   display: flex;
   flex-direction: column;
   gap: 2rem;
@@ -40,32 +29,6 @@
 .presenter-view__header h1 {
   margin: 0.2rem 0 0;
   font-size: clamp(2.4rem, 3vw, 3.2rem);
-}
-
-.presenter-view__status {
-  border-radius: 999px;
-  padding: 0.4rem 0.85rem;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  font-size: 0.78rem;
-  text-transform: uppercase;
-  background-color: rgba($main-text-color, 0.12);
-  color: $main-text-color;
-}
-
-.status--running {
-  background-color: rgba(#00a76f, 0.18);
-  color: #007350;
-}
-
-.status--paused {
-  background-color: rgba(#fbbc05, 0.18);
-  color: #a96a00;
-}
-
-.status--completed {
-  background-color: rgba(#5f6368, 0.24);
-  color: #3c4043;
 }
 
 .presenter-view__back {
@@ -298,10 +261,6 @@
 }
 
 @media (max-width: 640px) {
-  .presenter-view {
-    padding: 1.5rem;
-  }
-
   .presenter-view__header {
     flex-direction: column;
     align-items: flex-start;

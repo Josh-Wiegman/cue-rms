@@ -123,32 +123,6 @@ textarea {
   font-size: 1.2rem;
 }
 
-.timer-card__status {
-  font-size: 0.75rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  padding: 0.25rem 0.5rem;
-  border-radius: 999px;
-  background-color: rgba($main-text-color, 0.1);
-  color: $main-text-color;
-}
-
-.status--running {
-  background-color: rgba(#00a76f, 0.16);
-  color: #007350;
-}
-
-.status--paused {
-  background-color: rgba(#fbbc05, 0.18);
-  color: #a96a00;
-}
-
-.status--completed {
-  background-color: rgba(#5f6368, 0.2);
-  color: #3c4043;
-}
-
 .timer-card__countdown {
   font-size: 2.4rem;
   font-weight: 700;
@@ -226,10 +200,6 @@ textarea {
 .detail__header p {
   margin: 0.25rem 0 0;
   color: rgba($main-text-color, 0.65);
-}
-
-.detail__status {
-  @extend .timer-card__status;
 }
 
 .detail__countdown {
