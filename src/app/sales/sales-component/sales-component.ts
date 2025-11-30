@@ -37,7 +37,9 @@ export class SalesComponent implements OnInit, OnDestroy {
   }
 
   get branches(): string[] {
-    const unique = Array.from(new Set(this.orders.map((order) => order.branch)));
+    const unique = Array.from(
+      new Set(this.orders.map((order) => order.branch)),
+    );
     return ['All', ...unique];
   }
 
@@ -56,7 +58,10 @@ export class SalesComponent implements OnInit, OnDestroy {
           : true,
       )
       .filter((order) => {
-        if (this.dateFrom && new Date(order.startDate) < new Date(this.dateFrom))
+        if (
+          this.dateFrom &&
+          new Date(order.startDate) < new Date(this.dateFrom)
+        )
           return false;
         if (this.dateTo && new Date(order.endDate) > new Date(this.dateTo))
           return false;

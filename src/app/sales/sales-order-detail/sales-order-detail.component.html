@@ -18,11 +18,15 @@
       <div class="totals">
         <div>
           <p class="label">Total excl. GST</p>
-          <p class="value">{{ totalExcl | currency: 'NZD':'symbol':'1.0-0' }}</p>
+          <p class="value">
+            {{ totalExcl | currency: "NZD" : "symbol" : "1.0-0" }}
+          </p>
         </div>
         <div>
           <p class="label">Total incl. GST</p>
-          <p class="value">{{ totalIncl | currency: 'NZD':'symbol':'1.0-0' }}</p>
+          <p class="value">
+            {{ totalIncl | currency: "NZD" : "symbol" : "1.0-0" }}
+          </p>
         </div>
         <button type="button" class="primary" (click)="updateOrder()">
           Save order
@@ -36,11 +40,11 @@
         <dl>
           <div>
             <dt>Start date</dt>
-            <dd>{{ current.startDate | date: 'dd MMM yyyy' }}</dd>
+            <dd>{{ current.startDate | date: "dd MMM yyyy" }}</dd>
           </div>
           <div>
             <dt>End date</dt>
-            <dd>{{ current.endDate | date: 'dd MMM yyyy' }}</dd>
+            <dd>{{ current.endDate | date: "dd MMM yyyy" }}</dd>
           </div>
           <div>
             <dt>Billable days</dt>
@@ -89,8 +93,13 @@
             <dt>Global discount</dt>
             <dd>
               <select
-                [(ngModel)]="current.globalDiscount?.type"
-                (ngModelChange)="current.globalDiscount = current.globalDiscount || { type: 'percent', value: 0 }"
+                [ngModel]="current.globalDiscount?.type"
+                (ngModelChange)="
+                  current.globalDiscount = current.globalDiscount || {
+                    type: 'percent',
+                    value: 0,
+                  }
+                "
               >
                 <option value="percent">% off subtotal</option>
                 <option value="amount">$ off subtotal</option>
@@ -112,7 +121,9 @@
           </div>
           <div>
             <dt>Total discount</dt>
-            <dd>{{ totalDiscountValue | currency: 'NZD':'symbol':'1.0-0' }}</dd>
+            <dd>
+              {{ totalDiscountValue | currency: "NZD" : "symbol" : "1.0-0" }}
+            </dd>
           </div>
         </dl>
       </div>
@@ -123,8 +134,8 @@
         <div>
           <h2>Stock list</h2>
           <p class="subtitle">
-            Group items, add subgroups, and use the picker to drop new items into
-            the correct section.
+            Group items, add subgroups, and use the picker to drop new items
+            into the correct section.
           </p>
         </div>
         <button type="button" class="secondary" (click)="addGroup()">
@@ -137,7 +148,9 @@
           <div class="group-header">
             <input class="group-title" [(ngModel)]="group.title" />
             <div class="group-actions">
-              <button type="button" (click)="addGroup(group.id)">+ Subgroup</button>
+              <button type="button" (click)="addGroup(group.id)">
+                + Subgroup
+              </button>
               <button
                 type="button"
                 class="ghost"
@@ -153,7 +166,9 @@
             <div class="item" *ngFor="let item of group.items">
               <div>
                 <p class="item-name">{{ item.name }}</p>
-                <p class="item-meta">{{ item.sku }} · Qty {{ item.quantity }}</p>
+                <p class="item-meta">
+                  {{ item.sku }} · Qty {{ item.quantity }}
+                </p>
               </div>
               <div class="pricing">
                 <label>
@@ -176,7 +191,10 @@
                   placeholder="0"
                 />
                 <p class="item-total">
-                  {{ itemPrice(item, order?.billableDays || 1) | currency: 'NZD':'symbol':'1.0-0' }}
+                  {{
+                    itemPrice(item, order?.billableDays || 1)
+                      | currency: "NZD" : "symbol" : "1.0-0"
+                  }}
                 </p>
               </div>
             </div>
@@ -203,7 +221,12 @@
                   <p class="item-name">{{ item.name }}</p>
                   <p class="item-meta">{{ item.sku }}</p>
                 </div>
-                <span>{{ item.rates.oneDay | currency: 'NZD':'symbol':'1.0-0' }} / day</span>
+                <span
+                  >{{
+                    item.rates.oneDay | currency: "NZD" : "symbol" : "1.0-0"
+                  }}
+                  / day</span
+                >
               </button>
             </div>
           </div>
