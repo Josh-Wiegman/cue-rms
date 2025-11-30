@@ -29,7 +29,7 @@
   gap: 1rem;
 }
 
-.inventory-filters input[type='search'] {
+.inventory-filters input[type="search"] {
   flex: 1;
   border: 1px solid #d1d5db;
   border-radius: 10px;
@@ -102,7 +102,9 @@ td {
 }
 
 tr.row-link {
-  transition: background-color 0.15s ease, transform 0.15s ease;
+  transition:
+    background-color 0.15s ease,
+    transform 0.15s ease;
 }
 
 tr.row-link:hover {
@@ -300,10 +302,6 @@ button.primary {
 
 button.secondary {
   @include secondary-button;
-}
-
-button.ghost {
-  @include ghost-button;
 }
 
 button {
