@@ -67,6 +67,24 @@ export const routes: Routes = [
     canActivate: [authGuard],
   },
   {
+    path: 'inventory/:sku/availability',
+    loadComponent: () =>
+      import(
+        './inventory/inventory-availability/inventory-availability.component'
+      ).then((m) => m.InventoryAvailabilityComponent),
+    title: 'Inventory availability | Cue RMS',
+    canActivate: [authGuard],
+  },
+  {
+    path: 'inventory/:sku',
+    loadComponent: () =>
+      import(
+        './inventory/inventory-item-detail/inventory-item-detail.component'
+      ).then((m) => m.InventoryItemDetailComponent),
+    title: 'Inventory detail | Cue RMS',
+    canActivate: [authGuard],
+  },
+  {
     path: 'inventory',
     loadComponent: () =>
       import('./inventory/inventory-component/inventory-component').then(
