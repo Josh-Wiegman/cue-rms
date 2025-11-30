@@ -53,7 +53,12 @@ export class InventoryComponent implements OnInit, OnDestroy {
   sortDirection: 'asc' | 'desc' = 'asc';
 
   showNewItemDialog = false;
-  warehouses = ['Main Warehouse', 'Tour Prep', 'Festival Site', 'Dry Hire Counter'];
+  warehouses = [
+    'Main Warehouse',
+    'Tour Prep',
+    'Festival Site',
+    'Dry Hire Counter',
+  ];
   warehouseSelection = this.warehouses[0];
   warehouseQuantity = 1;
   warehouseAllocations: WarehouseQuantity[] = [];
@@ -76,8 +81,8 @@ export class InventoryComponent implements OnInit, OnDestroy {
     if (!this.sortColumn) return this.items;
 
     return [...this.items].sort((a, b) => {
-      const aVal = a[this.sortColumn];
-      const bVal = b[this.sortColumn];
+      const aVal = this.sortColumn ? a[this.sortColumn] : undefined;
+      const bVal = this.sortColumn ? b[this.sortColumn] : undefined;
 
       if (typeof aVal === 'number' && typeof bVal === 'number') {
         return this.sortDirection === 'asc' ? aVal - bVal : bVal - aVal;
@@ -121,7 +126,10 @@ export class InventoryComponent implements OnInit, OnDestroy {
     } else {
       this.warehouseAllocations = [
         ...this.warehouseAllocations,
-        { warehouse: this.warehouseSelection, quantity: this.warehouseQuantity },
+        {
+          warehouse: this.warehouseSelection,
+          quantity: this.warehouseQuantity,
+        },
       ];
     }
 
@@ -138,14 +146,24 @@ export class InventoryComponent implements OnInit, OnDestroy {
     const allocation =
       this.warehouseAllocations.length > 0
         ? this.warehouseAllocations
-        : [{ warehouse: this.warehouseSelection, quantity: this.warehouseQuantity }];
+        : [
+            {
+              warehouse: this.warehouseSelection,
+              quantity: this.warehouseQuantity,
+            },
+          ];
 
-    const totalQuantity = allocation.reduce((sum, entry) => sum + entry.quantity, 0);
+    const totalQuantity = allocation.reduce(
+      (sum, entry) => sum + entry.quantity,
+      0,
+    );
     const pricing = {
       oneDay: this.newItem.pricing.oneDay ?? this.newItem.unitDayRate,
       threeDay:
-        this.newItem.pricing.threeDay ?? Math.round(this.newItem.unitDayRate * 2.5),
-      week: this.newItem.pricing.week ?? Math.round(this.newItem.unitDayRate * 4),
+        this.newItem.pricing.threeDay ??
+        Math.round(this.newItem.unitDayRate * 2.5),
+      week:
+        this.newItem.pricing.week ?? Math.round(this.newItem.unitDayRate * 4),
     };
 
     this.inventoryService.addItem({
@@ -182,7 +200,12 @@ export class InventoryComponent implements OnInit, OnDestroy {
   get allocationPreview(): WarehouseQuantity[] {
     return this.warehouseAllocations.length > 0
       ? this.warehouseAllocations
-      : [{ warehouse: this.warehouseSelection, quantity: this.warehouseQuantity }];
+      : [
+          {
+            warehouse: this.warehouseSelection,
+            quantity: this.warehouseQuantity,
+          },
+        ];
   }
 
   totalWarehouseQuantity(warehouse: WarehouseQuantity[]): number {

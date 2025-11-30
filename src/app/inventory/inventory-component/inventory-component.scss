@@ -67,7 +67,9 @@ td {
 }
 
 tr.row-link {
-  transition: background-color 0.15s ease, transform 0.15s ease;
+  transition:
+    background-color 0.15s ease,
+    transform 0.15s ease;
 }
 
 tr.row-link:hover {
@@ -265,10 +267,6 @@ button.primary {
 
 button.secondary {
   @include secondary-button;
-}
-
-button.ghost {
-  @include ghost-button;
 }
 
 button {
