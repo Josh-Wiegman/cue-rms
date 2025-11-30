@@ -1,68 +1,264 @@
 <ui-shell>
-  <content>
-    <h1>Inventory</h1>
+  <content class="inventory-content">
+    <div class="inventory-header">
+      <div>
+        <p class="eyebrow">Operations</p>
+        <h1>Inventory</h1>
+        <p class="subtitle">
+          Manage stock across warehouses, create new SKUs, and drill into item detail.
+        </p>
+      </div>
+      <div class="inventory-actions">
+        <label class="inline-control">
+          <span>Warehouse</span>
+          <select [(ngModel)]="warehouseSelection">
+            <option *ngFor="let warehouse of warehouses" [value]="warehouse">
+              {{ warehouse }}
+            </option>
+          </select>
+        </label>
+        <button class="primary" type="button" (click)="openNewItemDialog()">
+          + Add inventory item
+        </button>
+      </div>
+    </div>
 
-    <table>
-      <thead>
-        <tr>
-          <th>
-            <input
-              type="checkbox"
-              [checked]="isAllSelected()"
-              (change)="toggleSelectAll($event)"
-            />
-          </th>
-          <th (click)="sortData('id')">
-            ID
-            <span *ngIf="sortColumn === 'id'">{{
-              sortDirection === "asc" ? "▲" : "▼"
-            }}</span>
-          </th>
-          <th (click)="sortData('name')">
-            Name
-            <span *ngIf="sortColumn === 'name'">{{
-              sortDirection === "asc" ? "▲" : "▼"
-            }}</span>
-          </th>
-          <th (click)="sortData('category')">
-            Category
-            <span *ngIf="sortColumn === 'category'">{{
-              sortDirection === "asc" ? "▲" : "▼"
-            }}</span>
-          </th>
-          <th (click)="sortData('stock')">
-            Stock
-            <span *ngIf="sortColumn === 'stock'">{{
-              sortDirection === "asc" ? "▲" : "▼"
-            }}</span>
-          </th>
-          <th (click)="sortData('price')">
-            Price
-            <span *ngIf="sortColumn === 'price'">{{
-              sortDirection === "asc" ? "▲" : "▼"
-            }}</span>
-          </th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr *ngFor="let item of sortedItems">
-          <td>
-            <input
-              type="checkbox"
-              [checked]="isSelected(item.id)"
-              (change)="toggleSelection(item.id)"
-            />
-          </td>
-          <td>{{ item.id }}</td>
-          <td>{{ item.name }}</td>
-          <td>{{ item.category }}</td>
-          <td>{{ item.stock }}</td>
-          <td>{{ item.price | currency }}</td>
-        </tr>
-      </tbody>
-    </table>
+    <div class="inventory-filters">
+      <input
+        type="search"
+        [(ngModel)]="searchTerm"
+        placeholder="Search by SKU, item name, or category"
+      />
+    </div>
 
-    <!-- Action Button -->
-    <button (click)="performActionOnSelected()">Run Action on Selected</button>
+    <div class="table-wrapper" *ngIf="sortedItems.length; else emptyState">
+      <table>
+        <thead>
+          <tr>
+            <th (click)="sortData('sku')">
+              SKU
+              <span *ngIf="sortColumn === 'sku'">{{ sortDirection === 'asc' ? '▲' : '▼' }}</span>
+            </th>
+            <th (click)="sortData('name')">
+              Item name
+              <span *ngIf="sortColumn === 'name'">{{ sortDirection === 'asc' ? '▲' : '▼' }}</span>
+            </th>
+            <th (click)="sortData('category')">
+              Category
+              <span *ngIf="sortColumn === 'category'">{{ sortDirection === 'asc' ? '▲' : '▼' }}</span>
+            </th>
+            <th (click)="sortData('quantity')">
+              Quantity
+              <span *ngIf="sortColumn === 'quantity'">{{ sortDirection === 'asc' ? '▲' : '▼' }}</span>
+            </th>
+            <th (click)="sortData('quantityAvailable')">
+              Quantity available
+              <span *ngIf="sortColumn === 'quantityAvailable'">{{ sortDirection === 'asc' ? '▲' : '▼' }}</span>
+            </th>
+            <th (click)="sortData('unitDayRate')">
+              Unit day rate
+              <span *ngIf="sortColumn === 'unitDayRate'">{{ sortDirection === 'asc' ? '▲' : '▼' }}</span>
+            </th>
+            <th (click)="sortData('itemType')">
+              Item type
+              <span *ngIf="sortColumn === 'itemType'">{{ sortDirection === 'asc' ? '▲' : '▼' }}</span>
+            </th>
+            <th>Warehouses</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let item of sortedItems" [routerLink]="['/inventory', item.sku]" class="row-link">
+            <td>{{ item.sku }}</td>
+            <td>
+              <div class="cell-title">{{ item.name }}</div>
+              <div class="cell-meta">{{ item.itemMode }}</div>
+            </td>
+            <td>{{ item.category }}</td>
+            <td>
+              {{ quantityForWarehouse(item) }}
+              <span class="cell-meta">/ {{ item.quantity }}</span>
+            </td>
+            <td>
+              {{ availableForWarehouse(item) }}
+              <span class="cell-meta">/ {{ item.quantityAvailable }}</span>
+            </td>
+            <td>{{ item.unitDayRate | currency }}</td>
+            <td class="badge" [class.sales]="item.itemType === 'sales'" [class.rental]="item.itemType === 'rental'" [class.consumable]="item.itemType === 'consumable'">
+              {{ item.itemType }}
+            </td>
+            <td>
+              <ul class="warehouse-list">
+                <li *ngFor="let allocation of item.warehouseQuantities">
+                  <span class="warehouse-name">{{ allocation.warehouse }}</span>
+                  <span class="warehouse-qty">{{ allocation.quantity }}</span>
+                </li>
+              </ul>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <ng-template #emptyState>
+      <div class="empty-state">
+        <h3>No inventory yet</h3>
+        <p>Start by adding your first SKU and assigning it to a warehouse.</p>
+        <button type="button" class="primary" (click)="openNewItemDialog()">Add an item</button>
+      </div>
+    </ng-template>
   </content>
+
+  <div class="dialog-backdrop" *ngIf="showNewItemDialog">
+    <div class="dialog">
+      <div class="dialog-header">
+        <div>
+          <p class="eyebrow">New item</p>
+          <h2>Create inventory item</h2>
+        </div>
+        <button class="ghost" type="button" (click)="closeDialog()">✕</button>
+      </div>
+
+      <form class="dialog-body" (ngSubmit)="submitNewItem()">
+        <div class="form-grid">
+          <label>
+            Item name
+            <input type="text" name="name" [(ngModel)]="newItem.name" required />
+          </label>
+          <label>
+            Category
+            <input type="text" name="category" [(ngModel)]="newItem.category" required />
+          </label>
+          <label>
+            Item type
+            <select name="itemType" [(ngModel)]="newItem.itemType">
+              <option value="sales">Sales</option>
+              <option value="rental">Rental</option>
+              <option value="consumable">Consumable</option>
+            </select>
+          </label>
+          <label>
+            Item mode
+            <select name="itemMode" [(ngModel)]="newItem.itemMode">
+              <option value="Bulk">Bulk</option>
+              <option value="Serialised">Serialised</option>
+            </select>
+          </label>
+          <label>
+            Unit day rate
+            <input type="number" min="0" name="unitDayRate" [(ngModel)]="newItem.unitDayRate" required />
+          </label>
+          <label>
+            3 day rate
+            <input type="number" min="0" name="threeDay" [(ngModel)]="newItem.pricing.threeDay" placeholder="Auto" />
+          </label>
+          <label>
+            Week rate
+            <input type="number" min="0" name="week" [(ngModel)]="newItem.pricing.week" placeholder="Auto" />
+          </label>
+          <label>
+            Product cost
+            <input type="number" min="0" name="productCost" [(ngModel)]="newItem.productCost" />
+          </label>
+          <label>
+            Subhire cost
+            <input type="number" min="0" name="subhireCost" [(ngModel)]="newItem.subhireCost" />
+          </label>
+          <label>
+            Weight (kg)
+            <input type="number" step="0.1" name="weightKg" [(ngModel)]="newItem.weightKg" />
+          </label>
+          <label>
+            Dimensions (mm)
+            <input type="text" name="dimensionsMm" [(ngModel)]="newItem.dimensionsMm" placeholder="L x W x H" />
+          </label>
+          <label>
+            Road case size
+            <select name="roadcaseSize" [(ngModel)]="newItem.roadcaseSize">
+              <option [ngValue]="undefined">Select a size</option>
+              <option value="400">400</option>
+              <option value="600">600</option>
+              <option value="800">800</option>
+              <option value="1200">1200</option>
+              <option value="1400">1400</option>
+              <option value="1600">1600</option>
+              <option value="1800">1800</option>
+              <option value="Cable or Small Item">Cable or Small Item</option>
+            </select>
+          </label>
+          <label>
+            Quantity per road case
+            <input type="number" min="0" name="roadcaseQuantity" [(ngModel)]="newItem.roadcaseQuantity" />
+          </label>
+          <label>
+            Last tested
+            <input type="date" name="lastTested" [(ngModel)]="newItem.lastTested" />
+          </label>
+          <label>
+            Next test due (months)
+            <select name="nextTestDueMonths" [(ngModel)]="newItem.nextTestDueMonths">
+              <option [ngValue]="3">3 months</option>
+              <option [ngValue]="6">6 months</option>
+              <option [ngValue]="12">12 months</option>
+              <option [ngValue]="24">24 months</option>
+            </select>
+          </label>
+          <label>
+            Accessories (comma separated)
+            <input type="text" name="accessories" [(ngModel)]="newItem.accessories" placeholder="Clamp, PSU, Cable" />
+          </label>
+          <label>
+            Accessory to (comma separated)
+            <input type="text" name="accessoryTo" [(ngModel)]="newItem.accessoryTo" placeholder="Lighting kit, Stage box" />
+          </label>
+        </div>
+
+        <div class="warehouse-panel">
+          <div class="panel-header">
+            <div>
+              <p class="eyebrow">Warehouses</p>
+              <h3>Assign quantities</h3>
+            </div>
+            <p class="muted">Use the dropdown to distribute stock across multiple warehouses.</p>
+          </div>
+          <div class="warehouse-grid">
+            <label>
+              Warehouse
+              <select name="warehouseSelection" [(ngModel)]="warehouseSelection">
+                <option *ngFor="let warehouse of warehouses" [value]="warehouse">{{ warehouse }}</option>
+              </select>
+            </label>
+            <label>
+              Quantity
+              <input type="number" min="1" name="warehouseQuantity" [(ngModel)]="warehouseQuantity" />
+            </label>
+            <button class="secondary" type="button" (click)="addWarehouseAllocation()">Add warehouse</button>
+          </div>
+
+          <ul class="allocation-list">
+            <li *ngFor="let allocation of allocationPreview">
+              <div>
+                <strong>{{ allocation.warehouse }}</strong>
+                <p class="muted">{{ allocation.quantity }} units</p>
+              </div>
+              <button
+                type="button"
+                class="ghost"
+                aria-label="Remove warehouse allocation"
+                (click)="removeWarehouseAllocation(allocation.warehouse)"
+                *ngIf="warehouseAllocations.length > 0"
+              >
+                Remove
+              </button>
+            </li>
+          </ul>
+          <p class="muted">Total quantity: {{ totalWarehouseQuantity(allocationPreview) }}</p>
+        </div>
+
+        <div class="dialog-footer">
+          <button class="ghost" type="button" (click)="closeDialog()">Cancel</button>
+          <button class="primary" type="submit">Save item</button>
+        </div>
+      </form>
+    </div>
+  </div>
 </ui-shell>

@@ -51,6 +51,17 @@
         <p class="settings__hint">
           Contact a system administrator if you need your access level adjusted.
         </p>
+
+        <div class="settings__preferences">
+          <h3>Warehouse preferences</h3>
+          <p class="settings__hint">Choose the warehouse you want to view by default when opening inventory.</p>
+          <label>
+            <span>Default warehouse</span>
+            <select [(ngModel)]="defaultWarehouse" (change)="updateDefaultWarehouse()">
+              <option *ngFor="let warehouse of warehouses" [value]="warehouse">{{ warehouse }}</option>
+            </select>
+          </label>
+        </div>
       </section>
 
       <section class="settings__panel" *ngIf="activeSection === 'add-user'">

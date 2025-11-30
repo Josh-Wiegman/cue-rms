@@ -1,13 +1,77 @@
 @use "../../../style/buttons.scss" as *;
 
-#control {
+.inventory-content {
   display: flex;
-  flex-direction: row;
-  align-items: center;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.inventory-header {
+  display: flex;
+  align-items: flex-start;
   justify-content: space-between;
-  flex-wrap: wrap;
+  gap: 1rem;
+
+  h1 {
+    margin: 0.25rem 0 0.5rem;
+  }
+}
+
+.inventory-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.inventory-filters {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.inventory-filters input[type='search'] {
+  flex: 1;
+  border: 1px solid #d1d5db;
+  border-radius: 10px;
+  padding: 0.65rem 0.75rem;
+  font-size: 1rem;
+}
+
+.inline-control {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  font-weight: 600;
+  color: #111827;
+
+  select {
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.95rem;
+  }
+}
+
+.eyebrow {
+  text-transform: uppercase;
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+  margin: 0;
+  color: #6b7280;
+}
+
+.subtitle {
+  margin: 0;
+  color: #4b5563;
+}
+
+.table-wrapper {
   width: 100%;
-  height: 4rem;
+  overflow: auto;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 6px 20px rgba(15, 23, 42, 0.05);
 }
 
 table {
@@ -18,15 +82,234 @@ table {
 th {
   cursor: pointer;
   user-select: none;
-  background: #f3f3f3;
+  background: #f8fafc;
+  text-align: left;
+  padding: 12px;
+  font-weight: 600;
+  color: #111827;
+  border-bottom: 1px solid #e5e7eb;
 }
 
-th,
+th:last-child,
+td:last-child {
+  width: 220px;
+}
+
 td {
-  padding: 8px;
-  border: 1px solid #ccc;
+  padding: 12px;
+  border-bottom: 1px solid #f1f5f9;
+  color: #111827;
 }
 
-tr:hover {
-  background-color: #f9f9f9;
+tr.row-link {
+  transition: background-color 0.15s ease, transform 0.15s ease;
+}
+
+tr.row-link:hover {
+  background: #f8fafc;
+  transform: translateY(-1px);
+}
+
+.cell-title {
+  font-weight: 600;
+}
+
+.cell-meta {
+  color: #6b7280;
+  font-size: 0.9rem;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.25rem 0.5rem;
+  border-radius: 999px;
+  text-transform: capitalize;
+  font-size: 0.85rem;
+  background: #e5e7eb;
+}
+
+.badge.sales {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.badge.rental {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+
+.badge.consumable {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.warehouse-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.warehouse-name {
+  font-weight: 600;
+}
+
+.warehouse-qty {
+  color: #4b5563;
+  margin-left: 0.35rem;
+}
+
+.empty-state {
+  padding: 3rem;
+  border: 1px dashed #cbd5e1;
+  border-radius: 12px;
+  text-align: center;
+  background: #f8fafc;
+  color: #334155;
+
+  h3 {
+    margin-top: 0;
+  }
+
+  p {
+    margin-bottom: 1rem;
+  }
+}
+
+.dialog-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 20;
+}
+
+.dialog {
+  background: #fff;
+  border-radius: 16px;
+  padding: 1.5rem;
+  width: min(1100px, 90vw);
+  max-height: 90vh;
+  overflow: auto;
+  box-shadow: 0 20px 40px rgba(15, 23, 42, 0.25);
+}
+
+.dialog-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+}
+
+.dialog-body {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1rem;
+}
+
+label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  font-weight: 600;
+  color: #111827;
+}
+
+input,
+select,
+textarea {
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  padding: 0.65rem 0.75rem;
+  font-size: 1rem;
+  color: #111827;
+  background: #fff;
+}
+
+textarea {
+  min-height: 90px;
+}
+
+.warehouse-panel {
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 1rem;
+  background: #f8fafc;
+}
+
+.panel-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.muted {
+  color: #6b7280;
+  margin: 0;
+}
+
+.warehouse-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 0.75rem;
+  align-items: end;
+  margin-top: 1rem;
+}
+
+.allocation-list {
+  list-style: none;
+  padding: 0;
+  margin: 1rem 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.allocation-list li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 1rem;
+  border-radius: 10px;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+}
+
+.dialog-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+}
+
+button.primary {
+  @include primary-button;
+}
+
+button.secondary {
+  @include secondary-button;
+}
+
+button.ghost {
+  @include ghost-button;
+}
+
+button {
+  cursor: pointer;
+}
+
+.row-link {
+  cursor: pointer;
 }

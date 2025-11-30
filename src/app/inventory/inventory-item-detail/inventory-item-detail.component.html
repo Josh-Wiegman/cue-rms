@@ -1,0 +1,260 @@
+<ui-shell>
+  <content class="detail-page" *ngIf="item; else missing">
+    <nav class="breadcrumbs">
+      <a routerLink="/inventory">Inventory</a>
+      <span>/</span>
+      <span>{{ item?.sku }}</span>
+    </nav>
+
+    <header class="detail-header">
+      <div>
+        <p class="eyebrow">{{ item.itemType | titlecase }} · {{ item.itemMode }}</p>
+        <h1>{{ item.name }}</h1>
+        <p class="muted">SKU {{ item.sku }}</p>
+      </div>
+      <div class="actions">
+        <button class="secondary" type="button" (click)="startEdit()">Edit item</button>
+        <button class="primary" type="button" (click)="goToAvailability()">Availability</button>
+      </div>
+    </header>
+
+    <div class="warehouse-switcher">
+      <label>
+        Viewing warehouse
+        <select [(ngModel)]="selectedWarehouse">
+          <option *ngFor="let allocation of item.warehouseQuantities" [value]="allocation.warehouse">
+            {{ allocation.warehouse }}
+          </option>
+        </select>
+      </label>
+      <p class="muted">Quantities update based on the selected warehouse.</p>
+    </div>
+
+    <section class="summary">
+      <div class="card image-card">
+        <img [src]="item.imageUrl || 'https://placehold.co/640x360'" [alt]="item.name" />
+      </div>
+      <div class="card pricing-card">
+        <div class="card-header">
+          <p class="eyebrow">Pricing</p>
+          <div class="price-row">
+            <div>
+              <p class="label">1 day</p>
+              <p class="value">{{ item.pricing.oneDay | currency }}</p>
+            </div>
+            <div>
+              <p class="label">3 day</p>
+              <p class="value">{{ item.pricing.threeDay | currency }}</p>
+            </div>
+            <div>
+              <p class="label">Week</p>
+              <p class="value">{{ item.pricing.week | currency }}</p>
+            </div>
+          </div>
+        </div>
+        <div class="cost-grid">
+          <div>
+            <p class="label">Product cost</p>
+            <p class="value">{{ item.productCost | currency }}</p>
+          </div>
+          <div>
+            <p class="label">Subhire cost</p>
+            <p class="value">{{ item.subhireCost | currency }}</p>
+          </div>
+          <div>
+            <p class="label">Unit day rate</p>
+            <p class="value">{{ item.unitDayRate | currency }}</p>
+          </div>
+          <div>
+            <p class="label">Quantity available</p>
+            <p class="value">{{ availableForWarehouse() }} / {{ quantityForWarehouse() }}</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="grid">
+      <div class="card">
+        <div class="card-header">
+          <p class="eyebrow">Orders</p>
+          <h3>Related activity</h3>
+        </div>
+        <div class="pill-row">
+          <div>
+            <p class="label">Sales orders</p>
+            <div class="pill-group">
+              <span class="pill" *ngFor="let order of item.relatedSalesOrders">{{ order }}</span>
+              <span class="muted" *ngIf="!item.relatedSalesOrders?.length">None yet</span>
+            </div>
+          </div>
+          <div>
+            <p class="label">Repair orders</p>
+            <div class="pill-group">
+              <span class="pill" *ngFor="let order of item.relatedRepairOrders">{{ order }}</span>
+              <span class="muted" *ngIf="!item.relatedRepairOrders?.length">None yet</span>
+            </div>
+          </div>
+          <div>
+            <p class="label">Transfer orders</p>
+            <div class="pill-group">
+              <span class="pill" *ngFor="let order of item.relatedTransferOrders">{{ order }}</span>
+              <span class="muted" *ngIf="!item.relatedTransferOrders?.length">None yet</span>
+            </div>
+          </div>
+        </div>
+        <button class="ghost" type="button" (click)="startEdit()">Edit item</button>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <p class="eyebrow">Testing</p>
+          <h3>Compliance</h3>
+        </div>
+        <div class="detail-grid">
+          <div>
+            <p class="label">Last tested</p>
+            <p class="value">{{ item.lastTested | date: 'mediumDate' }}</p>
+          </div>
+          <div>
+            <p class="label">Next test due</p>
+            <p class="value">{{ getNextTestDate(item) | date: 'mediumDate' }}</p>
+          </div>
+          <div>
+            <p class="label">Item type</p>
+            <p class="value">{{ item.itemMode }}</p>
+          </div>
+          <div>
+            <p class="label">Road case</p>
+            <p class="value">{{ item.roadcaseSize || 'Not set' }}</p>
+          </div>
+          <div>
+            <p class="label">Qty per road case</p>
+            <p class="value">{{ item.roadcaseQuantity || '—' }}</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="grid">
+      <div class="card">
+        <div class="card-header">
+          <p class="eyebrow">Warehouses</p>
+          <h3>Quantities</h3>
+        </div>
+        <ul class="warehouse-breakdown">
+          <li *ngFor="let allocation of item.warehouseQuantities">
+            <div>
+              <p class="label">{{ allocation.warehouse }}</p>
+              <p class="value">{{ allocation.quantity }} units</p>
+            </div>
+          </li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <p class="eyebrow">Accessories</p>
+          <h3>Related products</h3>
+        </div>
+        <div class="detail-grid">
+          <div>
+            <p class="label">Accessory products</p>
+            <div class="pill-group">
+              <span class="pill" *ngFor="let accessory of item.accessories">{{ accessory }}</span>
+              <span class="muted" *ngIf="!item.accessories?.length">None linked</span>
+            </div>
+          </div>
+          <div>
+            <p class="label">Accessory to</p>
+            <div class="pill-group">
+              <span class="pill" *ngFor="let parent of item.accessoryTo">{{ parent }}</span>
+              <span class="muted" *ngIf="!item.accessoryTo?.length">Not yet assigned</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="grid">
+      <div class="card">
+        <div class="detail-grid">
+          <div>
+            <p class="label">Weight</p>
+            <p class="value">{{ item.weightKg || '—' }} kg</p>
+          </div>
+          <div>
+            <p class="label">Dimensions</p>
+            <p class="value">{{ item.dimensionsMm || '—' }}</p>
+          </div>
+          <div>
+            <p class="label">Item type</p>
+            <p class="value">{{ item.itemType | titlecase }}</p>
+          </div>
+        </div>
+      </div>
+    </section>
+  </content>
+</ui-shell>
+
+<div class="dialog-backdrop" *ngIf="showEditDialog">
+  <div class="dialog">
+    <div class="dialog-header">
+      <div>
+        <p class="eyebrow">Edit item</p>
+        <h2>{{ item?.name }}</h2>
+      </div>
+      <button class="ghost" type="button" (click)="showEditDialog = false">✕</button>
+    </div>
+
+    <form class="dialog-body" (ngSubmit)="saveEdit()">
+      <div class="form-grid">
+        <label>
+          Item name
+          <input type="text" [(ngModel)]="editDraft.name" name="editName" />
+        </label>
+        <label>
+          Category
+          <input type="text" [(ngModel)]="editDraft.category" name="editCategory" />
+        </label>
+        <label>
+          Unit day rate
+          <input type="number" [(ngModel)]="editDraft.unitDayRate" name="editUnitDayRate" />
+        </label>
+        <label>
+          1 day price
+          <input type="number" [(ngModel)]="editDraft.pricing!.oneDay" name="editOneDay" />
+        </label>
+        <label>
+          3 day price
+          <input type="number" [(ngModel)]="editDraft.pricing!.threeDay" name="editThreeDay" />
+        </label>
+        <label>
+          Week price
+          <input type="number" [(ngModel)]="editDraft.pricing!.week" name="editWeek" />
+        </label>
+        <label>
+          Product cost
+          <input type="number" [(ngModel)]="editDraft.productCost" name="editProductCost" />
+        </label>
+        <label>
+          Subhire cost
+          <input type="number" [(ngModel)]="editDraft.subhireCost" name="editSubhireCost" />
+        </label>
+      </div>
+
+      <div class="dialog-footer">
+        <button class="ghost" type="button" (click)="showEditDialog = false">Cancel</button>
+        <button class="primary" type="submit">Save changes</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<ng-template #missing>
+  <ui-shell>
+    <content class="detail-page">
+      <p class="muted">Item not found.</p>
+      <a routerLink="/inventory" class="primary">Back to inventory</a>
+    </content>
+  </ui-shell>
+</ng-template>
