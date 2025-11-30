@@ -30,9 +30,9 @@ const initialItems: InventoryItem[] = [
     relatedRepairOrders: ['RO-212'],
     relatedTransferOrders: ['TO-14'],
     warehouseQuantities: [
-      { warehouse: 'Main Warehouse', quantity: 10 },
-      { warehouse: 'Tour Prep', quantity: 6 },
-      { warehouse: 'On Truck', quantity: 2 },
+      { warehouse: 'Main Warehouse', quantity: 10, quantityAvailable: 7 },
+      { warehouse: 'Tour Prep', quantity: 6, quantityAvailable: 4 },
+      { warehouse: 'On Truck', quantity: 2, quantityAvailable: 1 },
     ],
     availabilityBookings: [
       {
@@ -78,9 +78,9 @@ const initialItems: InventoryItem[] = [
     relatedRepairOrders: [],
     relatedTransferOrders: ['TO-19', 'TO-22'],
     warehouseQuantities: [
-      { warehouse: 'Main Warehouse', quantity: 40 },
-      { warehouse: 'Festival Site', quantity: 15 },
-      { warehouse: 'Dry Hire Counter', quantity: 5 },
+      { warehouse: 'Main Warehouse', quantity: 40, quantityAvailable: 38 },
+      { warehouse: 'Festival Site', quantity: 15, quantityAvailable: 13 },
+      { warehouse: 'Dry Hire Counter', quantity: 5, quantityAvailable: 5 },
     ],
     availabilityBookings: [
       {
@@ -117,8 +117,8 @@ const initialItems: InventoryItem[] = [
     relatedRepairOrders: ['RO-214'],
     relatedTransferOrders: [],
     warehouseQuantities: [
-      { warehouse: 'Main Warehouse', quantity: 14 },
-      { warehouse: 'Arena Boneyard', quantity: 10 },
+      { warehouse: 'Main Warehouse', quantity: 14, quantityAvailable: 12 },
+      { warehouse: 'Arena Boneyard', quantity: 10, quantityAvailable: 10 },
     ],
     availabilityBookings: [
       {
@@ -138,6 +138,10 @@ export class InventoryService {
     initialItems,
   );
   readonly items$ = this.itemsSubject.asObservable();
+  private readonly warehousesSubject = new BehaviorSubject<string[]>(
+    this.computeWarehouses(initialItems),
+  );
+  readonly warehouses$ = this.warehousesSubject.asObservable();
 
   list(): InventoryItem[] {
     return this.itemsSubject.getValue();
@@ -159,7 +163,9 @@ export class InventoryService {
       sku,
     };
 
-    this.itemsSubject.next([...items, itemToInsert]);
+    const updatedItems = [...items, itemToInsert];
+    this.itemsSubject.next(updatedItems);
+    this.refreshWarehouses(updatedItems);
     return itemToInsert;
   }
 
@@ -175,10 +181,28 @@ export class InventoryService {
     const nextItems = [...items];
     nextItems[index] = updated;
     this.itemsSubject.next(nextItems);
+    this.refreshWarehouses(nextItems);
     return updated;
   }
 
   generateSku(): string {
     return String(Math.floor(100000 + Math.random() * 900000));
+  }
+
+  getWarehouses(): string[] {
+    return this.warehousesSubject.getValue();
+  }
+
+  private refreshWarehouses(items: InventoryItem[]) {
+    this.warehousesSubject.next(this.computeWarehouses(items));
+  }
+
+  private computeWarehouses(items: InventoryItem[]): string[] {
+    const warehouses = new Set<string>();
+    items.forEach((item) => {
+      item.warehouseQuantities.forEach((entry) => warehouses.add(entry.warehouse));
+    });
+
+    return Array.from(warehouses);
   }
 }

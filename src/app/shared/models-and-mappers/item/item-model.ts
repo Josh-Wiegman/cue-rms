@@ -5,6 +5,7 @@ export type TestInterval = 3 | 6 | 12 | 24;
 export interface WarehouseQuantity {
   warehouse: string;
   quantity: number;
+  quantityAvailable?: number;
 }
 
 export interface ItemPricing {

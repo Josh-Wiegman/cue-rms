@@ -12,6 +12,7 @@ import {
 } from '../../shared/models-and-mappers/item/item-model';
 import { InventoryService } from '../inventory.service';
 import { Subscription } from 'rxjs';
+import { PreferencesService } from '../../shared/preferences/preferences.service';
 
 interface NewItemForm {
   name: string;
@@ -47,29 +48,41 @@ interface NewItemForm {
 })
 export class InventoryComponent implements OnInit, OnDestroy {
   items: InventoryItem[] = [];
+  warehouses: string[] = [];
   private subscriptions: Subscription[] = [];
 
   sortColumn: keyof InventoryItem | '' = '';
   sortDirection: 'asc' | 'desc' = 'asc';
 
+  searchTerm = '';
+
   showNewItemDialog = false;
-  warehouses = [
-    'Main Warehouse',
-    'Tour Prep',
-    'Festival Site',
-    'Dry Hire Counter',
-  ];
-  warehouseSelection = this.warehouses[0];
+  warehouseSelection = '';
   warehouseQuantity = 1;
   warehouseAllocations: WarehouseQuantity[] = [];
 
   newItem: NewItemForm = this.buildBlankForm();
 
-  constructor(private readonly inventoryService: InventoryService) {}
+  constructor(
+    private readonly inventoryService: InventoryService,
+    private readonly preferencesService: PreferencesService,
+  ) {}
 
   ngOnInit() {
     this.subscriptions.push(
       this.inventoryService.items$.subscribe((items) => (this.items = items)),
+      this.inventoryService.warehouses$.subscribe((warehouses) => {
+        this.warehouses = warehouses;
+        if (!this.warehouseSelection) {
+          this.warehouseSelection =
+            this.preferencesService.getDefaultWarehouse() || warehouses[0];
+        }
+      }),
+      this.preferencesService.defaultWarehouse$.subscribe((warehouse) => {
+        if (warehouse) {
+          this.warehouseSelection = warehouse;
+        }
+      }),
     );
   }
 
@@ -77,12 +90,25 @@ export class InventoryComponent implements OnInit, OnDestroy {
     this.subscriptions.forEach((sub) => sub.unsubscribe());
   }
 
-  get sortedItems(): InventoryItem[] {
-    if (!this.sortColumn) return this.items;
+  get filteredItems(): InventoryItem[] {
+    const term = this.searchTerm.trim().toLowerCase();
+    if (!term) return this.items;
 
-    return [...this.items].sort((a, b) => {
-      const aVal = this.sortColumn ? a[this.sortColumn] : undefined;
-      const bVal = this.sortColumn ? b[this.sortColumn] : undefined;
+    return this.items.filter((item) =>
+      [item.name, item.category, item.sku]
+        .join(' ')
+        .toLowerCase()
+        .includes(term),
+    );
+  }
+
+  get sortedItems(): InventoryItem[] {
+    const itemsToSort = this.filteredItems;
+    if (!this.sortColumn) return itemsToSort;
+
+    return [...itemsToSort].sort((a, b) => {
+      const aVal = a[this.sortColumn];
+      const bVal = b[this.sortColumn];
 
       if (typeof aVal === 'number' && typeof bVal === 'number') {
         return this.sortDirection === 'asc' ? aVal - bVal : bVal - aVal;
@@ -107,7 +133,8 @@ export class InventoryComponent implements OnInit, OnDestroy {
     this.showNewItemDialog = true;
     this.newItem = this.buildBlankForm();
     this.warehouseAllocations = [];
-    this.warehouseSelection = this.warehouses[0];
+    this.warehouseSelection = this.preferencesService.getDefaultWarehouse() ||
+      (this.warehouses.length ? this.warehouses[0] : '');
     this.warehouseQuantity = 1;
   }
 
@@ -126,10 +153,7 @@ export class InventoryComponent implements OnInit, OnDestroy {
     } else {
       this.warehouseAllocations = [
         ...this.warehouseAllocations,
-        {
-          warehouse: this.warehouseSelection,
-          quantity: this.warehouseQuantity,
-        },
+        { warehouse: this.warehouseSelection, quantity: this.warehouseQuantity },
       ];
     }
 
@@ -146,24 +170,14 @@ export class InventoryComponent implements OnInit, OnDestroy {
     const allocation =
       this.warehouseAllocations.length > 0
         ? this.warehouseAllocations
-        : [
-            {
-              warehouse: this.warehouseSelection,
-              quantity: this.warehouseQuantity,
-            },
-          ];
+        : [{ warehouse: this.warehouseSelection, quantity: this.warehouseQuantity }];
 
-    const totalQuantity = allocation.reduce(
-      (sum, entry) => sum + entry.quantity,
-      0,
-    );
+    const totalQuantity = allocation.reduce((sum, entry) => sum + entry.quantity, 0);
     const pricing = {
       oneDay: this.newItem.pricing.oneDay ?? this.newItem.unitDayRate,
       threeDay:
-        this.newItem.pricing.threeDay ??
-        Math.round(this.newItem.unitDayRate * 2.5),
-      week:
-        this.newItem.pricing.week ?? Math.round(this.newItem.unitDayRate * 4),
+        this.newItem.pricing.threeDay ?? Math.round(this.newItem.unitDayRate * 2.5),
+      week: this.newItem.pricing.week ?? Math.round(this.newItem.unitDayRate * 4),
     };
 
     this.inventoryService.addItem({
@@ -200,16 +214,33 @@ export class InventoryComponent implements OnInit, OnDestroy {
   get allocationPreview(): WarehouseQuantity[] {
     return this.warehouseAllocations.length > 0
       ? this.warehouseAllocations
-      : [
-          {
-            warehouse: this.warehouseSelection,
-            quantity: this.warehouseQuantity,
-          },
-        ];
+      : [{ warehouse: this.warehouseSelection, quantity: this.warehouseQuantity }];
   }
 
   totalWarehouseQuantity(warehouse: WarehouseQuantity[]): number {
     return warehouse.reduce((sum, entry) => sum + entry.quantity, 0);
+  }
+
+  quantityForWarehouse(item: InventoryItem): number {
+    const allocation = item.warehouseQuantities.find(
+      (entry) => entry.warehouse === this.warehouseSelection,
+    );
+    return allocation?.quantity ?? 0;
+  }
+
+  availableForWarehouse(item: InventoryItem): number {
+    const allocation = item.warehouseQuantities.find(
+      (entry) => entry.warehouse === this.warehouseSelection,
+    );
+
+    if (allocation?.quantityAvailable !== undefined) {
+      return allocation.quantityAvailable;
+    }
+
+    if (!allocation || item.quantity === 0) return 0;
+
+    const proportion = allocation.quantity / item.quantity;
+    return Math.round(item.quantityAvailable * proportion);
   }
 
   private buildBlankForm(): NewItemForm {

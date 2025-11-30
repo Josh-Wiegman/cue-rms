@@ -13,10 +13,22 @@
         <p class="muted">SKU {{ item.sku }}</p>
       </div>
       <div class="actions">
-        <button class="secondary" type="button">Edit item</button>
+        <button class="secondary" type="button" (click)="startEdit()">Edit item</button>
         <button class="primary" type="button" (click)="goToAvailability()">Availability</button>
       </div>
     </header>
+
+    <div class="warehouse-switcher">
+      <label>
+        Viewing warehouse
+        <select [(ngModel)]="selectedWarehouse">
+          <option *ngFor="let allocation of item.warehouseQuantities" [value]="allocation.warehouse">
+            {{ allocation.warehouse }}
+          </option>
+        </select>
+      </label>
+      <p class="muted">Quantities update based on the selected warehouse.</p>
+    </div>
 
     <section class="summary">
       <div class="card image-card">
@@ -55,7 +67,7 @@
           </div>
           <div>
             <p class="label">Quantity available</p>
-            <p class="value">{{ item.quantityAvailable }} / {{ item.quantity }}</p>
+            <p class="value">{{ availableForWarehouse() }} / {{ quantityForWarehouse() }}</p>
           </div>
         </div>
       </div>
@@ -90,7 +102,7 @@
             </div>
           </div>
         </div>
-        <button class="ghost" type="button">Edit item</button>
+        <button class="ghost" type="button" (click)="startEdit()">Edit item</button>
       </div>
 
       <div class="card">
@@ -183,6 +195,60 @@
     </section>
   </content>
 </ui-shell>
+
+<div class="dialog-backdrop" *ngIf="showEditDialog">
+  <div class="dialog">
+    <div class="dialog-header">
+      <div>
+        <p class="eyebrow">Edit item</p>
+        <h2>{{ item?.name }}</h2>
+      </div>
+      <button class="ghost" type="button" (click)="showEditDialog = false">✕</button>
+    </div>
+
+    <form class="dialog-body" (ngSubmit)="saveEdit()">
+      <div class="form-grid">
+        <label>
+          Item name
+          <input type="text" [(ngModel)]="editDraft.name" name="editName" />
+        </label>
+        <label>
+          Category
+          <input type="text" [(ngModel)]="editDraft.category" name="editCategory" />
+        </label>
+        <label>
+          Unit day rate
+          <input type="number" [(ngModel)]="editDraft.unitDayRate" name="editUnitDayRate" />
+        </label>
+        <label>
+          1 day price
+          <input type="number" [(ngModel)]="editDraft.pricing!.oneDay" name="editOneDay" />
+        </label>
+        <label>
+          3 day price
+          <input type="number" [(ngModel)]="editDraft.pricing!.threeDay" name="editThreeDay" />
+        </label>
+        <label>
+          Week price
+          <input type="number" [(ngModel)]="editDraft.pricing!.week" name="editWeek" />
+        </label>
+        <label>
+          Product cost
+          <input type="number" [(ngModel)]="editDraft.productCost" name="editProductCost" />
+        </label>
+        <label>
+          Subhire cost
+          <input type="number" [(ngModel)]="editDraft.subhireCost" name="editSubhireCost" />
+        </label>
+      </div>
+
+      <div class="dialog-footer">
+        <button class="ghost" type="button" (click)="showEditDialog = false">Cancel</button>
+        <button class="primary" type="submit">Save changes</button>
+      </div>
+    </form>
+  </div>
+</div>
 
 <ng-template #missing>
   <ui-shell>

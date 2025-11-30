@@ -8,9 +8,27 @@
           Manage stock across warehouses, create new SKUs, and drill into item detail.
         </p>
       </div>
-      <button class="primary" type="button" (click)="openNewItemDialog()">
-        + Add inventory item
-      </button>
+      <div class="inventory-actions">
+        <label class="inline-control">
+          <span>Warehouse</span>
+          <select [(ngModel)]="warehouseSelection">
+            <option *ngFor="let warehouse of warehouses" [value]="warehouse">
+              {{ warehouse }}
+            </option>
+          </select>
+        </label>
+        <button class="primary" type="button" (click)="openNewItemDialog()">
+          + Add inventory item
+        </button>
+      </div>
+    </div>
+
+    <div class="inventory-filters">
+      <input
+        type="search"
+        [(ngModel)]="searchTerm"
+        placeholder="Search by SKU, item name, or category"
+      />
     </div>
 
     <div class="table-wrapper" *ngIf="sortedItems.length; else emptyState">
@@ -56,8 +74,14 @@
               <div class="cell-meta">{{ item.itemMode }}</div>
             </td>
             <td>{{ item.category }}</td>
-            <td>{{ item.quantity }}</td>
-            <td>{{ item.quantityAvailable }}</td>
+            <td>
+              {{ quantityForWarehouse(item) }}
+              <span class="cell-meta">/ {{ item.quantity }}</span>
+            </td>
+            <td>
+              {{ availableForWarehouse(item) }}
+              <span class="cell-meta">/ {{ item.quantityAvailable }}</span>
+            </td>
             <td>{{ item.unitDayRate | currency }}</td>
             <td class="badge" [class.sales]="item.itemType === 'sales'" [class.rental]="item.itemType === 'rental'" [class.consumable]="item.itemType === 'consumable'">
               {{ item.itemType }}

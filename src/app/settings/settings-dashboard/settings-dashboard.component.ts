@@ -2,7 +2,7 @@
 import { CommonModule } from '@angular/common';
 import { map } from 'rxjs/operators';
 import { Component, OnInit, PLATFORM_ID, inject } from '@angular/core';
-import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormBuilder, ReactiveFormsModule, Validators, FormsModule } from '@angular/forms';
 
 import { UiShellComponent } from '../../shared/ui-shell/ui-shell-component';
 import { AuthService } from '../../auth/auth.service';
@@ -15,11 +15,13 @@ import {
   UserInvitationDetails,
 } from '../../auth/models/auth-user.model';
 import { OrgBrandingService } from '../../shared/org-branding/org-branding.service';
+import { PreferencesService } from '../../shared/preferences/preferences.service';
+import { InventoryService } from '../../inventory/inventory.service';
 
 @Component({
   selector: 'app-settings-dashboard',
   standalone: true,
-  imports: [CommonModule, UiShellComponent, ReactiveFormsModule],
+  imports: [CommonModule, UiShellComponent, ReactiveFormsModule, FormsModule],
   templateUrl: './settings-dashboard.component.html',
   styleUrl: './settings-dashboard.component.scss',
 })
@@ -28,6 +30,8 @@ export class SettingsDashboardComponent implements OnInit {
   private readonly fb = inject(FormBuilder);
   private readonly orgBrandingService = inject(OrgBrandingService);
   private readonly platformId = inject(PLATFORM_ID);
+  private readonly preferencesService = inject(PreferencesService);
+  private readonly inventoryService = inject(InventoryService);
 
   protected readonly user$ = this.authService.currentUser$;
   protected readonly permissionLevels = PERMISSION_LEVELS;
@@ -50,12 +54,17 @@ export class SettingsDashboardComponent implements OnInit {
   protected isSavingUser = false;
   protected saveMessage = '';
   protected organisationBranding: OrganisationBranding | null = null;
+  protected warehouses: string[] = [];
+  protected defaultWarehouse = '';
   compareLevels = (a: PermissionLevel, b: PermissionLevel) => a === b;
 
   async ngOnInit(): Promise<void> {
     this.organisationBranding = await this.orgBrandingService.getBranding(
       this.authService.orgSlug,
     );
+    this.warehouses = this.inventoryService.getWarehouses();
+    this.defaultWarehouse =
+      this.preferencesService.getDefaultWarehouse() || this.warehouses[0];
   }
 
   protected switchSection(section: 'profile' | 'add-user'): void {
@@ -65,6 +74,11 @@ export class SettingsDashboardComponent implements OnInit {
 
   protected canManageUsers(permissionLevel: PermissionLevel): boolean {
     return this.authService.canManageUsers(permissionLevel);
+  }
+
+  protected updateDefaultWarehouse(): void {
+    if (!this.defaultWarehouse) return;
+    this.preferencesService.setDefaultWarehouse(this.defaultWarehouse);
   }
 
   protected readonly visiblePermissionLevels$ = this.user$.pipe(
