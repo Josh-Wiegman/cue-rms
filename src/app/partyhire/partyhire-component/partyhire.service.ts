@@ -407,25 +407,26 @@ export class PartyHireService {
         month: 'long',
       });
 
-    return [
-      `Customer Details:`,
-      `Order Reference: ${reference}`,
-      `Customer: ${payload.customerName}`,
-      `Phone: ${payload.contactPhone || '—'}`,
-      ` `, // force blank line
-      `Event Details:`,
-      `Event: ${payload.eventName}`,
-      `Pickup Time: ${fmt(pickup)}`,
-      `Return Time: ${fmt(dropoff)}`,
-      `Location: ${payload.location}`,
-      `Type: ${payload.deliveryMethod === 'pickup' ? 'Pick up' : 'Delivery'}`,
-      ` `,
-      `Finances:`,
-      `Hire Total: $${total.toFixed(2)} incl GST`,
-      ` `,
-      `Notes:`,
-      payload.notes ? `${payload.notes}` : `—`,
-    ].join('\n');
+    return `
+    <hr>
+<b style="font-size:16px;">Customer Details</b><br>
+<b>Order Reference:</b> ${reference}<br>
+<b>Customer:</b> ${payload.customerName}<br>
+<b>Phone:</b> ${payload.contactPhone || '—'}<br><br>
+<hr>
+<b style="font-size:16px;">Event Details</b><br>
+<b>Event:</b> ${payload.eventName}<br>
+<b>Pickup Time:</b> ${fmt(pickup)}<br>
+<b>Return Time:</b> ${fmt(dropoff)}<br>
+<b>Location:</b> ${payload.location}<br>
+<b>Type:</b> ${payload.deliveryMethod === 'pickup' ? 'Pick up' : 'Delivery'}<br><br>
+<hr>
+<b style="font-size:16px;">Finances</b><br>
+<b>Hire Total:</b> $${total.toFixed(2)} incl GST<br><br>
+<hr>
+<b style="font-size:16px;">Notes</b><br>
+${payload.notes ? payload.notes.replace(/\n/g, '<br>') : '—'}
+  <hr>`.trim();
   }
 
   private googleCalendarUrl(
