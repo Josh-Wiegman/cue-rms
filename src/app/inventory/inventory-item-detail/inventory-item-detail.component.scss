@@ -149,10 +149,6 @@ button.secondary {
   @include secondary-button;
 }
 
-button.ghost {
-  @include ghost-button;
-}
-
 button {
   cursor: pointer;
 }
