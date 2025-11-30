@@ -38,7 +38,12 @@ export class SalesOrderDetailComponent implements OnInit, OnDestroy {
   pickerState: Record<string, PickerState> = {};
   availableItems: StockItem[] = [];
   activeEdit: EditSection = null;
-  draftSchedule = { startDate: '', endDate: '', billableDays: 1, rentalPeriodDays: 1 };
+  draftSchedule = {
+    startDate: '',
+    endDate: '',
+    billableDays: 1,
+    rentalPeriodDays: 1,
+  };
   draftCustomer = {
     customer: '',
     deliveryLocation: '',
@@ -77,10 +82,12 @@ export class SalesOrderDetailComponent implements OnInit, OnDestroy {
         }
         this.order = JSON.parse(JSON.stringify(order));
         this.availableItems = this.salesOrdersService.getStockLibrary();
-        if (!this.order.globalDiscount) {
+        if (this.order && !this.order.globalDiscount) {
           this.order.globalDiscount = { type: 'percent', value: 0 };
         }
-        this.seedPickerState(this.order.groups);
+        if (this.order?.groups) {
+          this.seedPickerState(this.order.groups);
+        }
       }),
     );
   }
@@ -178,10 +185,7 @@ export class SalesOrderDetailComponent implements OnInit, OnDestroy {
     this.order.billableDays = Number(value) || 1;
   }
 
-  setItemDiscountType(
-    item: StockItem,
-    discountType: Discount['type'] | '',
-  ) {
+  setItemDiscountType(item: StockItem, discountType: Discount['type'] | '') {
     if (!discountType) {
       item.discount = undefined;
       return;
@@ -227,7 +231,10 @@ export class SalesOrderDetailComponent implements OnInit, OnDestroy {
     if (!this.order) return 0;
     return this.order.groups
       .flatMap((group) => this.collectItems(group))
-      .reduce((sum, item) => sum + this.itemPrice(item, this.order!.billableDays), 0);
+      .reduce(
+        (sum, item) => sum + this.itemPrice(item, this.order!.billableDays),
+        0,
+      );
   }
 
   private collectItems(group: StockGroup): StockItem[] {
@@ -293,7 +300,8 @@ export class SalesOrderDetailComponent implements OnInit, OnDestroy {
     this.order.startDate = this.draftSchedule.startDate;
     this.order.endDate = this.draftSchedule.endDate;
     this.order.billableDays = Number(this.draftSchedule.billableDays) || 1;
-    this.order.rentalPeriodDays = Number(this.draftSchedule.rentalPeriodDays) || 1;
+    this.order.rentalPeriodDays =
+      Number(this.draftSchedule.rentalPeriodDays) || 1;
     this.closeEdit();
   }
 
