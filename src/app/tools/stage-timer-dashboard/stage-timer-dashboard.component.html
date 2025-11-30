@@ -82,12 +82,10 @@
         <div class="timer-card__content">
           <header class="timer-card__header">
             <h3>{{ timer.name }}</h3>
-            <span
-              class="timer-card__status"
-              [ngClass]="'status--' + timer.status"
-            >
-              {{ timerStatusBadge(timer) }}
-            </span>
+            <cg-pill
+              [label]="timerStatusBadge(timer)"
+              [state]="mapStatusToPillState(timer.status)"
+            />
           </header>
           <div class="timer-card__countdown">
             {{ formatTime(timer.remainingSeconds) }}
@@ -146,11 +144,9 @@
     </div>
 
     <!-- Detail pane uses selectedTimer, narrowed by *ngIf -->
-    <cg-panel class="stage-timer__detail">
-      <aside
-        class="stage-timer__detail__content"
-        *ngIf="selectedTimer as selected"
-      >
+
+    <cg-panel class="stage-timer__detail" *ngIf="selectedTimer as selected">
+      <aside class="stage-timer__detail__content">
         <header class="detail__header">
           <div>
             <h2>{{ selected.name }}</h2>
@@ -158,9 +154,10 @@
               Code · <strong>{{ selected.code }}</strong>
             </p>
           </div>
-          <span class="detail__status" [ngClass]="'status--' + selected.status">
-            {{ timerStatusBadge(selected) }}
-          </span>
+          <cg-pill
+            [label]="timerStatusBadge(selected)"
+            [state]="mapStatusToPillState(selected.status)"
+          />
         </header>
 
         <div class="detail__countdown">

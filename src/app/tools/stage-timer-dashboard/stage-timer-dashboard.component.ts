@@ -1,17 +1,20 @@
-import { AsyncPipe, DatePipe, NgClass, NgFor, NgIf } from '@angular/common';
+import { AsyncPipe, DatePipe, NgFor, NgIf } from '@angular/common';
 import { Component, OnDestroy, OnInit, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
+import { Router } from '@angular/router';
 import { Subscription } from 'rxjs';
 import {
   CreateStageTimerPayload,
   StageTimer,
   StageTimerNote,
+  StageTimerStatus,
   StageTimerUrgentNote,
 } from '../stage-timer.models';
 import { StageTimerService } from '../stage-timer.service';
 import { SimpleButton } from '../../shared/simple-button/simple-button';
 import { Panel } from '../../shared/panel/panel';
+import { Pill, PillState } from '../../shared/pill/pill';
+import { mapStatusToPillState } from '../helpers/mapStatusToPillState';
 
 @Component({
   selector: 'stage-timer-dashboard',
@@ -20,12 +23,11 @@ import { Panel } from '../../shared/panel/panel';
     AsyncPipe,
     DatePipe,
     FormsModule,
-    NgClass,
     NgFor,
     NgIf,
-    RouterLink,
     SimpleButton,
     Panel,
+    Pill,
   ],
   templateUrl: './stage-timer-dashboard.component.html',
   styleUrl: './stage-timer-dashboard.component.scss',
@@ -193,5 +195,8 @@ export class StageTimerDashboardComponent implements OnInit, OnDestroy {
 
   private pad(value: number): string {
     return value.toString().padStart(2, '0');
+  }
+  protected mapStatusToPillState(status: StageTimerStatus): PillState {
+    return mapStatusToPillState(status);
   }
 }
