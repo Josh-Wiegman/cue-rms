@@ -104,7 +104,7 @@
             <dt>Global discount</dt>
             <dd>
               <select
-                [(ngModel)]="current.globalDiscount?.type"
+                [ngModel]="current.globalDiscount?.type"
                 (ngModelChange)="current.globalDiscount = current.globalDiscount || { type: 'percent', value: 0 }"
               >
                 <option value="percent">% off subtotal</option>
