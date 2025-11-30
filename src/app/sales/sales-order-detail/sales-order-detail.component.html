@@ -18,15 +18,11 @@
       <div class="totals">
         <div>
           <p class="label">Total excl. GST</p>
-          <p class="value">
-            {{ totalExcl | currency: "NZD" : "symbol" : "1.0-0" }}
-          </p>
+          <p class="value">{{ totalExcl | currency: 'NZD':'symbol':'1.0-0' }}</p>
         </div>
         <div>
           <p class="label">Total incl. GST</p>
-          <p class="value">
-            {{ totalIncl | currency: "NZD" : "symbol" : "1.0-0" }}
-          </p>
+          <p class="value">{{ totalIncl | currency: 'NZD':'symbol':'1.0-0' }}</p>
         </div>
         <button type="button" class="primary" (click)="updateOrder()">
           Save order
@@ -36,15 +32,20 @@
 
     <section class="order-grid">
       <div class="card">
-        <h3>Schedule</h3>
+        <div class="card-heading">
+          <h3>Schedule</h3>
+          <button type="button" class="edit-button" (click)="openEdit('schedule')">
+            Edit
+          </button>
+        </div>
         <dl>
           <div>
             <dt>Start date</dt>
-            <dd>{{ current.startDate | date: "dd MMM yyyy" }}</dd>
+            <dd>{{ current.startDate | date: 'dd MMM yyyy' }}</dd>
           </div>
           <div>
             <dt>End date</dt>
-            <dd>{{ current.endDate | date: "dd MMM yyyy" }}</dd>
+            <dd>{{ current.endDate | date: 'dd MMM yyyy' }}</dd>
           </div>
           <div>
             <dt>Billable days</dt>
@@ -65,7 +66,12 @@
       </div>
 
       <div class="card">
-        <h3>Customer</h3>
+        <div class="card-heading">
+          <h3>Customer</h3>
+          <button type="button" class="edit-button" (click)="openEdit('customer')">
+            Edit
+          </button>
+        </div>
         <dl>
           <div>
             <dt>Customer</dt>
@@ -87,19 +93,19 @@
       </div>
 
       <div class="card">
-        <h3>Financial</h3>
+        <div class="card-heading">
+          <h3>Financial</h3>
+          <button type="button" class="edit-button" (click)="openEdit('financial')">
+            Edit
+          </button>
+        </div>
         <dl>
           <div>
             <dt>Global discount</dt>
             <dd>
               <select
                 [ngModel]="current.globalDiscount?.type"
-                (ngModelChange)="
-                  current.globalDiscount = current.globalDiscount || {
-                    type: 'percent',
-                    value: 0,
-                  }
-                "
+                (ngModelChange)="current.globalDiscount = current.globalDiscount || { type: 'percent', value: 0 }"
               >
                 <option value="percent">% off subtotal</option>
                 <option value="amount">$ off subtotal</option>
@@ -121,9 +127,7 @@
           </div>
           <div>
             <dt>Total discount</dt>
-            <dd>
-              {{ totalDiscountValue | currency: "NZD" : "symbol" : "1.0-0" }}
-            </dd>
+            <dd>{{ totalDiscountValue | currency: 'NZD':'symbol':'1.0-0' }}</dd>
           </div>
         </dl>
       </div>
@@ -134,8 +138,8 @@
         <div>
           <h2>Stock list</h2>
           <p class="subtitle">
-            Group items, add subgroups, and use the picker to drop new items
-            into the correct section.
+            Group items, add subgroups, and use the picker to drop new items into
+            the correct section.
           </p>
         </div>
         <button type="button" class="secondary" (click)="addGroup()">
@@ -148,12 +152,10 @@
           <div class="group-header">
             <input class="group-title" [(ngModel)]="group.title" />
             <div class="group-actions">
-              <button type="button" (click)="addGroup(group.id)">
-                + Subgroup
-              </button>
+              <button type="button" (click)="addGroup(group.id)">+ Subgroup</button>
               <button
                 type="button"
-                class="ghost"
+                class="quiet-button"
                 (click)="togglePicker(group.id)"
                 aria-label="Open item picker"
               >
@@ -166,9 +168,7 @@
             <div class="item" *ngFor="let item of group.items">
               <div>
                 <p class="item-name">{{ item.name }}</p>
-                <p class="item-meta">
-                  {{ item.sku }} · Qty {{ item.quantity }}
-                </p>
+                <p class="item-meta">{{ item.sku }} · Qty {{ item.quantity }}</p>
               </div>
               <div class="pricing">
                 <label>
@@ -191,10 +191,7 @@
                   placeholder="0"
                 />
                 <p class="item-total">
-                  {{
-                    itemPrice(item, order?.billableDays || 1)
-                      | currency: "NZD" : "symbol" : "1.0-0"
-                  }}
+                  {{ itemPrice(item, order?.billableDays || 1) | currency: 'NZD':'symbol':'1.0-0' }}
                 </p>
               </div>
             </div>
@@ -221,12 +218,7 @@
                   <p class="item-name">{{ item.name }}</p>
                   <p class="item-meta">{{ item.sku }}</p>
                 </div>
-                <span
-                  >{{
-                    item.rates.oneDay | currency: "NZD" : "symbol" : "1.0-0"
-                  }}
-                  / day</span
-                >
+                <span>{{ item.rates.oneDay | currency: 'NZD':'symbol':'1.0-0' }} / day</span>
               </button>
             </div>
           </div>
@@ -254,5 +246,152 @@
         </div>
       </ng-template>
     </section>
+    <div class="modal-backdrop" *ngIf="activeEdit" (click)="closeEdit()">
+      <div class="modal" (click)="$event.stopPropagation()">
+        <header class="modal-header">
+          <p class="eyebrow">Update {{ activeEdit }} info</p>
+          <button type="button" class="close" (click)="closeEdit()">×</button>
+        </header>
+
+        <div class="modal-body" [ngSwitch]="activeEdit">
+          <ng-container *ngSwitchCase="'schedule'">
+            <label>
+              <span>Start date</span>
+              <input type="date" [(ngModel)]="draftSchedule.startDate" />
+            </label>
+            <label>
+              <span>End date</span>
+              <input type="date" [(ngModel)]="draftSchedule.endDate" />
+            </label>
+            <label>
+              <span>Billable days</span>
+              <input type="number" min="1" [(ngModel)]="draftSchedule.billableDays" />
+            </label>
+            <label>
+              <span>Rental period (days)</span>
+              <input
+                type="number"
+                min="1"
+                [(ngModel)]="draftSchedule.rentalPeriodDays"
+              />
+            </label>
+          </ng-container>
+
+          <ng-container *ngSwitchCase="'customer'">
+            <label>
+              <span>Customer</span>
+              <input type="text" [(ngModel)]="draftCustomer.customer" />
+            </label>
+            <label>
+              <span>Delivery location</span>
+              <input type="text" [(ngModel)]="draftCustomer.deliveryLocation" />
+            </label>
+            <label>
+              <span>Service branch</span>
+              <input type="text" [(ngModel)]="draftCustomer.serviceBranch" />
+            </label>
+            <label>
+              <span>Order type</span>
+              <select [(ngModel)]="draftCustomer.orderType">
+                <option value="Production">Production</option>
+                <option value="Dry Hire">Dry Hire</option>
+                <option value="Stock Transfer">Stock Transfer</option>
+              </select>
+            </label>
+            <label>
+              <span>Status</span>
+              <select [(ngModel)]="draftCustomer.status">
+                <option value="Quote">Quote</option>
+                <option value="Confirmed">Confirmed</option>
+                <option value="Invoiced">Invoiced</option>
+                <option value="Completed">Completed</option>
+                <option value="Dead">Dead</option>
+              </select>
+            </label>
+            <label>
+              <span>Warehouse status</span>
+              <select [(ngModel)]="draftCustomer.warehouseStatus">
+                <option value="To Prep">To Prep</option>
+                <option value="Prepped">Prepped</option>
+                <option value="Loaded">Loaded</option>
+                <option value="With Client">With Client</option>
+                <option value="Returned">Returned</option>
+                <option value="Partial Return">Partial Return</option>
+                <option value="Completed">Completed</option>
+              </select>
+            </label>
+            <label>
+              <span>Tags</span>
+              <input
+                type="text"
+                [(ngModel)]="draftCustomer.tags"
+                placeholder="Comma separated"
+              />
+            </label>
+          </ng-container>
+
+          <ng-container *ngSwitchCase="'financial'">
+            <label>
+              <span>Global discount type</span>
+              <select [(ngModel)]="draftFinancial.globalDiscountType">
+                <option value="percent">Percent</option>
+                <option value="amount">Amount</option>
+              </select>
+            </label>
+            <label>
+              <span>Global discount value</span>
+              <input
+                type="number"
+                min="0"
+                [(ngModel)]="draftFinancial.globalDiscountValue"
+              />
+            </label>
+            <label>
+              <span>Customer reference</span>
+              <input type="text" [(ngModel)]="draftFinancial.customerReference" />
+            </label>
+            <label>
+              <span>Total discount</span>
+              <input
+                type="number"
+                min="0"
+                [(ngModel)]="draftFinancial.totalDiscount"
+              />
+            </label>
+            <p class="muted">Tracking numbers remain read-only.</p>
+          </ng-container>
+        </div>
+
+        <footer class="modal-actions">
+          <button type="button" class="secondary" (click)="closeEdit()">
+            Cancel
+          </button>
+          <button
+            type="button"
+            class="primary"
+            *ngIf="activeEdit === 'schedule'"
+            (click)="saveSchedule()"
+          >
+            Save schedule
+          </button>
+          <button
+            type="button"
+            class="primary"
+            *ngIf="activeEdit === 'customer'"
+            (click)="saveCustomer()"
+          >
+            Save customer
+          </button>
+          <button
+            type="button"
+            class="primary"
+            *ngIf="activeEdit === 'financial'"
+            (click)="saveFinancial()"
+          >
+            Save financials
+          </button>
+        </footer>
+      </div>
+    </div>
   </content>
 </ui-shell>

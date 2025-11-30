@@ -8,9 +8,14 @@
           Search, filter, and drill into sales orders across all branches.
         </p>
       </div>
-      <button class="secondary" type="button" (click)="clearFilters()">
-        Clear filters
-      </button>
+      <div class="actions">
+        <button class="secondary" type="button" (click)="clearFilters()">
+          Clear filters
+        </button>
+        <button class="primary" type="button" (click)="openCreateModal()">
+          + Create sales order
+        </button>
+      </div>
     </div>
 
     <div class="filters">
@@ -61,8 +66,8 @@
             <td>{{ order.orderNumber }}</td>
             <td>{{ order.title }}</td>
             <td>{{ order.accountManager }}</td>
-            <td>{{ order.startDate | date: "dd MMM yyyy" }}</td>
-            <td>{{ order.endDate | date: "dd MMM yyyy" }}</td>
+            <td>{{ order.startDate | date: 'dd MMM yyyy' }}</td>
+            <td>{{ order.endDate | date: 'dd MMM yyyy' }}</td>
             <td>{{ order.branch }}</td>
             <td>{{ order.status }}</td>
           </tr>
@@ -75,5 +80,76 @@
         <p>No sales orders match your filters.</p>
       </div>
     </ng-template>
+
+    <div class="modal-backdrop" *ngIf="showCreateModal" (click)="closeCreateModal()">
+      <div class="modal" (click)="$event.stopPropagation()">
+        <header class="modal__header">
+          <div>
+            <p class="eyebrow">Create order</p>
+            <h2>New sales order</h2>
+          </div>
+          <button
+            type="button"
+            class="modal__close"
+            aria-label="Close create form"
+            (click)="closeCreateModal()"
+          >
+            ×
+          </button>
+        </header>
+
+        <div class="modal__body">
+          <label>
+            <span>Title</span>
+            <input type="text" [(ngModel)]="newOrder.title" />
+          </label>
+          <label>
+            <span>Account manager</span>
+            <input type="text" [(ngModel)]="newOrder.accountManager" />
+          </label>
+          <label>
+            <span>Customer</span>
+            <input type="text" [(ngModel)]="newOrder.customer" />
+          </label>
+          <label>
+            <span>Branch</span>
+            <input type="text" [(ngModel)]="newOrder.branch" />
+          </label>
+          <label>
+            <span>Delivery location</span>
+            <input type="text" [(ngModel)]="newOrder.deliveryLocation" />
+          </label>
+          <label>
+            <span>Service branch</span>
+            <input type="text" [(ngModel)]="newOrder.serviceBranch" />
+          </label>
+          <label>
+            <span>Order type</span>
+            <select [(ngModel)]="newOrder.orderType">
+              <option value="Production">Production</option>
+              <option value="Dry Hire">Dry Hire</option>
+              <option value="Stock Transfer">Stock Transfer</option>
+            </select>
+          </label>
+          <label>
+            <span>Start date</span>
+            <input type="date" [(ngModel)]="newOrder.startDate" />
+          </label>
+          <label>
+            <span>End date</span>
+            <input type="date" [(ngModel)]="newOrder.endDate" />
+          </label>
+        </div>
+
+        <footer class="modal__actions">
+          <button type="button" class="secondary" (click)="closeCreateModal()">
+            Cancel
+          </button>
+          <button type="button" class="primary" (click)="createOrder()">
+            Create sales order
+          </button>
+        </footer>
+      </div>
+    </div>
   </content>
 </ui-shell>

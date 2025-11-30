@@ -1,0 +1,51 @@
+<ui-shell>
+  <content class="customers-content">
+    <div class="header">
+      <div>
+        <p class="eyebrow">CRM</p>
+        <h1>Customers</h1>
+        <p class="subtitle">View contact details and drill into account records.</p>
+      </div>
+      <input
+        type="search"
+        placeholder="Search by name or email"
+        [(ngModel)]="searchTerm"
+      />
+    </div>
+
+    <div class="table-wrapper" *ngIf="customers.length; else emptyState">
+      <table>
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Email</th>
+            <th>Phone</th>
+            <th>Secondary Phone</th>
+            <th>Billing address</th>
+            <th>Default delivery address</th>
+            <th>Payment terms</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let customer of customers" [routerLink]="['/customers', customer.id]">
+            <td>{{ customer.name }}</td>
+            <td>{{ customer.email }}</td>
+            <td>{{ customer.phone }}</td>
+            <td>{{ customer.secondaryPhone || '—' }}</td>
+            <td>{{ customer.billingAddress }}</td>
+            <td>{{ customer.deliveryAddress || '—' }}</td>
+            <td>
+              {{ customer.cashCustomer ? 'Cash (7 days)' : customer.paymentTerms }}
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <ng-template #emptyState>
+      <div class="empty-state">
+        <p>No customers found.</p>
+      </div>
+    </ng-template>
+  </content>
+</ui-shell>

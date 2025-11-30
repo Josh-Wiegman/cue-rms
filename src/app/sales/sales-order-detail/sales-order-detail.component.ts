@@ -17,6 +17,8 @@ interface PickerState {
   isOpen: boolean;
 }
 
+type EditSection = 'schedule' | 'customer' | 'financial' | null;
+
 @Component({
   selector: 'sales-order-detail',
   standalone: true,
@@ -34,50 +36,24 @@ interface PickerState {
 export class SalesOrderDetailComponent implements OnInit, OnDestroy {
   order?: SalesOrderSummary;
   pickerState: Record<string, PickerState> = {};
-  availableItems: StockItem[] = [
-    {
-      id: 'lib-1',
-      name: 'Wireless Microphone Kit',
-      sku: 'AUD-220',
-      quantity: 1,
-      rates: { oneDay: 45, threeDay: 120, week: 180 },
-    },
-    {
-      id: 'lib-2',
-      name: 'Moving Head Spot',
-      sku: 'LGT-501',
-      quantity: 1,
-      rates: { oneDay: 75, threeDay: 195, week: 280 },
-    },
-    {
-      id: 'lib-3',
-      name: 'Stage Deck 1m x 2m',
-      sku: 'STG-102',
-      quantity: 1,
-      rates: { oneDay: 30, threeDay: 80, week: 120 },
-    },
-    {
-      id: 'lib-4',
-      name: 'Power Cable 10m',
-      sku: 'CAB-010',
-      quantity: 1,
-      rates: { oneDay: 5, threeDay: 12, week: 18 },
-    },
-    {
-      id: 'lib-5',
-      name: 'Video Switcher',
-      sku: 'VID-303',
-      quantity: 1,
-      rates: { oneDay: 180, threeDay: 470, week: 680 },
-    },
-    {
-      id: 'lib-6',
-      name: 'Lighting Console',
-      sku: 'LGT-900',
-      quantity: 1,
-      rates: { oneDay: 140, threeDay: 360, week: 520 },
-    },
-  ];
+  availableItems: StockItem[] = [];
+  activeEdit: EditSection = null;
+  draftSchedule = { startDate: '', endDate: '', billableDays: 1, rentalPeriodDays: 1 };
+  draftCustomer = {
+    customer: '',
+    deliveryLocation: '',
+    serviceBranch: '',
+    status: 'Quote' as SalesOrderSummary['status'],
+    warehouseStatus: 'To Prep' as SalesOrderSummary['warehouseStatus'],
+    orderType: 'Dry Hire' as SalesOrderSummary['orderType'],
+    tags: '' as string,
+  };
+  draftFinancial = {
+    globalDiscountType: 'percent' as Discount['type'],
+    globalDiscountValue: 0,
+    customerReference: '',
+    totalDiscount: 0,
+  };
 
   private readonly subscriptions: Subscription[] = [];
 
@@ -100,12 +76,11 @@ export class SalesOrderDetailComponent implements OnInit, OnDestroy {
           return;
         }
         this.order = JSON.parse(JSON.stringify(order));
-        if (this.order && !this.order.globalDiscount) {
+        this.availableItems = this.salesOrdersService.getStockLibrary();
+        if (!this.order.globalDiscount) {
           this.order.globalDiscount = { type: 'percent', value: 0 };
         }
-        if (this.order?.groups) {
-          this.seedPickerState(this.order.groups);
-        }
+        this.seedPickerState(this.order.groups);
       }),
     );
   }
@@ -203,7 +178,10 @@ export class SalesOrderDetailComponent implements OnInit, OnDestroy {
     this.order.billableDays = Number(value) || 1;
   }
 
-  setItemDiscountType(item: StockItem, discountType: Discount['type'] | '') {
+  setItemDiscountType(
+    item: StockItem,
+    discountType: Discount['type'] | '',
+  ) {
     if (!discountType) {
       item.discount = undefined;
       return;
@@ -249,10 +227,7 @@ export class SalesOrderDetailComponent implements OnInit, OnDestroy {
     if (!this.order) return 0;
     return this.order.groups
       .flatMap((group) => this.collectItems(group))
-      .reduce(
-        (sum, item) => sum + this.itemPrice(item, this.order!.billableDays),
-        0,
-      );
+      .reduce((sum, item) => sum + this.itemPrice(item, this.order!.billableDays), 0);
   }
 
   private collectItems(group: StockGroup): StockItem[] {
@@ -272,5 +247,79 @@ export class SalesOrderDetailComponent implements OnInit, OnDestroy {
 
   get totalIncl(): number {
     return this.totalExcl * 1.15;
+  }
+
+  openEdit(section: EditSection) {
+    if (!this.order) return;
+    this.activeEdit = section;
+
+    if (section === 'schedule') {
+      this.draftSchedule = {
+        startDate: this.order.startDate,
+        endDate: this.order.endDate,
+        billableDays: this.order.billableDays,
+        rentalPeriodDays: this.order.rentalPeriodDays,
+      };
+    }
+
+    if (section === 'customer') {
+      this.draftCustomer = {
+        customer: this.order.customer,
+        deliveryLocation: this.order.deliveryLocation,
+        serviceBranch: this.order.serviceBranch,
+        status: this.order.status,
+        warehouseStatus: this.order.warehouseStatus,
+        orderType: this.order.orderType,
+        tags: this.order.tags.join(', '),
+      };
+    }
+
+    if (section === 'financial') {
+      this.draftFinancial = {
+        globalDiscountType: this.order.globalDiscount?.type || 'percent',
+        globalDiscountValue: this.order.globalDiscount?.value || 0,
+        customerReference: this.order.customerReference,
+        totalDiscount: this.order.totalDiscount,
+      };
+    }
+  }
+
+  closeEdit() {
+    this.activeEdit = null;
+  }
+
+  saveSchedule() {
+    if (!this.order) return;
+    this.order.startDate = this.draftSchedule.startDate;
+    this.order.endDate = this.draftSchedule.endDate;
+    this.order.billableDays = Number(this.draftSchedule.billableDays) || 1;
+    this.order.rentalPeriodDays = Number(this.draftSchedule.rentalPeriodDays) || 1;
+    this.closeEdit();
+  }
+
+  saveCustomer() {
+    if (!this.order) return;
+    this.order.customer = this.draftCustomer.customer;
+    this.order.deliveryLocation = this.draftCustomer.deliveryLocation;
+    this.order.serviceBranch = this.draftCustomer.serviceBranch;
+    this.order.status = this.draftCustomer.status;
+    this.order.warehouseStatus = this.draftCustomer.warehouseStatus;
+    this.order.orderType = this.draftCustomer.orderType;
+    this.order.tags = this.draftCustomer.tags
+      .split(',')
+      .map((tag) => tag.trim())
+      .filter(Boolean);
+    this.closeEdit();
+  }
+
+  saveFinancial() {
+    if (!this.order) return;
+    this.order.globalDiscount = {
+      type: this.draftFinancial.globalDiscountType,
+      value: Number(this.draftFinancial.globalDiscountValue) || 0,
+    };
+    this.order.customerReference = this.draftFinancial.customerReference;
+    this.order.totalDiscount = Number(this.draftFinancial.totalDiscount) || 0;
+    this.closeEdit();
   }
 }

@@ -49,6 +49,24 @@ export const routes: Routes = [
     canActivate: [authGuard],
   },
   {
+    path: 'customers/:id',
+    loadComponent: () =>
+      import('./customers/customer-detail.component').then(
+        (m) => m.CustomerDetailComponent,
+      ),
+    title: 'Customer detail | Cue RMS',
+    canActivate: [authGuard],
+  },
+  {
+    path: 'customers',
+    loadComponent: () =>
+      import('./customers/customers.component').then(
+        (m) => m.CustomersComponent,
+      ),
+    title: 'Customers | Cue RMS',
+    canActivate: [authGuard],
+  },
+  {
     path: 'partyhire',
     loadComponent: () =>
       import('./partyhire/partyhire-component/partyhire.component').then(

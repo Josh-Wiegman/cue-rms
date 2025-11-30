@@ -1,5 +1,7 @@
 import { Injectable } from '@angular/core';
 import { BehaviorSubject } from 'rxjs';
+import { InventoryService } from '../inventory/inventory.service';
+import { InventoryItem } from '../shared/models-and-mappers/item/item-model';
 
 export type OrderStatus =
   | 'Quote'
@@ -174,6 +176,8 @@ export class SalesOrdersService {
 
   readonly orders$ = this.ordersSubject.asObservable();
 
+  constructor(private readonly inventoryService: InventoryService) {}
+
   get orders(): SalesOrderSummary[] {
     return this.ordersSubject.getValue();
   }
@@ -187,5 +191,61 @@ export class SalesOrdersService {
       order.id === updated.id ? updated : order,
     );
     this.ordersSubject.next(orders);
+  }
+
+  createOrder(payload: Partial<SalesOrderSummary>): SalesOrderSummary {
+    const nextNumber = this.generateOrderNumber();
+    const order: SalesOrderSummary = {
+      id: crypto.randomUUID(),
+      orderNumber: nextNumber,
+      internalReference: nextNumber,
+      accountManager: payload.accountManager || 'Unassigned',
+      title: payload.title || 'New Sales Order',
+      startDate: payload.startDate || new Date().toISOString().slice(0, 10),
+      endDate: payload.endDate || payload.startDate || new Date().toISOString().slice(0, 10),
+      branch: payload.branch || 'Christchurch',
+      customer: payload.customer || 'Walk-up customer',
+      deliveryLocation: payload.deliveryLocation || 'TBC',
+      serviceBranch: payload.serviceBranch || payload.branch || 'Christchurch',
+      status: payload.status || 'Quote',
+      warehouseStatus: payload.warehouseStatus || 'To Prep',
+      customerReference: payload.customerReference || '',
+      totalDiscount: payload.totalDiscount ?? 0,
+      billableDays: payload.billableDays || 1,
+      rentalPeriodDays: payload.rentalPeriodDays || 1,
+      orderType: payload.orderType || 'Dry Hire',
+      tags: payload.tags || [],
+      groups: payload.groups || [],
+      globalDiscount: payload.globalDiscount,
+    };
+
+    this.ordersSubject.next([order, ...this.orders]);
+    return order;
+  }
+
+  getStockLibrary(): StockItem[] {
+    return this.inventoryService.list().map((item) => this.mapInventory(item));
+  }
+
+  private mapInventory(item: InventoryItem): StockItem {
+    return {
+      id: `inv-${item.id}`,
+      name: item.name,
+      sku: item.sku,
+      quantity: 1,
+      rates: {
+        oneDay: item.pricing.oneDay,
+        threeDay: item.pricing.threeDay,
+        week: item.pricing.week,
+      },
+    };
+  }
+
+  private generateOrderNumber(): string {
+    const numbers = this.orders
+      .map((order) => Number(order.orderNumber.replace(/\D+/g, '')))
+      .filter((num) => !Number.isNaN(num));
+    const next = numbers.length ? Math.max(...numbers) + 1 : 1000;
+    return `SO-${next}`;
   }
 }

@@ -1,0 +1,77 @@
+.customer-detail {
+  padding: 1.5rem 2rem 3rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  color: #6b7280;
+}
+
+.breadcrumb a {
+  color: #3b82f6;
+  text-decoration: none;
+}
+
+.hero {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 1.25rem 1.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.subtitle {
+  color: #6b7280;
+  margin: 0.15rem 0 0;
+}
+
+.tags {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.pill {
+  padding: 0.35rem 0.75rem;
+  background: #eef2ff;
+  color: #3730a3;
+  border-radius: 999px;
+  border: 1px solid #c7d2fe;
+}
+
+.info-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 1rem;
+}
+
+.card {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 1rem 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.card dl {
+  display: grid;
+  gap: 0.6rem;
+}
+
+.card dt {
+  font-weight: 600;
+  color: #111827;
+}
+
+.card dd {
+  margin: 0.15rem 0 0;
+  color: #4b5563;
+}
