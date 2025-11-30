@@ -1,0 +1,235 @@
+<ui-shell>
+  <content class="order-detail" *ngIf="order as current">
+    <div class="breadcrumb">
+      <a routerLink="/sales">Sales Orders</a>
+      <span>/</span>
+      <span class="crumb">{{ current.orderNumber }}</span>
+    </div>
+
+    <header class="order-header">
+      <div>
+        <p class="eyebrow">{{ current.orderType }}</p>
+        <h1>{{ current.title }}</h1>
+        <p class="meta">{{ current.orderNumber }} · {{ current.status }}</p>
+        <div class="tags">
+          <span *ngFor="let tag of current.tags">{{ tag }}</span>
+        </div>
+      </div>
+      <div class="totals">
+        <div>
+          <p class="label">Total excl. GST</p>
+          <p class="value">{{ totalExcl | currency: 'NZD':'symbol':'1.0-0' }}</p>
+        </div>
+        <div>
+          <p class="label">Total incl. GST</p>
+          <p class="value">{{ totalIncl | currency: 'NZD':'symbol':'1.0-0' }}</p>
+        </div>
+        <button type="button" class="primary" (click)="updateOrder()">
+          Save order
+        </button>
+      </div>
+    </header>
+
+    <section class="order-grid">
+      <div class="card">
+        <h3>Schedule</h3>
+        <dl>
+          <div>
+            <dt>Start date</dt>
+            <dd>{{ current.startDate | date: 'dd MMM yyyy' }}</dd>
+          </div>
+          <div>
+            <dt>End date</dt>
+            <dd>{{ current.endDate | date: 'dd MMM yyyy' }}</dd>
+          </div>
+          <div>
+            <dt>Billable days</dt>
+            <dd>
+              <input
+                type="number"
+                min="1"
+                [ngModel]="current.billableDays"
+                (ngModelChange)="updateBillableDays($event)"
+              />
+            </dd>
+          </div>
+          <div>
+            <dt>Rental period</dt>
+            <dd>{{ current.rentalPeriodDays }} days</dd>
+          </div>
+        </dl>
+      </div>
+
+      <div class="card">
+        <h3>Customer</h3>
+        <dl>
+          <div>
+            <dt>Customer</dt>
+            <dd>{{ current.customer }}</dd>
+          </div>
+          <div>
+            <dt>Delivery location</dt>
+            <dd>{{ current.deliveryLocation }}</dd>
+          </div>
+          <div>
+            <dt>Service branch</dt>
+            <dd>{{ current.serviceBranch }}</dd>
+          </div>
+          <div>
+            <dt>Status</dt>
+            <dd>{{ current.status }} / {{ current.warehouseStatus }}</dd>
+          </div>
+        </dl>
+      </div>
+
+      <div class="card">
+        <h3>Financial</h3>
+        <dl>
+          <div>
+            <dt>Global discount</dt>
+            <dd>
+              <select
+                [(ngModel)]="current.globalDiscount?.type"
+                (ngModelChange)="current.globalDiscount = current.globalDiscount || { type: 'percent', value: 0 }"
+              >
+                <option value="percent">% off subtotal</option>
+                <option value="amount">$ off subtotal</option>
+              </select>
+              <input
+                type="number"
+                min="0"
+                [(ngModel)]="current.globalDiscount!.value"
+              />
+            </dd>
+          </div>
+          <div>
+            <dt>Customer reference</dt>
+            <dd>{{ current.customerReference }}</dd>
+          </div>
+          <div>
+            <dt>Internal reference</dt>
+            <dd>{{ current.internalReference }}</dd>
+          </div>
+          <div>
+            <dt>Total discount</dt>
+            <dd>{{ totalDiscountValue | currency: 'NZD':'symbol':'1.0-0' }}</dd>
+          </div>
+        </dl>
+      </div>
+    </section>
+
+    <section class="stock">
+      <div class="stock-header">
+        <div>
+          <h2>Stock list</h2>
+          <p class="subtitle">
+            Group items, add subgroups, and use the picker to drop new items into
+            the correct section.
+          </p>
+        </div>
+        <button type="button" class="secondary" (click)="addGroup()">
+          + Add top-level group
+        </button>
+      </div>
+
+      <ng-template #groupTemplate let-group>
+        <div class="group">
+          <div class="group-header">
+            <input class="group-title" [(ngModel)]="group.title" />
+            <div class="group-actions">
+              <button type="button" (click)="addGroup(group.id)">+ Subgroup</button>
+              <button
+                type="button"
+                class="ghost"
+                (click)="togglePicker(group.id)"
+                aria-label="Open item picker"
+              >
+                🔍 Show picker
+              </button>
+            </div>
+          </div>
+
+          <div class="items" *ngIf="group.items.length">
+            <div class="item" *ngFor="let item of group.items">
+              <div>
+                <p class="item-name">{{ item.name }}</p>
+                <p class="item-meta">{{ item.sku }} · Qty {{ item.quantity }}</p>
+              </div>
+              <div class="pricing">
+                <label>
+                  <span>Discount</span>
+                  <select
+                    [ngModel]="item.discount?.type || ''"
+                    (ngModelChange)="setItemDiscountType(item, $event)"
+                  >
+                    <option value="">None</option>
+                    <option value="percent">%</option>
+                    <option value="amount">$</option>
+                  </select>
+                </label>
+                <input
+                  type="number"
+                  min="0"
+                  [ngModel]="item.discount?.value"
+                  (ngModelChange)="updateItemDiscountValue(item, $event)"
+                  [disabled]="!item.discount"
+                  placeholder="0"
+                />
+                <p class="item-total">
+                  {{ itemPrice(item, order?.billableDays || 1) | currency: 'NZD':'symbol':'1.0-0' }}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div class="picker" *ngIf="pickerState[group.id]?.isOpen">
+            <div class="picker-header">
+              <input
+                type="search"
+                placeholder="Search items"
+                [ngModel]="pickerState[group.id].search"
+                (ngModelChange)="onSearchChange(group.id, $event)"
+              />
+              <small>Showing up to 30 results</small>
+            </div>
+            <div class="picker-items">
+              <button
+                class="picker-item"
+                type="button"
+                *ngFor="let item of filteredLibrary(group.id)"
+                (click)="addItem(group.id, item)"
+              >
+                <div>
+                  <p class="item-name">{{ item.name }}</p>
+                  <p class="item-meta">{{ item.sku }}</p>
+                </div>
+                <span>{{ item.rates.oneDay | currency: 'NZD':'symbol':'1.0-0' }} / day</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="children" *ngIf="group.groups.length">
+            <ng-container
+              *ngFor="let child of group.groups"
+              [ngTemplateOutlet]="groupTemplate"
+              [ngTemplateOutletContext]="{ $implicit: child }"
+            ></ng-container>
+          </div>
+        </div>
+      </ng-template>
+
+      <div class="group-list" *ngIf="current.groups.length; else noGroups">
+        <ng-container
+          *ngFor="let group of current.groups"
+          [ngTemplateOutlet]="groupTemplate"
+          [ngTemplateOutletContext]="{ $implicit: group }"
+        ></ng-container>
+      </div>
+      <ng-template #noGroups>
+        <div class="empty-state">
+          <p>No groups yet. Create one to begin building the stock list.</p>
+        </div>
+      </ng-template>
+    </section>
+  </content>
+</ui-shell>

@@ -31,6 +31,15 @@ export const routes: Routes = [
     canActivate: [authGuard],
   },
   {
+    path: 'sales/:orderNumber',
+    loadComponent: () =>
+      import(
+        './sales/sales-order-detail/sales-order-detail.component'
+      ).then((m) => m.SalesOrderDetailComponent),
+    title: 'Sales Order | Cue RMS',
+    canActivate: [authGuard],
+  },
+  {
     path: 'sales',
     loadComponent: () =>
       import('./sales/sales-component/sales-component').then(
