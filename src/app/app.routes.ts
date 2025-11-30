@@ -31,12 +31,39 @@ export const routes: Routes = [
     canActivate: [authGuard],
   },
   {
+    path: 'sales/:orderNumber',
+    loadComponent: () =>
+      import(
+        './sales/sales-order-detail/sales-order-detail.component'
+      ).then((m) => m.SalesOrderDetailComponent),
+    title: 'Sales Order | Cue RMS',
+    canActivate: [authGuard],
+  },
+  {
     path: 'sales',
     loadComponent: () =>
       import('./sales/sales-component/sales-component').then(
         (m) => m.SalesComponent,
       ),
     title: 'Sales | Cue RMS',
+    canActivate: [authGuard],
+  },
+  {
+    path: 'customers/:id',
+    loadComponent: () =>
+      import('./customers/customer-detail.component').then(
+        (m) => m.CustomerDetailComponent,
+      ),
+    title: 'Customer detail | Cue RMS',
+    canActivate: [authGuard],
+  },
+  {
+    path: 'customers',
+    loadComponent: () =>
+      import('./customers/customers.component').then(
+        (m) => m.CustomersComponent,
+      ),
+    title: 'Customers | Cue RMS',
     canActivate: [authGuard],
   },
   {

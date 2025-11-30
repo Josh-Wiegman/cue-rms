@@ -75,10 +75,17 @@ export class MainNavigationComponent implements OnInit {
         }))
         .filter((item) => item.label && item.path);
 
-      this.navItems = [...flattened, this.createToolsNavigation()];
+      this.navItems = [
+        ...flattened,
+        { label: 'Customers', path: '/customers' },
+        this.createToolsNavigation(),
+      ];
     } catch (error) {
       console.error('Failed to load navigation items', error);
-      this.navItems = [this.createToolsNavigation()];
+      this.navItems = [
+        { label: 'Customers', path: '/customers' },
+        this.createToolsNavigation(),
+      ];
     }
   }
 
