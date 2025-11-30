@@ -1,0 +1,74 @@
+<ui-shell>
+  <content class="availability-page" *ngIf="item; else missing">
+    <nav class="breadcrumbs">
+      <a routerLink="/inventory">Inventory</a>
+      <span>/</span>
+      <a [routerLink]="['/inventory', item?.sku]">{{ item?.sku }}</a>
+      <span>/</span>
+      <span>Availability</span>
+    </nav>
+
+    <header class="page-header">
+      <div>
+        <p class="eyebrow">Timeline</p>
+        <h1>{{ item?.name }}</h1>
+        <p class="muted">Track bookings by sales order and quantity</p>
+      </div>
+      <a class="secondary" [routerLink]="['/inventory', item?.sku]">Back to item</a>
+    </header>
+
+    <section class="card">
+      <div class="card-header">
+        <div>
+          <p class="eyebrow">Bookings</p>
+          <h3>Upcoming allocations</h3>
+        </div>
+        <p class="muted" *ngIf="rangeStart && rangeEnd">
+          {{ rangeStart | date: 'mediumDate' }} — {{ rangeEnd | date: 'mediumDate' }}
+        </p>
+      </div>
+
+      <div class="timeline" *ngIf="bookings.length; else noBookings">
+        <div class="timeline-bar" *ngFor="let booking of bookings" [ngStyle]="barStyle(booking)">
+          <span class="label">{{ booking.orderId }} · {{ booking.quantity }} pcs</span>
+        </div>
+      </div>
+
+      <ng-template #noBookings>
+        <p class="muted">No bookings for this item yet.</p>
+      </ng-template>
+    </section>
+
+    <section class="card" *ngIf="bookings.length">
+      <table>
+        <thead>
+          <tr>
+            <th>Order</th>
+            <th>Type</th>
+            <th>From</th>
+            <th>To</th>
+            <th>Quantity</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let booking of bookings">
+            <td>{{ booking.orderId }}</td>
+            <td>{{ booking.type | titlecase }}</td>
+            <td>{{ booking.startDate | date: 'mediumDate' }}</td>
+            <td>{{ booking.endDate | date: 'mediumDate' }}</td>
+            <td>{{ booking.quantity }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+  </content>
+</ui-shell>
+
+<ng-template #missing>
+  <ui-shell>
+    <content class="availability-page">
+      <p class="muted">Item not found.</p>
+      <a routerLink="/inventory" class="primary">Back to inventory</a>
+    </content>
+  </ui-shell>
+</ng-template>
