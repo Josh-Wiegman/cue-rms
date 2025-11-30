@@ -1,20 +1,34 @@
-import { AsyncPipe, DatePipe, NgClass, NgFor, NgIf } from '@angular/common';
+import { AsyncPipe, DatePipe, NgFor, NgIf } from '@angular/common';
 import { Component, OnDestroy, OnInit, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
+import { Router } from '@angular/router';
 import { Subscription } from 'rxjs';
 import {
   CreateStageTimerPayload,
   StageTimer,
   StageTimerNote,
+  StageTimerStatus,
   StageTimerUrgentNote,
 } from '../stage-timer.models';
 import { StageTimerService } from '../stage-timer.service';
+import { SimpleButton } from '../../shared/simple-button/simple-button';
+import { Panel } from '../../shared/panel/panel';
+import { Pill, PillState } from '../../shared/pill/pill';
+import { mapStatusToPillState } from '../helpers/mapStatusToPillState';
 
 @Component({
   selector: 'stage-timer-dashboard',
   standalone: true,
-  imports: [AsyncPipe, DatePipe, FormsModule, NgClass, NgFor, NgIf, RouterLink],
+  imports: [
+    AsyncPipe,
+    DatePipe,
+    FormsModule,
+    NgFor,
+    NgIf,
+    SimpleButton,
+    Panel,
+    Pill,
+  ],
   templateUrl: './stage-timer-dashboard.component.html',
   styleUrl: './stage-timer-dashboard.component.scss',
 })
@@ -63,8 +77,7 @@ export class StageTimerDashboardComponent implements OnInit, OnDestroy {
     this.subscription?.unsubscribe();
   }
 
-  protected async createTimer(event: SubmitEvent): Promise<void> {
-    event.preventDefault();
+  protected async createTimer(): Promise<void> {
     const payload: CreateStageTimerPayload = {
       name: this.newTimerName,
       durationMinutes: this.newTimerMinutes,
@@ -87,8 +100,7 @@ export class StageTimerDashboardComponent implements OnInit, OnDestroy {
     this.urgentNoteDraft = '';
   }
 
-  protected toggleTimer(timer: StageTimer, event: Event): void {
-    event.stopPropagation();
+  protected toggleTimer(timer: StageTimer): void {
     if (timer.status === 'running') {
       void this.stageTimerService.pauseTimer(timer.id);
     } else if (timer.status === 'completed') {
@@ -99,13 +111,11 @@ export class StageTimerDashboardComponent implements OnInit, OnDestroy {
     }
   }
 
-  protected resetTimer(timer: StageTimer, event: Event): void {
-    event.stopPropagation();
+  protected resetTimer(timer: StageTimer): void {
     void this.stageTimerService.resetTimer(timer.id);
   }
 
-  protected deleteTimer(timer: StageTimer, event: Event): void {
-    event.stopPropagation();
+  protected deleteTimer(timer: StageTimer): void {
     void this.stageTimerService.deleteTimer(timer.id);
   }
 
@@ -127,11 +137,7 @@ export class StageTimerDashboardComponent implements OnInit, OnDestroy {
     await this.stageTimerService.clearUrgentNote(timer.id);
   }
 
-  protected async openPresenter(
-    timer: StageTimer,
-    event: Event,
-  ): Promise<void> {
-    event.stopPropagation();
+  protected async openPresenter(timer: StageTimer): Promise<void> {
     await this.router.navigate([
       '/tools',
       'stage-timer',
@@ -140,8 +146,7 @@ export class StageTimerDashboardComponent implements OnInit, OnDestroy {
     ]);
   }
 
-  protected async openPresenterAccess(event: Event): Promise<void> {
-    event.preventDefault();
+  protected async openPresenterAccess(): Promise<void> {
     await this.router.navigate(['/tools', 'stage-timer', 'presenter']);
   }
 
@@ -190,5 +195,8 @@ export class StageTimerDashboardComponent implements OnInit, OnDestroy {
 
   private pad(value: number): string {
     return value.toString().padStart(2, '0');
+  }
+  protected mapStatusToPillState(status: StageTimerStatus): PillState {
+    return mapStatusToPillState(status);
   }
 }

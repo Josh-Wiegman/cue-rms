@@ -1,273 +1,273 @@
-<section class="stage-timer">
+<section class="stage-timer-container">
   <header class="stage-timer__header">
     <div class="stage-timer__heading">
       <h1>Stage Timer</h1>
       <p>Monitor, create, and control timers across your master scene.</p>
     </div>
     <div class="stage-timer__actions">
-      <button
-        type="button"
-        class="btn btn--primary"
-        (click)="toggleCreateForm()"
-      >
-        {{ showCreateForm ? "Close form" : "New timer" }}
-      </button>
-      <a
-        class="btn btn--ghost"
-        href=""
-        (click)="openPresenterAccess($event)"
-        title="Open presenter access"
-        >Presenter access</a
-      >
+      <cg-simple-button
+        buttonLabel="New timer"
+        (onClick)="toggleCreateForm()"
+        [disabled]="showCreateForm ? true : false"
+        buttonStyle="primary"
+      />
+
+      <cg-simple-button
+        buttonLabel="Presenter access"
+        (onClick)="openPresenterAccess()"
+        buttonStyle="ghost"
+      />
     </div>
   </header>
 
-  <form
-    class="stage-timer__form"
-    *ngIf="showCreateForm"
-    (ngSubmit)="createTimer($event)"
-  >
-    <div class="form-grid">
-      <label>
-        <span>Timer name</span>
-        <input
-          type="text"
-          name="timerName"
-          [(ngModel)]="newTimerName"
-          placeholder="Backstage countdown"
+  <cg-panel *ngIf="showCreateForm">
+    <form>
+      <div class="form-grid">
+        <label>
+          <span>Timer name</span>
+          <input
+            type="text"
+            name="timerName"
+            [(ngModel)]="newTimerName"
+            placeholder="Backstage countdown"
+          />
+        </label>
+        <label>
+          <span>Minutes</span>
+          <input
+            type="number"
+            min="0"
+            name="timerMinutes"
+            [(ngModel)]="newTimerMinutes"
+          />
+        </label>
+        <label>
+          <span>Seconds</span>
+          <input
+            type="number"
+            min="0"
+            max="59"
+            name="timerSeconds"
+            [(ngModel)]="newTimerSeconds"
+          />
+        </label>
+      </div>
+      <div class="form-actions">
+        <cg-simple-button
+          buttonLabel="Create timer"
+          buttonStyle="primary"
+          (onClick)="createTimer()"
         />
-      </label>
-      <label>
-        <span>Minutes</span>
-        <input
-          type="number"
-          min="0"
-          name="timerMinutes"
-          [(ngModel)]="newTimerMinutes"
+        <cg-simple-button
+          buttonLabel="Cancel"
+          buttonStyle="ghost"
+          (onClick)="toggleCreateForm()"
         />
-      </label>
-      <label>
-        <span>Seconds</span>
-        <input
-          type="number"
-          min="0"
-          max="59"
-          name="timerSeconds"
-          [(ngModel)]="newTimerSeconds"
-        />
-      </label>
-    </div>
-    <div class="form-actions">
-      <button type="submit" class="btn btn--primary">Create timer</button>
-      <button type="button" class="btn btn--ghost" (click)="toggleCreateForm()">
-        Cancel
-      </button>
-    </div>
-  </form>
+      </div>
+    </form>
+  </cg-panel>
 
   <div class="stage-timer__content" *ngIf="timers$ | async as timers">
     <div
       class="stage-timer__list"
       [class.stage-timer__list--empty]="!timers.length"
     >
-      <article
-        class="timer-card"
+      <cg-panel
         *ngFor="let timer of timers; trackBy: trackByTimer"
-        [class.timer-card--selected]="isSelected(timer)"
+        class="timer-card"
         (click)="selectTimer(timer)"
+        [selected]="isSelected(timer)"
+        hoverable
       >
-        <header class="timer-card__header">
-          <h3>{{ timer.name }}</h3>
-          <span
-            class="timer-card__status"
-            [ngClass]="'status--' + timer.status"
-          >
-            {{ timerStatusBadge(timer) }}
-          </span>
-        </header>
-        <div class="timer-card__countdown">
-          {{ formatTime(timer.remainingSeconds) }}
-        </div>
-        <div class="timer-card__meta">
-          <div class="timer-card__code">
-            Code · <strong>{{ timer.code }}</strong>
+        <div class="timer-card__content">
+          <header class="timer-card__header">
+            <h3>{{ timer.name }}</h3>
+            <cg-pill
+              [label]="timerStatusBadge(timer)"
+              [state]="mapStatusToPillState(timer.status)"
+            />
+          </header>
+          <div class="timer-card__countdown">
+            {{ formatTime(timer.remainingSeconds) }}
           </div>
-          <div class="timer-card__scene">Scene · Master</div>
-        </div>
-        <div class="timer-card__progress">
+          <div class="timer-card__meta">
+            <div class="timer-card__code">
+              Code · <strong>{{ timer.code }}</strong>
+            </div>
+            <div class="timer-card__scene">Scene · Master</div>
+          </div>
+          <div class="timer-card__progress">
+            <div
+              class="timer-card__progress-bar"
+              [style.width.%]="timerProgress(timer)"
+            ></div>
+          </div>
+          <footer class="timer-card__footer">
+            <cg-simple-button
+              [buttonLabel]="
+                timer.status === 'running'
+                  ? 'Pause'
+                  : timer.status === 'completed'
+                    ? 'Restart'
+                    : 'Start'
+              "
+              buttonStyle="secondary"
+              (onClick)="toggleTimer(timer)"
+            />
+            <cg-simple-button
+              buttonLabel="Reset"
+              buttonStyle="secondary"
+              (onClick)="resetTimer(timer)"
+            />
+            <cg-simple-button
+              buttonLabel="Presenter"
+              buttonStyle="secondary"
+              (onClick)="openPresenter(timer)"
+            />
+            <cg-simple-button
+              buttonLabel="Delete"
+              buttonStyle="destructive"
+              (onClick)="deleteTimer(timer)"
+            />
+          </footer>
           <div
-            class="timer-card__progress-bar"
-            [style.width.%]="timerProgress(timer)"
-          ></div>
+            class="timer-card__urgent"
+            *ngIf="timer.urgentNote && !timer.urgentNote.acknowledgedAt"
+          >
+            <span>Urgent note active</span>
+          </div>
         </div>
-        <footer class="timer-card__footer">
-          <button
-            type="button"
-            class="btn btn--secondary"
-            (click)="toggleTimer(timer, $event)"
-          >
-            {{
-              timer.status === "running"
-                ? "Pause"
-                : timer.status === "completed"
-                  ? "Restart"
-                  : "Start"
-            }}
-          </button>
-          <button type="button" class="btn" (click)="resetTimer(timer, $event)">
-            Reset
-          </button>
-          <button
-            type="button"
-            class="btn"
-            title="Open presenter view"
-            (click)="openPresenter(timer, $event)"
-          >
-            Presenter
-          </button>
-          <button
-            type="button"
-            class="btn btn--danger"
-            title="Delete timer"
-            (click)="deleteTimer(timer, $event)"
-          >
-            Delete
-          </button>
-        </footer>
-        <div
-          class="timer-card__urgent"
-          *ngIf="timer.urgentNote && !timer.urgentNote.acknowledgedAt"
-        >
-          <span>Urgent note active</span>
-        </div>
-      </article>
+      </cg-panel>
       <p class="stage-timer__empty" *ngIf="!timers.length">
         No timers yet. Use the <strong>New timer</strong> button to create one.
       </p>
     </div>
 
     <!-- Detail pane uses selectedTimer, narrowed by *ngIf -->
-    <aside class="stage-timer__detail" *ngIf="selectedTimer as selected">
-      <header class="detail__header">
-        <div>
-          <h2>{{ selected.name }}</h2>
-          <p>
-            Code · <strong>{{ selected.code }}</strong>
-          </p>
-        </div>
-        <span class="detail__status" [ngClass]="'status--' + selected.status">
-          {{ timerStatusBadge(selected) }}
-        </span>
-      </header>
 
-      <div class="detail__countdown">
-        {{ formatTime(selected.remainingSeconds) }}
-      </div>
-      <div class="detail__progress">
-        <div class="detail__progress-track">
-          <div
-            class="detail__progress-fill"
-            [style.width.%]="timerProgress(selected)"
-          ></div>
-        </div>
-        <div class="detail__meta">
-          <span>Duration · {{ formatTime(selected.durationSeconds) }}</span>
-          <span>Remaining · {{ formatTime(selected.remainingSeconds) }}</span>
-        </div>
-      </div>
-
-      <div class="detail__controls">
-        <button
-          type="button"
-          class="btn btn--primary"
-          (click)="toggleTimer(selected, $event)"
-        >
-          {{ selected.status === "running" ? "Pause timer" : "Start timer" }}
-        </button>
-
-        <button
-          type="button"
-          class="btn"
-          (click)="resetTimer(selected, $event)"
-        >
-          Reset timer
-        </button>
-        <button
-          type="button"
-          class="btn"
-          (click)="openPresenter(selected, $event)"
-        >
-          Open presenter
-        </button>
-      </div>
-
-      <section class="detail__section">
-        <header class="detail__section-header">
-          <h3>Notes</h3>
-          <p>Keep everyone aligned with running notes.</p>
-        </header>
-        <ul class="notes" *ngIf="notesFor(selected) as notes">
-          <li *ngFor="let note of notes">
-            <span class="notes__time">{{
-              note.createdAt | date: "shortTime"
-            }}</span>
-            <span class="notes__body">{{ note.body }}</span>
-          </li>
-          <li *ngIf="!notes.length" class="notes__empty">No notes yet.</li>
-        </ul>
-        <form class="notes__form" (ngSubmit)="addNote(selected)">
-          <textarea
-            name="noteDraft"
-            [(ngModel)]="noteDraft"
-            rows="3"
-            placeholder="Add a note for this timer..."
-          ></textarea>
-          <button type="submit" class="btn btn--secondary">Add note</button>
-        </form>
-      </section>
-
-      <section class="detail__section detail__section--urgent">
-        <header class="detail__section-header">
-          <h3>Urgent note</h3>
-          <p>Send high-priority alerts to the presenter instantly.</p>
-        </header>
-        <ng-container
-          *ngIf="urgentNoteFor(selected) as urgent; else urgentForm"
-        >
-          <div
-            class="urgent-note"
-            [class.urgent-note--acknowledged]="urgent.acknowledgedAt"
-          >
-            <div class="urgent-note__message">{{ urgent.body }}</div>
-            <div class="urgent-note__meta">
-              Sent {{ urgent.createdAt | date: "shortTime" }}
-              <span *ngIf="urgent.acknowledgedAt">
-                · Acknowledged {{ urgent.acknowledgedAt | date: "shortTime" }}
-              </span>
-            </div>
-            <button
-              type="button"
-              class="btn btn--ghost"
-              (click)="clearUrgent(selected)"
-            >
-              Clear urgent note
-            </button>
+    <cg-panel class="stage-timer__detail" *ngIf="selectedTimer as selected">
+      <aside class="stage-timer__detail__content">
+        <header class="detail__header">
+          <div>
+            <h2>{{ selected.name }}</h2>
+            <p>
+              Code · <strong>{{ selected.code }}</strong>
+            </p>
           </div>
-        </ng-container>
-        <ng-template #urgentForm>
-          <form class="urgent-form" (ngSubmit)="addUrgentNote(selected)">
+          <cg-pill
+            [label]="timerStatusBadge(selected)"
+            [state]="mapStatusToPillState(selected.status)"
+          />
+        </header>
+
+        <div class="detail__countdown">
+          {{ formatTime(selected.remainingSeconds) }}
+        </div>
+        <div class="detail__progress">
+          <div class="detail__progress-track">
+            <div
+              class="detail__progress-fill"
+              [style.width.%]="timerProgress(selected)"
+            ></div>
+          </div>
+          <div class="detail__meta">
+            <span>Duration · {{ formatTime(selected.durationSeconds) }}</span>
+            <span>Remaining · {{ formatTime(selected.remainingSeconds) }}</span>
+          </div>
+        </div>
+
+        <div class="detail__controls">
+          <cg-simple-button
+            [buttonLabel]="
+              selected.status === 'running' ? 'Pause timer' : 'Start timer'
+            "
+            buttonStyle="secondary"
+            (onClick)="toggleTimer(selected)"
+          />
+          <cg-simple-button
+            buttonLabel="Reset timer"
+            buttonStyle="secondary"
+            (onClick)="resetTimer(selected)"
+          />
+          <cg-simple-button
+            buttonLabel="Open presenter"
+            buttonStyle="secondary"
+            (onClick)="openPresenter(selected)"
+          />
+        </div>
+
+        <section class="detail__section detail__section--urgent">
+          <header class="detail__section-header">
+            <h3>Urgent note</h3>
+            <p>Send high-priority alerts to the presenter instantly.</p>
+          </header>
+          <ng-container
+            *ngIf="urgentNoteFor(selected) as urgent; else urgentForm"
+          >
+            <div
+              class="urgent-note"
+              [class.urgent-note--acknowledged]="urgent.acknowledgedAt"
+            >
+              <div class="urgent-note__message">{{ urgent.body }}</div>
+              <div class="urgent-note__meta">
+                Sent {{ urgent.createdAt | date: "shortTime" }}
+                <span *ngIf="urgent.acknowledgedAt">
+                  · Acknowledged {{ urgent.acknowledgedAt | date: "shortTime" }}
+                </span>
+              </div>
+              <cg-simple-button
+                buttonLabel="Clear urgent note"
+                buttonStyle="destructive"
+                (onClick)="clearUrgent(selected)"
+              />
+            </div>
+          </ng-container>
+          <ng-template #urgentForm>
+            <form class="urgent-form">
+              <textarea
+                name="urgentDraft"
+                [(ngModel)]="urgentNoteDraft"
+                rows="3"
+                placeholder="Alert the presenter to an urgent change..."
+              ></textarea>
+              <cg-simple-button
+                buttonLabel="Send urgent note"
+                buttonStyle="tertiary"
+                (onClick)="addUrgentNote(selected)"
+              />
+            </form>
+          </ng-template>
+        </section>
+
+        <section class="detail__section">
+          <header class="detail__section-header">
+            <h3>Notes</h3>
+            <p>Keep everyone aligned with running notes.</p>
+          </header>
+          <ul class="notes" *ngIf="notesFor(selected) as notes">
+            <li *ngFor="let note of notes">
+              <span class="notes__time">{{
+                note.createdAt | date: "shortTime"
+              }}</span>
+              <span class="notes__body">{{ note.body }}</span>
+            </li>
+            <li *ngIf="!notes.length" class="notes__empty">No notes yet.</li>
+          </ul>
+          <form class="notes__form">
             <textarea
-              name="urgentDraft"
-              [(ngModel)]="urgentNoteDraft"
+              name="noteDraft"
+              [(ngModel)]="noteDraft"
               rows="3"
-              placeholder="Alert the presenter to an urgent change..."
+              placeholder="Add a note for this timer..."
             ></textarea>
-            <button type="submit" class="btn btn--danger">
-              Send urgent note
-            </button>
+            <cg-simple-button
+              buttonLabel="Add note"
+              buttonStyle="tertiary"
+              (onClick)="addNote(selected)"
+            />
           </form>
-        </ng-template>
-      </section>
-    </aside>
+        </section>
+      </aside>
+    </cg-panel>
   </div>
 </section>

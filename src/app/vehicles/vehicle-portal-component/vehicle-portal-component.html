@@ -10,24 +10,24 @@
         </div>
         <div class="page-header__controls">
           <div class="stats" *ngIf="vehicleDataService.isAdmin$ | async">
-            <div class="stat">
+            <cg-panel class="stat" borderRadius="less">
               <span class="stat__label">Active</span>
               <span class="stat__value">{{ activeVehicles() }}</span>
-            </div>
-            <div class="stat">
+            </cg-panel>
+            <cg-panel class="stat" borderRadius="less">
               <span class="stat__label">Unavailable</span>
               <span class="stat__value">{{ unavailableVehicles() }}</span>
-            </div>
-            <div class="stat">
+            </cg-panel>
+            <cg-panel class="stat" borderRadius="less">
               <span class="stat__label">Archived</span>
               <span class="stat__value">{{ archivedVehicles() }}</span>
-            </div>
+            </cg-panel>
           </div>
         </div>
       </header>
 
       <div class="portal-grid">
-        <section class="panel vehicle-list">
+        <cg-panel>
           <header class="panel__header">
             <h2>Vehicles</h2>
             <div class="panel__header-action-group">
@@ -148,12 +148,9 @@
               </tbody>
             </table>
           </div>
-        </section>
+        </cg-panel>
 
-        <section
-          class="panel vehicle-details"
-          *ngIf="selectedVehicle(); else noSelection"
-        >
+        <cg-panel *ngIf="selectedVehicle(); else noSelection">
           <header class="panel__header">
             <div>
               <h2>{{ selectedVehicle()?.name }}</h2>
@@ -162,38 +159,31 @@
                 {{ selectedVehicle()?.location }}
               </p>
             </div>
-            <div class="status-actions">
-              <button
-                type="button"
-                (click)="markVehicleStatus('active')"
+            <cg-dropdown-menu
+              menuLabel="Vehicle actions"
+              iconPath="more-vertical.svg"
+              iconOnly
+            >
+              <cg-dropdown-menu-item
+                (onClick)="markVehicleStatus('active')"
                 [disabled]="selectedVehicle()?.status === 'active'"
+                >Mark active</cg-dropdown-menu-item
               >
-                Mark active
-              </button>
-              <button
-                type="button"
-                (click)="markVehicleStatus('unavailable')"
+              <cg-dropdown-menu-item
+                (onClick)="markVehicleStatus('unavailable')"
                 [disabled]="selectedVehicle()?.status === 'unavailable'"
+                >Mark unavailable</cg-dropdown-menu-item
               >
-                Mark unavailable
-              </button>
-              <button
-                type="button"
-                (click)="markVehicleStatus('archived')"
+              <cg-dropdown-menu-item
+                (onClick)="markVehicleStatus('archived')"
                 [disabled]="selectedVehicle()?.status === 'archived'"
+                >Archive vehicle</cg-dropdown-menu-item
               >
-                Archive
-              </button>
-              <button
-                type="button"
-                class="status-actions__export"
-                (click)="exportSelectedVehicle()"
+              <cg-dropdown-menu-item (onClick)="exportSelectedVehicle()"
+                >Export CSV</cg-dropdown-menu-item
               >
-                Export CSV
-              </button>
-            </div>
+            </cg-dropdown-menu>
           </header>
-
           <form
             class="panel__form"
             [formGroup]="vehicleDetailsForm"
@@ -276,7 +266,6 @@
             </div>
             <button type="submit" class="primary">Save changes</button>
           </form>
-
           <section class="maintenance">
             <header class="maintenance__header">
               <div>
@@ -459,7 +448,7 @@
               </table>
             </div>
           </section>
-        </section>
+        </cg-panel>
 
         <ng-template #noSelection>
           <section class="panel vehicle-details empty-state">

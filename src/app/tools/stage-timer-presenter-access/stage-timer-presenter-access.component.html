@@ -5,7 +5,7 @@
       <p>Join an active stage timer by entering the unique presenter code.</p>
     </header>
 
-    <form class="presenter-access__form" (ngSubmit)="submit($event)">
+    <form class="presenter-access__form">
       <label>
         <span>Timer code</span>
         <input
@@ -18,9 +18,15 @@
           autocapitalize="characters"
         />
       </label>
-      <button type="submit" class="btn btn--primary">Open presenter view</button>
+      <cg-simple-button
+        buttonLabel="Open presenter view"
+        buttonStyle="primary"
+        (onClick)="submit()"
+      />
     </form>
-    <p class="presenter-access__error" *ngIf="errorMessage">{{ errorMessage }}</p>
+    <p class="presenter-access__error" *ngIf="errorMessage">
+      {{ errorMessage }}
+    </p>
 
     <section class="presenter-access__active" *ngIf="timers$ | async as timers">
       <header>
@@ -34,9 +40,12 @@
             <span>{{ timer.status | titlecase }}</span>
           </div>
           <div class="timer-code">Code · {{ timer.code }}</div>
-          <button type="button" class="btn" (click)="openTimer(timer)">
-            Open presenter
-          </button>
+
+          <cg-simple-button
+            buttonLabel="Open presenter"
+            buttonStyle="tertiary"
+            (onClick)="openTimer(timer)"
+          />
         </li>
         <li *ngIf="!timers.length" class="presenter-access__empty">
           No active timers. <a (click)="goToDashboard()">Create one now.</a>

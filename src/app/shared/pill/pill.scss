@@ -1,0 +1,65 @@
+@use "../../../style/colors.scss" as *;
+
+.pill {
+  padding: 0.25rem 0.75rem;
+  border-radius: $major-border-radius;
+  font-size: $small-text;
+  font-weight: 600;
+  text-transform: uppercase;
+
+  &.hero {
+    color: $hero-text-color;
+  }
+
+  &.default {
+    &.hero {
+      border: $minor-border;
+      background-color: rgba($main-light-color, 0.1);
+    }
+    &:not(.hero) {
+      border: $minor-border;
+      background-color: rgba($main-text-color, 0.04);
+      color: rgba($main-text-color, 0.75);
+    }
+  }
+
+  &.warning {
+    &.hero {
+      background-color: rgba($warning-color, 0.5);
+    }
+    &:not(.hero) {
+      background-color: rgba($warning-color, 0.2);
+      color: $warning-text-light-color;
+    }
+  }
+
+  &.success {
+    &.hero {
+      background-color: rgba($success-color, 0.6);
+    }
+    &:not(.hero) {
+      background-color: rgba($success-color, 0.2);
+      color: $success-text-light-color;
+    }
+  }
+
+  &.error {
+    &.hero {
+      background-color: rgba($error-color, 0.6);
+    }
+    &:not(.hero) {
+      background-color: rgba($error-color, 0.2);
+      color: $error-text-light-color;
+    }
+  }
+
+  &.accent {
+    &.hero {
+      background-color: rgba($accent-color, 0.6);
+    }
+    &:not(.hero) {
+      background-color: rgba($accent-color, 0.2);
+      color: $accent-color;
+    }
+  }
+}

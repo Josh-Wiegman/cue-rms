@@ -1,0 +1,69 @@
+@use "../../../style/colors.scss" as *;
+
+.simple-button {
+  border-radius: $minor-border-radius;
+  font-weight: 600;
+  border: none;
+
+  p {
+    padding: 0.5rem 0.95rem;
+    border-radius: $minor-border-radius;
+  }
+
+  &.primary {
+    background: $hero-gradient-minor;
+    color: $hero-text-color;
+  }
+
+  &.secondary {
+    box-shadow: inset 0 0 0 2px $main-border-color;
+    background: none;
+  }
+
+  &.tertiary {
+    background-color: rgba($main-text-color, 0.06);
+  }
+
+  &.ghost {
+    background: transparent;
+    color: $accent-color;
+  }
+
+  &.destructive {
+    background-color: rgba($error-color, 0.12);
+    color: $error-color;
+    box-shadow: inset 0 0 0 2px rgba($error-color, 0.38);
+  }
+}
+
+.simple-button:disabled {
+  opacity: 0.8;
+}
+
+.simple-button:enabled:hover {
+  transition: $medium-transition;
+  cursor: pointer;
+
+  &.primary > p {
+    background-color: rgba($hero-dark-color, 0.3);
+  }
+
+  &.secondary {
+    box-shadow: inset 0 0 0 2px rgba($accent-color, 0.6);
+    color: $accent-color;
+    background-color: rgba($accent-color, 0.1);
+  }
+
+  &.tertiary {
+    background-color: rgba($main-text-color, 0.2);
+  }
+
+  &.ghost {
+    background-color: rgba($accent-color, 0.12);
+  }
+
+  &.destructive {
+    background-color: rgba($error-color, 0.22);
+    box-shadow: inset 0 0 0 2px rgba($error-color, 0.38);
+  }
+}

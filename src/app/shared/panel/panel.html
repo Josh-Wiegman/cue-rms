@@ -1,0 +1,10 @@
+<div
+  class="panel"
+  style="border-radius: {{ this.borderRadii[borderRadius] }};"
+  [class]="this.hero ? 'hero' : 'main'"
+  [class.selected]="selected"
+  [class.hoverable]="hoverable"
+  [class.sticky]="sticky"
+>
+  <ng-content />
+</div>

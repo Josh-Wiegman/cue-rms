@@ -1,17 +1,17 @@
-@use '../../../style/colors.scss' as *;
-
-:host {
-  display: block;
-  height: 100%;
-}
+@use "../../../style/colors.scss" as *;
 
 .presenter-access {
   display: flex;
   justify-content: center;
   align-items: flex-start;
   padding: 3rem 1.5rem;
-  background: radial-gradient(circle at top left, rgba($accent-color, 0.12), transparent);
+  background: radial-gradient(
+    circle at top left,
+    rgba($accent-color, 0.12),
+    transparent
+  );
   min-height: 100%;
+  border-radius: $major-border-radius;
 }
 
 .presenter-access__card {
@@ -135,10 +135,6 @@
   background-color: rgba($main-light-color, 0.9);
 }
 
-.presenter-access__active li button {
-  justify-self: end;
-}
-
 .timer-title {
   display: flex;
   flex-direction: column;
@@ -176,9 +172,5 @@
 
   .presenter-access__active li {
     grid-template-columns: 1fr;
-  }
-
-  .presenter-access__active li button {
-    justify-self: stretch;
   }
 }

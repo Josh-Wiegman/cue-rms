@@ -18,6 +18,9 @@ import {
 import { PartyHireService } from './partyhire.service';
 import { OrgBrandingService } from '../../shared/org-branding/org-branding.service';
 import { AuthService } from '../../auth/auth.service';
+import { Pill, PillState } from '../../shared/pill/pill';
+import { Panel } from '../../shared/panel/panel';
+import { SimpleButton } from '../../shared/simple-button/simple-button';
 
 @Component({
   selector: 'partyhire-component',
@@ -29,6 +32,9 @@ import { AuthService } from '../../auth/auth.service';
     ReactiveFormsModule,
     CurrencyPipe,
     DatePipe,
+    Pill,
+    Panel,
+    SimpleButton,
   ],
   templateUrl: './partyhire.component.html',
   styleUrl: './partyhire.component.scss',
@@ -308,8 +314,16 @@ export class PartyHireComponent implements OnInit {
     return value?.stockId ?? index;
   }
 
-  protected statusClass(status: PartyHireOrderStatus): string {
-    return status.toLowerCase().replaceAll(' ', '-');
+  private states = {
+    Draft: 'default',
+    Prepped: 'accent',
+    Collected: 'warning',
+    Returned: 'success',
+    Missing: 'error',
+    'Partial Return': 'warning',
+  };
+  protected mapStatusToPillState(status: PartyHireOrderStatus): PillState {
+    return this.states[status] as PillState;
   }
 
   protected toggleArchived(): void {

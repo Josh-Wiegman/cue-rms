@@ -43,18 +43,18 @@
     <div class="nav__actions--user">
       {{ user.displayName }} · L{{ user.permissionLevel }}
     </div>
-    <div class="nav__actions--more">
-      <img
-        src="more-vertical.svg"
-        alt="Account options"
-        title="Account options"
-      />
-      <ul class="nav__actions--sub-nav">
-        <li>
-          <a routerLink="/settings" routerLinkActive="active">Settings</a>
-        </li>
-        <li><button (click)="logout()">Sign out</button></li>
-      </ul>
-    </div>
+    <cg-dropdown-menu
+      menuLabel="Account Options"
+      iconPath="more-vertical.svg"
+      horizontal
+      iconOnly
+    >
+      <cg-dropdown-menu-item routerLink="/settings" routerLinkActive="active"
+        >Settings</cg-dropdown-menu-item
+      >
+      <cg-dropdown-menu-item (onClick)="logout()"
+        >Sign out</cg-dropdown-menu-item
+      >
+    </cg-dropdown-menu>
   </div>
 </nav>

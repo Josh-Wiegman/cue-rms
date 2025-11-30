@@ -5,6 +5,8 @@ import { AsyncPipe, NgIf } from '@angular/common';
 import { AuthService } from '../../auth/auth.service';
 import { dbFunctionsService } from '../supabase-service/db_functions.service';
 import { OrgBrandingService } from '../org-branding/org-branding.service';
+import { DropdownMenu } from '../dropdown-menu/dropdown-menu';
+import { DropdownMenuItem } from '../dropdown-menu/dropdown-menu-item/dropdown-menu-item';
 
 type NavigationLink = {
   label: string;
@@ -22,7 +24,14 @@ type NavigationItem = NavigationLink | NavigationGroup;
 
 @Component({
   selector: 'main-navigation-component',
-  imports: [RouterLink, RouterLinkActive, NgIf, AsyncPipe],
+  imports: [
+    RouterLink,
+    RouterLinkActive,
+    NgIf,
+    AsyncPipe,
+    DropdownMenu,
+    DropdownMenuItem,
+  ],
   templateUrl: './main-navigation-component.html',
   styleUrl: './main-navigation-component.scss',
 })
