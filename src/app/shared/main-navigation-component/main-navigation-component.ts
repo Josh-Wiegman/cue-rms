@@ -126,6 +126,10 @@ export class MainNavigationComponent implements OnInit {
           label: 'Stage Timer',
           path: '/tools/stage-timer',
         },
+        {
+          label: 'Crew Planner',
+          path: '/crew-planner',
+        },
       ],
     };
   }
