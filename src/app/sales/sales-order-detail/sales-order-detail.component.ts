@@ -64,6 +64,7 @@ export class SalesOrderDetailComponent implements OnInit, OnDestroy {
     customerReference: '',
     totalDiscount: 0,
   };
+  draggedItem: { groupId: string; itemId: string } | null = null;
 
   private readonly subscriptions: Subscription[] = [];
 
@@ -190,6 +191,94 @@ export class SalesOrderDetailComponent implements OnInit, OnDestroy {
     this.applyToGroup(this.order.groups, parentId, (group) => {
       group.groups = [...group.groups, newGroup];
     });
+  }
+
+  removeItem(groupId: string, itemId: string) {
+    if (!this.order) return;
+    this.applyToGroup(this.order.groups, groupId, (group) => {
+      group.items = group.items.filter((item) => item.id !== itemId);
+    });
+  }
+
+  removeGroup(groupId: string) {
+    if (!this.order) return;
+    this.order.groups = this.pruneGroup(this.order.groups, groupId);
+  }
+
+  startDrag(groupId: string, itemId: string) {
+    this.draggedItem = { groupId, itemId };
+  }
+
+  endDrag() {
+    this.draggedItem = null;
+  }
+
+  onDragOver(event: DragEvent) {
+    event.preventDefault();
+  }
+
+  onDrop(event: DragEvent, targetGroupId: string, targetIndex?: number) {
+    event.preventDefault();
+    event.stopPropagation();
+
+    if (!this.order || !this.draggedItem) return;
+
+    const { groupId: sourceGroupId, itemId } = this.draggedItem;
+    let removedIndex: number | null = null;
+    let movingItem: StockItem | undefined;
+
+    this.applyToGroup(this.order.groups, sourceGroupId, (group) => {
+      const idx = group.items.findIndex((item) => item.id === itemId);
+      if (idx !== -1) {
+        removedIndex = idx;
+        [movingItem] = group.items.splice(idx, 1);
+      }
+    });
+
+    if (!movingItem) {
+      this.draggedItem = null;
+      return;
+    }
+
+    let inserted = false;
+
+    this.applyToGroup(this.order.groups, targetGroupId, (group) => {
+      let insertAt =
+        typeof targetIndex === 'number' ? targetIndex : group.items.length;
+
+      if (
+        sourceGroupId === targetGroupId &&
+        removedIndex !== null &&
+        removedIndex < insertAt
+      ) {
+        insertAt -= 1;
+      }
+
+      insertAt = Math.max(0, Math.min(insertAt, group.items.length));
+      group.items.splice(insertAt, 0, movingItem!);
+      inserted = true;
+    });
+
+    if (!inserted) {
+      this.applyToGroup(this.order.groups, sourceGroupId, (group) => {
+        group.items.splice(removedIndex ?? group.items.length, 0, movingItem!);
+      });
+    }
+
+    this.draggedItem = null;
+  }
+
+  isDraggingItem(itemId: string): boolean {
+    return this.draggedItem?.itemId === itemId;
+  }
+
+  private pruneGroup(groups: StockGroup[], targetId: string): StockGroup[] {
+    return groups
+      .filter((group) => group.id !== targetId)
+      .map((group) => ({
+        ...group,
+        groups: this.pruneGroup(group.groups, targetId),
+      }));
   }
 
   private applyToGroup(
