@@ -4,8 +4,12 @@
   border-radius: $major-border-radius;
   @include box-shadow;
   border: $minor-border;
-  padding: 1.25rem 1.5rem;
   transition: $quick-transition;
+  overflow: hidden;
+
+  &:not(.noPadding) {
+    padding: 1.25rem 1.5rem;
+  }
 
   &.sticky {
     position: sticky;

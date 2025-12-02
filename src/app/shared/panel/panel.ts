@@ -27,4 +27,7 @@ export class Panel {
 
   @Input({ transform: booleanAttribute })
   sticky?: boolean;
+
+  @Input({ transform: booleanAttribute })
+  noPadding?: boolean;
 }
