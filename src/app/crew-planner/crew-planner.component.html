@@ -1,0 +1,112 @@
+<ui-shell>
+  <content class="crew-planner">
+    <header class="crew-planner__header">
+      <div>
+        <p class="eyebrow">Crew planner</p>
+        <h1>Week of {{ weekDays()[0].date | date: 'MMM d' }} -
+          {{ weekDays()[6].date | date: 'MMM d' }}</h1>
+        <p>
+          Allocate crew, vehicles, and timings for each booking. Warnings show overlapping crew
+          or vehicles with expiring warrants.
+        </p>
+      </div>
+      <div class="crew-planner__actions">
+        <div class="button-group">
+          <button type="button" (click)="adjustWeek(-1)">Previous week</button>
+          <button type="button" class="primary" (click)="adjustWeek(1)">Next week</button>
+        </div>
+        <div class="segmented">
+          <button type="button"
+                  [class.active]="viewMode() === 'byTask'"
+                  (click)="toggleView('byTask')">
+            Pack-in view
+          </button>
+          <button type="button"
+                  [class.active]="viewMode() === 'byTime'"
+                  (click)="toggleView('byTime')">
+            Chronological
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <section class="crew-planner__legend">
+      <div>
+        <span class="badge badge--info"></span>
+        <span>Warnings highlight crew overlaps and WOF expiries but do not block scheduling.</span>
+      </div>
+      <div class="legend__hint">
+        <span class="dot dot--packin"></span> Pack in
+        <span class="dot dot--show"></span> Show
+        <span class="dot dot--packout"></span> Pack out
+      </div>
+    </section>
+
+    <div class="week-grid">
+      <section class="day" *ngFor="let day of weekDays()">
+        <header class="day__header">
+          <div>
+            <p class="eyebrow">{{ day.date | date: 'EEEE' }}</p>
+            <h2>{{ day.date | date: 'MMM d' }}</h2>
+          </div>
+          <span class="day__count">{{ eventsForDay(day.date).length }} events</span>
+        </header>
+
+        <div class="day__empty" *ngIf="eventsForDay(day.date).length === 0">
+          <p>No bookings for this day.</p>
+        </div>
+
+        <article class="event" *ngFor="let event of eventsForDay(day.date)">
+          <header class="event__header">
+            <div>
+              <p class="eyebrow">{{ event.salesOrder }} · {{ event.location }}</p>
+              <h3>{{ event.title }}</h3>
+              <div class="event__tags">
+                <span class="badge" [attr.data-type]="event.type">{{ event.type }}</span>
+                <span class="badge badge--outline" *ngFor="let vehicleId of event.vehicles">
+                  {{ getVehicle(vehicleId)?.name }} · {{ getVehicle(vehicleId)?.licensePlate }}
+                </span>
+              </div>
+            </div>
+            <div class="event__notes" *ngIf="event.notes">
+              <p>{{ event.notes }}</p>
+            </div>
+          </header>
+
+          <ul class="event__timeline">
+            <li class="timeline__row" *ngFor="let slot of slotOrder(event.slots)"
+                [attr.data-slot]="slot.key">
+              <div class="timeline__time">
+                <span class="timeline__label">{{ slot.label }}</span>
+                <span class="timeline__value">{{ formattedTime(event.date, slot.start) }}</span>
+              </div>
+              <div class="timeline__crew">
+                <p class="crew-list">
+                  <span *ngFor="let assignment of slot.crew; let last = last">
+                    {{ crewName(assignment.crewId) }}
+                    <ng-container *ngIf="assignment.responsibility">
+                      <span class="muted">({{ assignment.responsibility }})</span>
+                    </ng-container>
+                    <span *ngIf="!last"> • </span>
+                  </span>
+                </p>
+              </div>
+            </li>
+          </ul>
+
+          <div class="event__warnings" *ngIf="warningForEvent(event.id).crewConflicts.length || warningForEvent(event.id).vehicleAlerts.length">
+            <p class="eyebrow">Alerts</p>
+            <ul>
+              <li *ngFor="let warning of warningForEvent(event.id).crewConflicts">
+                <span class="alert alert--crew">Crew overlap · {{ warning }}</span>
+              </li>
+              <li *ngFor="let warning of warningForEvent(event.id).vehicleAlerts">
+                <span class="alert alert--vehicle">Vehicle · {{ warning }}</span>
+              </li>
+            </ul>
+          </div>
+        </article>
+      </section>
+    </div>
+  </content>
+</ui-shell>
