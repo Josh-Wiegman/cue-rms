@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { CommonModule, CurrencyPipe, DatePipe } from '@angular/common';
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
@@ -19,7 +20,13 @@ interface DraftItem extends PurchaseOrderItem {
 @Component({
   selector: 'app-purchase-orders',
   standalone: true,
-  imports: [UiShellComponent, CommonModule, FormsModule, DatePipe, CurrencyPipe],
+  imports: [
+    UiShellComponent,
+    CommonModule,
+    FormsModule,
+    DatePipe,
+    CurrencyPipe,
+  ],
   templateUrl: './purchase-orders.component.html',
   styleUrl: './purchase-orders.component.scss',
 })
@@ -49,7 +56,7 @@ export class PurchaseOrdersComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.subscriptions.push(
-      this.purchaseOrdersService.orders$.subscribe((orders) => {
+      this.purchaseOrdersService.orders$.subscribe((order) => {
         this.activeOrders = this.purchaseOrdersService.activeOrders;
         this.archivedOrders = this.purchaseOrdersService.archivedOrders;
       }),
@@ -65,7 +72,9 @@ export class PurchaseOrdersComponent implements OnInit, OnDestroy {
   }
 
   get branches(): string[] {
-    return this.purchaseOrdersService.getBranches().map((branch) => branch.name);
+    return this.purchaseOrdersService
+      .getBranches()
+      .map((branch) => branch.name);
   }
 
   openCreateModal() {
@@ -110,7 +119,10 @@ export class PurchaseOrdersComponent implements OnInit, OnDestroy {
       }));
   }
 
-  applySuggestion(item: DraftItem, suggestion: { description: string; sku: string; price: number }) {
+  applySuggestion(
+    item: DraftItem,
+    suggestion: { description: string; sku: string; price: number },
+  ) {
     item.description = suggestion.description;
     item.sku = suggestion.sku;
     item.price = suggestion.price;
@@ -174,7 +186,8 @@ export class PurchaseOrdersComponent implements OnInit, OnDestroy {
     const today = createdOn ?? new Date().toISOString().slice(0, 10);
     const defaultArrival = new Date(today);
     defaultArrival.setDate(defaultArrival.getDate() + 7);
-    const profile = this.purchaseOrdersService.findBranchProfile('Christchurch');
+    const profile =
+      this.purchaseOrdersService.findBranchProfile('Christchurch');
 
     const draft: PurchaseOrder & { items: DraftItem[] } = {
       id: '',
@@ -201,5 +214,13 @@ export class PurchaseOrdersComponent implements OnInit, OnDestroy {
     };
 
     return draft;
+  }
+
+  get newOrderTotal(): number {
+    return this.newOrder.items.reduce((acc, item) => {
+      const qty = Number(item.quantity) || 0;
+      const price = Number(item.price) || 0;
+      return acc + qty * price;
+    }, 0);
   }
 }

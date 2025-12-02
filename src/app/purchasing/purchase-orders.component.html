@@ -44,10 +44,13 @@
                 <small>{{ order.deliveryAddress }}</small>
               </div>
             </td>
-            <td>{{ order.createdOn | date: 'dd MMM yyyy' }}</td>
-            <td>{{ order.expectedArrival | date: 'dd MMM yyyy' }}</td>
+            <td>{{ order.createdOn | date: "dd MMM yyyy" }}</td>
+            <td>{{ order.expectedArrival | date: "dd MMM yyyy" }}</td>
             <td>
-              <select [ngModel]="order.status" (ngModelChange)="changeStatus(order, $event)">
+              <select
+                [ngModel]="order.status"
+                (ngModelChange)="changeStatus(order, $event)"
+              >
                 <option value="Ordered">Ordered</option>
                 <option value="Shipping">Shipping</option>
                 <option value="Shipped">Shipped</option>
@@ -58,19 +61,38 @@
             <td>
               <div class="stacked">
                 <span *ngIf="order.trackingNumber; else noTracking">
-                  {{ order.carrier || 'Carrier TBC' }} · {{ order.trackingNumber }}
+                  {{ order.carrier || "Carrier TBC" }} ·
+                  {{ order.trackingNumber }}
                 </span>
                 <ng-template #noTracking>
                   <small>Tracking not provided</small>
                 </ng-template>
-                <small>Arrival: {{ order.expectedArrival | date: 'dd MMM' }}</small>
+                <small
+                  >Arrival: {{ order.expectedArrival | date: "dd MMM" }}</small
+                >
               </div>
             </td>
-            <td>{{ totalFor(order) | currency:'NZD':'symbol':'1.0-0' }}</td>
+            <td>
+              {{ totalFor(order) | currency: "NZD" : "symbol" : "1.0-0" }}
+            </td>
             <td class="export-actions">
-              <button type="button" class="ghost" (click)="export(order, 'rfq')">RFQ</button>
-              <button type="button" class="ghost" (click)="export(order, 'po')">PO</button>
-              <button type="button" class="ghost" (click)="export(order, 'delivery')">Docket</button>
+              <button
+                type="button"
+                class="ghost"
+                (click)="export(order, 'rfq')"
+              >
+                RFQ
+              </button>
+              <button type="button" class="ghost" (click)="export(order, 'po')">
+                PO
+              </button>
+              <button
+                type="button"
+                class="ghost"
+                (click)="export(order, 'delivery')"
+              >
+                Docket
+              </button>
             </td>
           </tr>
         </tbody>
@@ -108,12 +130,21 @@
           <div class="grid two">
             <label>
               <span>Vendor</span>
-              <input type="text" [(ngModel)]="newOrder.vendor" placeholder="Supplier name" />
+              <input
+                type="text"
+                [(ngModel)]="newOrder.vendor"
+                placeholder="Supplier name"
+              />
             </label>
             <label>
               <span>Recipient branch</span>
-              <select [(ngModel)]="newOrder.recipientBranch" (change)="updateBranch(newOrder.recipientBranch)">
-                <option *ngFor="let branch of branches" [value]="branch">{{ branch }}</option>
+              <select
+                [(ngModel)]="newOrder.recipientBranch"
+                (change)="updateBranch(newOrder.recipientBranch)"
+              >
+                <option *ngFor="let branch of branches" [value]="branch">
+                  {{ branch }}
+                </option>
               </select>
             </label>
           </div>
@@ -136,13 +167,19 @@
             </label>
             <label>
               <span>Tracking number</span>
-              <input type="text" [(ngModel)]="newOrder.trackingNumber" placeholder="Optional" />
+              <input
+                type="text"
+                [(ngModel)]="newOrder.trackingNumber"
+                placeholder="Optional"
+              />
             </label>
             <label>
               <span>Carrier</span>
               <select [(ngModel)]="newOrder.carrier">
                 <option [ngValue]="undefined">Select carrier</option>
-                <option *ngFor="let carrier of carriers" [ngValue]="carrier">{{ carrier }}</option>
+                <option *ngFor="let carrier of carriers" [ngValue]="carrier">
+                  {{ carrier }}
+                </option>
               </select>
             </label>
           </div>
@@ -166,7 +203,10 @@
 
           <h3>Items</h3>
           <div class="line-items">
-            <div class="line-item" *ngFor="let item of newOrder.items; let i = index">
+            <div
+              class="line-item"
+              *ngFor="let item of newOrder.items; let i = index"
+            >
               <div class="line-item__main">
                 <input
                   type="text"
@@ -180,29 +220,59 @@
                     *ngFor="let suggestion of item.suggestions"
                     (click)="applySuggestion(item, suggestion)"
                   >
-                    {{ suggestion.description }} ({{ suggestion.sku }}) · {{ suggestion.price | currency:'NZD':'symbol':'1.0-0' }}
+                    {{ suggestion.description }} ({{ suggestion.sku }}) ·
+                    {{
+                      suggestion.price | currency: "NZD" : "symbol" : "1.0-0"
+                    }}
                   </button>
-                  <button type="button" class="ghost" (click)="clearSuggestions(item)">
+                  <button
+                    type="button"
+                    class="ghost"
+                    (click)="clearSuggestions(item)"
+                  >
                     Hide suggestions
                   </button>
                 </div>
               </div>
               <input type="number" min="1" [(ngModel)]="item.quantity" />
-              <input type="number" min="0" step="0.01" [(ngModel)]="item.price" />
-              <span class="line-item__total">{{ item.quantity * item.price | currency:'NZD':'symbol':'1.0-0' }}</span>
-              <button type="button" class="ghost" (click)="removeLineItem(i)" aria-label="Remove line">✕</button>
+              <input
+                type="number"
+                min="0"
+                step="0.01"
+                [(ngModel)]="item.price"
+              />
+              <span class="line-item__total">{{
+                item.quantity * item.price
+                  | currency: "NZD" : "symbol" : "1.0-0"
+              }}</span>
+              <button
+                type="button"
+                class="ghost"
+                (click)="removeLineItem(i)"
+                aria-label="Remove line"
+              >
+                ✕
+              </button>
             </div>
           </div>
-          <button class="secondary" type="button" (click)="addLineItem()">+ Add another item</button>
+          <button class="secondary" type="button" (click)="addLineItem()">
+            + Add another item
+          </button>
         </div>
 
         <footer class="modal__actions">
           <div class="summary">
             <p>PO total</p>
-            <strong>{{ newOrder.items.reduce((sum, item) => sum + item.quantity * item.price, 0) | currency:'NZD':'symbol':'1.0-0' }}</strong>
+            <strong>{{
+              newOrderTotal | currency: "NZD" : "symbol" : "1.0-0"
+            }}</strong>
           </div>
           <div class="modal__actions-buttons">
-            <button type="button" class="secondary" (click)="closeCreateModal()">
+            <button
+              type="button"
+              class="secondary"
+              (click)="closeCreateModal()"
+            >
               Cancel
             </button>
             <button type="button" class="primary" (click)="createOrder()">
