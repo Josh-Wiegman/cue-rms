@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Injectable } from '@angular/core';
 import { BehaviorSubject } from 'rxjs';
 import { InventoryService } from '../inventory/inventory.service';
@@ -293,17 +294,22 @@ export class PurchaseOrdersService {
     doc.text(titleMap[type], 14, cursorY);
     doc.setFontSize(11);
     doc.text(`PO Number: ${order.poNumber}`, 14, (cursorY += 8));
-    doc.text(
-      `Company: ${branding?.name ?? 'Company Name'}`,
-      200,
-      cursorY,
-      { align: 'right' },
-    );
+    doc.text(`Company: ${branding?.name ?? 'Company Name'}`, 200, cursorY, {
+      align: 'right',
+    });
     doc.text(`Vendor: ${order.vendor}`, 14, (cursorY += 8));
     doc.text(`Status: ${order.status}`, 14, (cursorY += 8));
-    doc.text(`Tracking: ${order.carrier ?? 'TBC'} · ${order.trackingNumber ?? 'None'}`, 14, (cursorY += 8));
+    doc.text(
+      `Tracking: ${order.carrier ?? 'TBC'} · ${order.trackingNumber ?? 'None'}`,
+      14,
+      (cursorY += 8),
+    );
     doc.text(`Expected arrival: ${order.expectedArrival}`, 14, (cursorY += 8));
-    doc.text(`Created: ${order.createdOn} · Last updated: ${order.updatedOn}`, 14, (cursorY += 8));
+    doc.text(
+      `Created: ${order.createdOn} · Last updated: ${order.updatedOn}`,
+      14,
+      (cursorY += 8),
+    );
     doc.text('Ship to:', 14, (cursorY += 12));
     const addressLines = doc.splitTextToSize(
       `${order.recipientBranch} — ${order.deliveryContact}\n${order.deliveryAddress}`,
@@ -389,7 +395,9 @@ export class PurchaseOrdersService {
     return this.jsPdfLoader;
   }
 
-  private async getLogoDataUrl(logoUrl?: string | null): Promise<string | null> {
+  private async getLogoDataUrl(
+    logoUrl?: string | null,
+  ): Promise<string | null> {
     if (!logoUrl) return null;
 
     try {

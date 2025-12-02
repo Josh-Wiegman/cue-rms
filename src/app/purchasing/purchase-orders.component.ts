@@ -22,7 +22,13 @@ interface DraftItem extends PurchaseOrderItem {
 @Component({
   selector: 'app-purchase-orders',
   standalone: true,
-  imports: [UiShellComponent, CommonModule, FormsModule, DatePipe, CurrencyPipe],
+  imports: [
+    UiShellComponent,
+    CommonModule,
+    FormsModule,
+    DatePipe,
+    CurrencyPipe,
+  ],
   templateUrl: './purchase-orders.component.html',
   styleUrl: './purchase-orders.component.scss',
 })
@@ -33,7 +39,7 @@ export class PurchaseOrdersComponent implements OnInit, OnDestroy {
 
   detailModalOpen = false;
   selectedOrder?: PurchaseOrder;
-  editableOrder?: (PurchaseOrder & { items: DraftItem[] });
+  editableOrder?: PurchaseOrder & { items: DraftItem[] };
   orgBranding: OrganisationBranding | null = null;
 
   creationModalOpen = false;
@@ -49,7 +55,8 @@ export class PurchaseOrdersComponent implements OnInit, OnDestroy {
     'Posthaste',
   ];
 
-  newOrder = this.blankOrder();
+  // 🔧 FIX: don't call blankOrder() here (service DI not ready yet)
+  newOrder!: PurchaseOrder & { items: DraftItem[] };
 
   private readonly subscriptions: Subscription[] = [];
 
@@ -71,6 +78,9 @@ export class PurchaseOrdersComponent implements OnInit, OnDestroy {
       }),
     );
 
+    // 🔧 FIX: initialise draft order here where DI is safe
+    this.newOrder = this.blankOrder();
+
     this.loadBranding();
   }
 
@@ -83,7 +93,9 @@ export class PurchaseOrdersComponent implements OnInit, OnDestroy {
   }
 
   get branches(): string[] {
-    return this.purchaseOrdersService.getBranches().map((branch) => branch.name);
+    return this.purchaseOrdersService
+      .getBranches()
+      .map((branch) => branch.name);
   }
 
   openCreateModal() {
@@ -164,7 +176,10 @@ export class PurchaseOrdersComponent implements OnInit, OnDestroy {
       }));
   }
 
-  applySuggestion(item: DraftItem, suggestion: { description: string; sku: string; price: number }) {
+  applySuggestion(
+    item: DraftItem,
+    suggestion: { description: string; sku: string; price: number },
+  ) {
     item.description = suggestion.description;
     item.sku = suggestion.sku;
     item.price = suggestion.price;
@@ -257,7 +272,8 @@ export class PurchaseOrdersComponent implements OnInit, OnDestroy {
     const today = createdOn ?? new Date().toISOString().slice(0, 10);
     const defaultArrival = new Date(today);
     defaultArrival.setDate(defaultArrival.getDate() + 7);
-    const profile = this.purchaseOrdersService.findBranchProfile('Christchurch');
+    const profile =
+      this.purchaseOrdersService.findBranchProfile('Christchurch');
 
     const draft: PurchaseOrder & { items: DraftItem[] } = {
       id: '',
@@ -287,7 +303,9 @@ export class PurchaseOrdersComponent implements OnInit, OnDestroy {
     return draft;
   }
 
-  private cloneForEdit(order: PurchaseOrder): PurchaseOrder & { items: DraftItem[] } {
+  private cloneForEdit(
+    order: PurchaseOrder,
+  ): PurchaseOrder & { items: DraftItem[] } {
     return {
       ...order,
       items: order.items.map((item) => ({ ...item, suggestions: [] })),
@@ -302,5 +320,24 @@ export class PurchaseOrdersComponent implements OnInit, OnDestroy {
     } catch (err) {
       console.warn('Unable to load branding for purchase orders', err);
     }
+  }
+
+  // 🔧 FIX: template totals use these (no inline reduce)
+  get newOrderTotal(): number {
+    if (!this.newOrder || !this.newOrder.items) return 0;
+    return this.newOrder.items.reduce((acc, item) => {
+      const qty = Number(item.quantity) || 0;
+      const price = Number(item.price) || 0;
+      return acc + qty * price;
+    }, 0);
+  }
+
+  get editableOrderTotal(): number {
+    if (!this.editableOrder || !this.editableOrder.items) return 0;
+    return this.editableOrder.items.reduce((acc, item) => {
+      const qty = Number(item.quantity) || 0;
+      const price = Number(item.price) || 0;
+      return acc + qty * price;
+    }, 0);
   }
 }
