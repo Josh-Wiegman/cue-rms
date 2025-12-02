@@ -28,9 +28,6 @@
             {{ totalIncl | currency: "NZD" : "symbol" : "1.0-0" }}
           </p>
         </div>
-        <button type="button" class="primary" (click)="updateOrder()">
-          Save order
-        </button>
       </div>
     </header>
 
@@ -107,34 +104,16 @@
       <div class="card">
         <div class="card-heading">
           <h3>Financial</h3>
-          <button
-            type="button"
-            class="edit-button"
-            (click)="openEdit('financial')"
-          >
-            Edit
-          </button>
         </div>
         <dl>
           <div>
             <dt>Global discount</dt>
             <dd>
-              <select
-                [ngModel]="current.globalDiscount?.type"
-                (ngModelChange)="
-                  current.globalDiscount = current.globalDiscount || {
-                    type: 'percent',
-                    value: 0,
-                  }
-                "
-              >
-                <option value="percent">% off subtotal</option>
-                <option value="amount">$ off subtotal</option>
-              </select>
               <input
-                type="number"
-                min="0"
-                [(ngModel)]="current.globalDiscount!.value"
+                type="text"
+                placeholder="10% or $10"
+                [ngModel]="formatDiscount(current.globalDiscount)"
+                (ngModelChange)="updateGlobalDiscountInput($event)"
               />
             </dd>
           </div>
@@ -178,6 +157,9 @@
               <button type="button" (click)="addGroup(group.id)">
                 + Subgroup
               </button>
+              <button type="button" class="quiet-button" (click)="removeGroup(group.id)">
+                Delete
+              </button>
               <button
                 type="button"
                 class="quiet-button"
@@ -189,57 +171,78 @@
             </div>
           </div>
 
-          <div class="items" *ngIf="group.items.length">
-            <div class="item" *ngFor="let item of group.items">
-              <div>
-                <p class="item-name">{{ item.name }}</p>
-                <p class="item-meta">{{ item.sku }}</p>
+          <div
+            class="items"
+            (dragover)="onDragOver($event)"
+            (drop)="onDrop($event, group.id)"
+          >
+            <div class="item-grid-header">
+              <span class="center">Move</span>
+              <span>Item</span>
+              <span class="center">Qty</span>
+              <span class="center">Days</span>
+              <span class="center">Discount</span>
+              <span class="right">Price</span>
+              <span class="sr-only">Actions</span>
+            </div>
+            <div
+              class="item"
+              *ngFor="let item of group.items; let i = index"
+              draggable="true"
+              [class.dragging]="isDraggingItem(item.id)"
+              (dragstart)="startDrag(group.id, item.id)"
+              (dragend)="endDrag()"
+              (dragover)="onDragOver($event)"
+              (drop)="onDrop($event, group.id, i)"
+            >
+              <div class="drag-handle" title="Drag to reorder">
+                ☰
               </div>
-              <div class="item-controls">
-                <label>
-                  <span>Qty</span>
-                  <input
-                    type="number"
-                    min="1"
-                    [ngModel]="item.quantity"
-                    (ngModelChange)="updateItemQuantity(item, $event)"
-                  />
-                </label>
-                <label>
-                  <span>Days</span>
-                  <input
-                    type="number"
-                    min="1"
-                    [ngModel]="item.billableDays"
-                    (ngModelChange)="updateItemBillableDays(item, $event)"
-                    [placeholder]="order?.billableDays?.toString()"
-                  />
-                </label>
-              </div>
-              <div class="pricing">
-                <label>
-                  <span>Discount</span>
-                  <select
-                    [ngModel]="item.discount?.type || ''"
-                    (ngModelChange)="setItemDiscountType(item, $event)"
-                  >
-                    <option value="">None</option>
-                    <option value="percent">%</option>
-                    <option value="amount">$</option>
-                  </select>
-                </label>
-                <input
-                  type="number"
-                  min="0"
-                  [ngModel]="item.discount?.value"
-                  (ngModelChange)="updateItemDiscountValue(item, $event)"
-                  [disabled]="!item.discount"
-                  placeholder="0"
-                />
-                <p class="item-total">
-                  {{ itemPrice(item) | currency: "NZD" : "symbol" : "1.0-0" }}
+              <div class="item-title">
+                <p class="item-name">
+                  {{ item.name }}
+                  <span class="item-sku">· {{ item.sku }}</span>
                 </p>
               </div>
+              <div class="item-cell">
+                <input
+                  type="number"
+                  min="1"
+                  [ngModel]="item.quantity"
+                  (ngModelChange)="updateItemQuantity(item, $event)"
+                />
+              </div>
+              <div class="item-cell">
+                <input
+                  type="number"
+                  min="1"
+                  [ngModel]="item.billableDays"
+                  (ngModelChange)="updateItemBillableDays(item, $event)"
+                  [placeholder]="order?.billableDays?.toString()"
+                />
+              </div>
+              <div class="item-cell discount">
+                <input
+                  type="text"
+                  placeholder="10% or $10"
+                  [ngModel]="formatDiscount(item.discount)"
+                  (ngModelChange)="updateItemDiscountInput(item, $event)"
+                />
+              </div>
+              <p class="item-total">
+                {{ itemPrice(item) | currency: "NZD" : "symbol" : "1.0-0" }}
+              </p>
+              <button
+                type="button"
+                class="icon-button"
+                aria-label="Remove item"
+                (click)="removeItem(group.id, item.id)"
+              >
+                ✕
+              </button>
+            </div>
+            <div *ngIf="!group.items.length" class="empty-items">
+              Drop items here or use the picker.
             </div>
           </div>
 
@@ -444,18 +447,12 @@
 
           <ng-container *ngSwitchCase="'financial'">
             <label>
-              <span>Global discount type</span>
-              <select [(ngModel)]="draftFinancial.globalDiscountType">
-                <option value="percent">Percent</option>
-                <option value="amount">Amount</option>
-              </select>
-            </label>
-            <label>
               <span>Global discount value</span>
               <input
-                type="number"
-                min="0"
-                [(ngModel)]="draftFinancial.globalDiscountValue"
+                type="text"
+                placeholder="10% or $10"
+                [ngModel]="formatDiscountDraft()"
+                (ngModelChange)="updateDraftFinancialDiscount($event)"
               />
             </label>
             <label>

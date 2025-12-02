@@ -1,5 +1,5 @@
 import { CommonModule, CurrencyPipe, DatePipe } from '@angular/common';
-import { Component, OnDestroy, OnInit } from '@angular/core';
+import { Component, HostListener, OnDestroy, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { Subscription } from 'rxjs';
@@ -58,12 +58,16 @@ export class SalesOrderDetailComponent implements OnInit, OnDestroy {
     orderType: 'Dry Hire' as SalesOrderSummary['orderType'],
     tags: '' as string,
   };
-  draftFinancial = {
-    globalDiscountType: 'percent' as Discount['type'],
-    globalDiscountValue: 0,
+  draftFinancial: {
+    discount?: Discount;
+    customerReference: string;
+    totalDiscount: number;
+  } = {
+    discount: { type: 'percent', value: 0 },
     customerReference: '',
     totalDiscount: 0,
   };
+  draggedItem: { groupId: string; itemId: string } | null = null;
 
   private readonly subscriptions: Subscription[] = [];
 
@@ -95,7 +99,17 @@ export class SalesOrderDetailComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
+    if (this.order) {
+      this.updateOrder();
+    }
     this.subscriptions.forEach((sub) => sub.unsubscribe());
+  }
+
+  @HostListener('window:beforeunload')
+  handleBeforeUnload() {
+    if (this.order) {
+      this.updateOrder();
+    }
   }
 
   openPicker(groupId: string) {
@@ -192,6 +206,94 @@ export class SalesOrderDetailComponent implements OnInit, OnDestroy {
     });
   }
 
+  removeItem(groupId: string, itemId: string) {
+    if (!this.order) return;
+    this.applyToGroup(this.order.groups, groupId, (group) => {
+      group.items = group.items.filter((item) => item.id !== itemId);
+    });
+  }
+
+  removeGroup(groupId: string) {
+    if (!this.order) return;
+    this.order.groups = this.pruneGroup(this.order.groups, groupId);
+  }
+
+  startDrag(groupId: string, itemId: string) {
+    this.draggedItem = { groupId, itemId };
+  }
+
+  endDrag() {
+    this.draggedItem = null;
+  }
+
+  onDragOver(event: DragEvent) {
+    event.preventDefault();
+  }
+
+  onDrop(event: DragEvent, targetGroupId: string, targetIndex?: number) {
+    event.preventDefault();
+    event.stopPropagation();
+
+    if (!this.order || !this.draggedItem) return;
+
+    const { groupId: sourceGroupId, itemId } = this.draggedItem;
+    let removedIndex: number | null = null;
+    let movingItem: StockItem | undefined;
+
+    this.applyToGroup(this.order.groups, sourceGroupId, (group) => {
+      const idx = group.items.findIndex((item) => item.id === itemId);
+      if (idx !== -1) {
+        removedIndex = idx;
+        [movingItem] = group.items.splice(idx, 1);
+      }
+    });
+
+    if (!movingItem) {
+      this.draggedItem = null;
+      return;
+    }
+
+    let inserted = false;
+
+    this.applyToGroup(this.order.groups, targetGroupId, (group) => {
+      let insertAt =
+        typeof targetIndex === 'number' ? targetIndex : group.items.length;
+
+      if (
+        sourceGroupId === targetGroupId &&
+        removedIndex !== null &&
+        removedIndex < insertAt
+      ) {
+        insertAt -= 1;
+      }
+
+      insertAt = Math.max(0, Math.min(insertAt, group.items.length));
+      group.items.splice(insertAt, 0, movingItem!);
+      inserted = true;
+    });
+
+    if (!inserted) {
+      this.applyToGroup(this.order.groups, sourceGroupId, (group) => {
+        group.items.splice(removedIndex ?? group.items.length, 0, movingItem!);
+      });
+    }
+
+    this.draggedItem = null;
+  }
+
+  isDraggingItem(itemId: string): boolean {
+    return this.draggedItem?.itemId === itemId;
+  }
+
+  private pruneGroup(groups: StockGroup[], targetId: string): StockGroup[] {
+    return groups
+      .filter((group) => group.id !== targetId)
+      .map((group) => ({
+        ...group,
+        groups: this.pruneGroup(group.groups, targetId),
+      }));
+  }
+
   private applyToGroup(
     groups: StockGroup[],
     targetId: string,
@@ -226,21 +328,33 @@ export class SalesOrderDetailComponent implements OnInit, OnDestroy {
     item.billableDays = parsed > 0 ? parsed : undefined;
   }
 
-  setItemDiscountType(item: StockItem, discountType: Discount['type'] | '') {
-    if (!discountType) {
-      item.discount = undefined;
-      return;
-    }
-    item.discount = item.discount ?? { type: discountType, value: 0 };
-    item.discount.type = discountType;
+  updateItemDiscountInput(item: StockItem, value: string) {
+    const parsed = this.parseDiscount(value);
+    item.discount = parsed;
   }
 
-  updateItemDiscountValue(item: StockItem, value: number) {
-    if (!item.discount) {
-      item.discount = { type: 'percent', value };
-      return;
-    }
-    item.discount.value = value;
+  updateGlobalDiscountInput(value: string) {
+    if (!this.order) return;
+    this.order.globalDiscount = this.parseDiscount(value);
+  }
+
+  formatDiscount(discount?: Discount | null): string {
+    if (!discount) return '';
+    return discount.type === 'percent'
+      ? `${discount.value || 0}%`
+      : `$${discount.value || 0}`;
+  }
+
+  private parseDiscount(value: string): Discount | undefined {
+    const raw = (value || '').trim();
+    if (!raw) return undefined;
+
+    const isPercent = raw.includes('%');
+    const numeric = parseFloat(raw.replace(/[^0-9.]/g, '')) || 0;
+
+    return isPercent
+      ? { type: 'percent', value: numeric }
+      : { type: 'amount', value: numeric };
   }
 
   updateOrder() {
@@ -322,8 +436,9 @@ export class SalesOrderDetailComponent implements OnInit, OnDestroy {
 
     if (section === 'financial') {
       this.draftFinancial = {
-        globalDiscountType: this.order.globalDiscount?.type || 'percent',
-        globalDiscountValue: this.order.globalDiscount?.value || 0,
+        discount: this.order.globalDiscount
+          ? { ...this.order.globalDiscount }
+          : { type: 'percent', value: 0 },
         customerReference: this.order.customerReference,
         totalDiscount: this.order.totalDiscount,
       };
@@ -361,12 +476,19 @@ export class SalesOrderDetailComponent implements OnInit, OnDestroy {
 
   saveFinancial() {
     if (!this.order) return;
-    this.order.globalDiscount = {
-      type: this.draftFinancial.globalDiscountType,
-      value: Number(this.draftFinancial.globalDiscountValue) || 0,
-    };
+    this.order.globalDiscount = this.draftFinancial.discount
+      ? { ...this.draftFinancial.discount }
+      : undefined;
     this.order.customerReference = this.draftFinancial.customerReference;
     this.order.totalDiscount = Number(this.draftFinancial.totalDiscount) || 0;
     this.closeEdit();
+  }
+
+  formatDiscountDraft(): string {
+    return this.formatDiscount(this.draftFinancial.discount);
+  }
+
+  updateDraftFinancialDiscount(value: string) {
+    this.draftFinancial.discount = this.parseDiscount(value);
   }
 }
