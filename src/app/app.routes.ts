@@ -94,6 +94,15 @@ export const routes: Routes = [
     canActivate: [authGuard],
   },
   {
+    path: 'crew-planner',
+    loadComponent: () =>
+      import('./crew/crew-planner/crew-planner').then(
+        (m) => m.CrewPlannerComponent,
+      ),
+    title: 'Crew Planner | Cue RMS',
+    canActivate: [authGuard],
+  },
+  {
     path: 'inventory/:sku/availability',
     loadComponent: () =>
       import(
