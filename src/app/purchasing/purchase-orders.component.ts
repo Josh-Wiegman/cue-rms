@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import { CommonModule, CurrencyPipe, DatePipe } from '@angular/common';
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
@@ -11,6 +10,9 @@ import {
   PurchaseOrdersService,
 } from './purchase-orders.service';
 import { Subscription } from 'rxjs';
+import { OrgBrandingService } from '../shared/org-branding/org-branding.service';
+import { OrganisationBranding } from '../auth/models/auth-user.model';
+import { AuthService } from '../auth/auth.service';
 
 interface DraftItem extends PurchaseOrderItem {
   suggestionTerm?: string;
@@ -20,13 +22,7 @@ interface DraftItem extends PurchaseOrderItem {
 @Component({
   selector: 'app-purchase-orders',
   standalone: true,
-  imports: [
-    UiShellComponent,
-    CommonModule,
-    FormsModule,
-    DatePipe,
-    CurrencyPipe,
-  ],
+  imports: [UiShellComponent, CommonModule, FormsModule, DatePipe, CurrencyPipe],
   templateUrl: './purchase-orders.component.html',
   styleUrl: './purchase-orders.component.scss',
 })
@@ -34,6 +30,11 @@ export class PurchaseOrdersComponent implements OnInit, OnDestroy {
   activeOrders: PurchaseOrder[] = [];
   archivedOrders: PurchaseOrder[] = [];
   showArchived = false;
+
+  detailModalOpen = false;
+  selectedOrder?: PurchaseOrder;
+  editableOrder?: (PurchaseOrder & { items: DraftItem[] });
+  orgBranding: OrganisationBranding | null = null;
 
   creationModalOpen = false;
   creationStatus: PurchaseOrderStatus = 'Ordered';
@@ -48,23 +49,29 @@ export class PurchaseOrdersComponent implements OnInit, OnDestroy {
     'Posthaste',
   ];
 
-  // ⚠️ IMPORTANT: don't call blankOrder() here, DI isn't ready yet
-  newOrder!: PurchaseOrder & { items: DraftItem[] };
+  newOrder = this.blankOrder();
 
   private readonly subscriptions: Subscription[] = [];
 
-  constructor(private readonly purchaseOrdersService: PurchaseOrdersService) {}
+  constructor(
+    private readonly purchaseOrdersService: PurchaseOrdersService,
+    private readonly orgBrandingService: OrgBrandingService,
+    private readonly authService: AuthService,
+  ) {}
 
   ngOnInit(): void {
-    // DI is ready here, so it's safe to call methods using the service
-    this.newOrder = this.blankOrder();
-
     this.subscriptions.push(
-      this.purchaseOrdersService.orders$.subscribe(() => {
-        this.activeOrders = this.purchaseOrdersService.activeOrders;
-        this.archivedOrders = this.purchaseOrdersService.archivedOrders;
+      this.purchaseOrdersService.orders$.subscribe((orders) => {
+        this.activeOrders = orders.filter(
+          (order) => !this.purchaseOrdersService.isArchived(order),
+        );
+        this.archivedOrders = orders.filter((order) =>
+          this.purchaseOrdersService.isArchived(order),
+        );
       }),
     );
+
+    this.loadBranding();
   }
 
   ngOnDestroy(): void {
@@ -76,9 +83,7 @@ export class PurchaseOrdersComponent implements OnInit, OnDestroy {
   }
 
   get branches(): string[] {
-    return this.purchaseOrdersService
-      .getBranches()
-      .map((branch) => branch.name);
+    return this.purchaseOrdersService.getBranches().map((branch) => branch.name);
   }
 
   openCreateModal() {
@@ -88,6 +93,18 @@ export class PurchaseOrdersComponent implements OnInit, OnDestroy {
 
   closeCreateModal() {
     this.creationModalOpen = false;
+  }
+
+  openDetailModal(order: PurchaseOrder) {
+    this.selectedOrder = order;
+    this.editableOrder = this.cloneForEdit(order);
+    this.detailModalOpen = true;
+  }
+
+  closeDetailModal() {
+    this.detailModalOpen = false;
+    this.selectedOrder = undefined;
+    this.editableOrder = undefined;
   }
 
   addLineItem() {
@@ -101,8 +118,23 @@ export class PurchaseOrdersComponent implements OnInit, OnDestroy {
     });
   }
 
+  addEditLineItem() {
+    if (!this.editableOrder) return;
+    this.editableOrder.items.push({
+      id: crypto.randomUUID(),
+      description: '',
+      quantity: 1,
+      price: 0,
+      suggestions: [],
+    });
+  }
+
   removeLineItem(index: number) {
     this.newOrder.items.splice(index, 1);
+  }
+
+  removeEditLineItem(index: number) {
+    this.editableOrder?.items.splice(index, 1);
   }
 
   updateBranch(branch: string) {
@@ -111,6 +143,15 @@ export class PurchaseOrdersComponent implements OnInit, OnDestroy {
     this.newOrder.branch = branch;
     this.newOrder.deliveryAddress = profile.address;
     this.newOrder.deliveryContact = profile.contact;
+  }
+
+  updateEditBranch(branch: string) {
+    if (!this.editableOrder) return;
+    const profile = this.purchaseOrdersService.findBranchProfile(branch);
+    this.editableOrder.recipientBranch = branch;
+    this.editableOrder.branch = branch;
+    this.editableOrder.deliveryAddress = profile.address;
+    this.editableOrder.deliveryContact = profile.contact;
   }
 
   searchInventory(item: DraftItem) {
@@ -123,10 +164,7 @@ export class PurchaseOrdersComponent implements OnInit, OnDestroy {
       }));
   }
 
-  applySuggestion(
-    item: DraftItem,
-    suggestion: { description: string; sku: string; price: number },
-  ) {
+  applySuggestion(item: DraftItem, suggestion: { description: string; sku: string; price: number }) {
     item.description = suggestion.description;
     item.sku = suggestion.sku;
     item.price = suggestion.price;
@@ -135,6 +173,33 @@ export class PurchaseOrdersComponent implements OnInit, OnDestroy {
 
   clearSuggestions(item: DraftItem) {
     item.suggestions = [];
+  }
+
+  async saveEdits() {
+    if (!this.selectedOrder || !this.editableOrder) return;
+
+    const items: PurchaseOrderItem[] = this.editableOrder.items.map((item) => ({
+      id: item.id,
+      description: item.description,
+      quantity: item.quantity,
+      price: item.price,
+      sku: item.sku,
+    }));
+
+    this.purchaseOrdersService.updateOrder(this.selectedOrder.id, {
+      vendor: this.editableOrder.vendor,
+      branch: this.editableOrder.branch,
+      recipientBranch: this.editableOrder.recipientBranch,
+      deliveryContact: this.editableOrder.deliveryContact,
+      deliveryAddress: this.editableOrder.deliveryAddress,
+      expectedArrival: this.editableOrder.expectedArrival,
+      trackingNumber: this.editableOrder.trackingNumber,
+      carrier: this.editableOrder.carrier,
+      status: this.editableOrder.status,
+      items,
+    });
+
+    this.closeDetailModal();
   }
 
   createOrder() {
@@ -176,22 +241,23 @@ export class PurchaseOrdersComponent implements OnInit, OnDestroy {
     return this.purchaseOrdersService.calculateTotal(order);
   }
 
-  export(order: PurchaseOrder, type: 'rfq' | 'po' | 'delivery') {
-    const text = this.purchaseOrdersService.exportDocument(order, type);
-    const blob = new Blob([text], { type: 'text/plain' });
-    const link = document.createElement('a');
-    link.href = URL.createObjectURL(blob);
-    link.download = `${order.poNumber}-${type}.txt`;
-    link.click();
-    URL.revokeObjectURL(link.href);
+  async export(order: PurchaseOrder, type: 'rfq' | 'po' | 'delivery') {
+    try {
+      await this.purchaseOrdersService.exportDocumentPdf(order, type, {
+        name: this.orgBranding?.name,
+        logoUrl: this.orgBranding?.logoUrl,
+      });
+    } catch (err) {
+      console.error('Failed to export document', err);
+      alert('Unable to export this document to PDF right now.');
+    }
   }
 
   private blankOrder(createdOn?: string) {
     const today = createdOn ?? new Date().toISOString().slice(0, 10);
     const defaultArrival = new Date(today);
     defaultArrival.setDate(defaultArrival.getDate() + 7);
-    const profile =
-      this.purchaseOrdersService.findBranchProfile('Christchurch');
+    const profile = this.purchaseOrdersService.findBranchProfile('Christchurch');
 
     const draft: PurchaseOrder & { items: DraftItem[] } = {
       id: '',
@@ -206,6 +272,7 @@ export class PurchaseOrdersComponent implements OnInit, OnDestroy {
       carrier: undefined,
       expectedArrival: defaultArrival.toISOString().slice(0, 10),
       createdOn: today,
+      updatedOn: today,
       items: [
         {
           id: crypto.randomUUID(),
@@ -220,11 +287,20 @@ export class PurchaseOrdersComponent implements OnInit, OnDestroy {
     return draft;
   }
 
-  get newOrderTotal(): number {
-    return this.newOrder.items.reduce((acc, item) => {
-      const qty = Number(item.quantity) || 0;
-      const price = Number(item.price) || 0;
-      return acc + qty * price;
-    }, 0);
+  private cloneForEdit(order: PurchaseOrder): PurchaseOrder & { items: DraftItem[] } {
+    return {
+      ...order,
+      items: order.items.map((item) => ({ ...item, suggestions: [] })),
+    };
+  }
+
+  private async loadBranding() {
+    try {
+      this.orgBranding = await this.orgBrandingService.getBranding(
+        this.authService.orgSlug,
+      );
+    } catch (err) {
+      console.warn('Unable to load branding for purchase orders', err);
+    }
   }
 }

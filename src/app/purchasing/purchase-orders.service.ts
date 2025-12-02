@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Injectable } from '@angular/core';
 import { BehaviorSubject } from 'rxjs';
 import { InventoryService } from '../inventory/inventory.service';
@@ -43,6 +42,7 @@ export interface PurchaseOrder {
   carrier?: FreightCarrier;
   expectedArrival: string;
   createdOn: string;
+  updatedOn: string;
   items: PurchaseOrderItem[];
 }
 
@@ -85,6 +85,7 @@ export class PurchaseOrdersService {
       carrier: 'Mainfreight',
       trackingNumber: 'MNF123456789',
       createdOn: '2024-08-18',
+      updatedOn: '2024-08-19',
       expectedArrival: this.addDays('2024-08-18', 7),
       items: [
         {
@@ -114,6 +115,7 @@ export class PurchaseOrdersService {
       carrier: 'NZPost',
       trackingNumber: 'NZP77881234',
       createdOn: '2024-08-01',
+      updatedOn: '2024-08-07',
       expectedArrival: '2024-08-08',
       items: [
         {
@@ -137,6 +139,7 @@ export class PurchaseOrdersService {
       carrier: 'DHL',
       trackingNumber: 'DHL00997311',
       createdOn: '2024-08-20',
+      updatedOn: '2024-08-20',
       expectedArrival: this.addDays('2024-08-20', 10),
       items: [
         {
@@ -220,6 +223,7 @@ export class PurchaseOrdersService {
       trackingNumber: payload.trackingNumber,
       carrier: payload.carrier,
       createdOn,
+      updatedOn: createdOn,
       expectedArrival: payload.expectedArrival,
       items: payload.items.map((item) => ({
         ...item,
@@ -232,30 +236,105 @@ export class PurchaseOrdersService {
   }
 
   updateOrderStatus(id: string, status: PurchaseOrderStatus) {
-    const updated = this.orders.map((order) =>
-      order.id === id ? { ...order, status } : order,
-    );
+    this.updateOrder(id, { status });
+  }
+
+  updateOrder(
+    id: string,
+    changes: Partial<Omit<PurchaseOrder, 'id' | 'poNumber'>>, // PO number is immutable once created
+  ): void {
+    const updatedOn = new Date().toISOString().slice(0, 10);
+
+    const updated = this.orders.map((order) => {
+      if (order.id !== id) return order;
+
+      const items = changes.items
+        ? changes.items.map((item) => ({
+            ...item,
+            id: item.id || crypto.randomUUID(),
+          }))
+        : order.items;
+
+      return {
+        ...order,
+        ...changes,
+        items,
+        updatedOn,
+      } satisfies PurchaseOrder;
+    });
+
     this.ordersSubject.next(updated);
   }
 
-  exportDocument(
+  async exportDocumentPdf(
     order: PurchaseOrder,
     type: 'rfq' | 'po' | 'delivery',
-  ): string {
+    branding?: { name?: string; logoUrl?: string | null },
+  ): Promise<void> {
+    const JsPdf = await this.loadJsPdf();
+    if (!JsPdf) throw new Error('Unable to load PDF generator');
+
+    const doc = new JsPdf();
     const titleMap = {
       rfq: 'Request for Quotation',
       po: 'Purchase Order',
       delivery: 'Delivery Docket',
     } as const;
 
-    const items = order.items
-      .map(
-        (item) =>
-          `- ${item.description} (${item.sku ?? 'no sku'}) ×${item.quantity} @ $${item.price.toFixed(2)}`,
-      )
-      .join('\n');
+    let cursorY = 20;
+    const logoData = await this.getLogoDataUrl(branding?.logoUrl);
 
-    return `${titleMap[type]}\nPO: ${order.poNumber}\nVendor: ${order.vendor}\nShip to: ${order.deliveryAddress}\nStatus: ${order.status}\nExpected: ${order.expectedArrival}\nItems:\n${items}\nTotal: $${this.calculateTotal(order).toFixed(2)}`;
+    if (logoData) {
+      doc.addImage(logoData, 'PNG', 14, 10, 40, 20);
+      cursorY = 40;
+    }
+
+    doc.setFontSize(16);
+    doc.text(titleMap[type], 14, cursorY);
+    doc.setFontSize(11);
+    doc.text(`PO Number: ${order.poNumber}`, 14, (cursorY += 8));
+    doc.text(
+      `Company: ${branding?.name ?? 'Company Name'}`,
+      200,
+      cursorY,
+      { align: 'right' },
+    );
+    doc.text(`Vendor: ${order.vendor}`, 14, (cursorY += 8));
+    doc.text(`Status: ${order.status}`, 14, (cursorY += 8));
+    doc.text(`Tracking: ${order.carrier ?? 'TBC'} · ${order.trackingNumber ?? 'None'}`, 14, (cursorY += 8));
+    doc.text(`Expected arrival: ${order.expectedArrival}`, 14, (cursorY += 8));
+    doc.text(`Created: ${order.createdOn} · Last updated: ${order.updatedOn}`, 14, (cursorY += 8));
+    doc.text('Ship to:', 14, (cursorY += 12));
+    const addressLines = doc.splitTextToSize(
+      `${order.recipientBranch} — ${order.deliveryContact}\n${order.deliveryAddress}`,
+      180,
+    );
+    doc.text(addressLines, 14, cursorY + 6);
+    cursorY += 18;
+
+    doc.setFontSize(12);
+    doc.text('Items', 14, cursorY);
+    doc.setLineWidth(0.4);
+    doc.line(14, cursorY + 2, 196, cursorY + 2);
+    cursorY += 8;
+    doc.setFontSize(11);
+
+    order.items.forEach((item, index) => {
+      const line = `${index + 1}. ${item.description} (${item.sku ?? 'SKU not set'}) ×${item.quantity} @ $${item.price.toFixed(2)} = $${(item.quantity * item.price).toFixed(2)}`;
+      const wrapped = doc.splitTextToSize(line, 180);
+      doc.text(wrapped, 14, cursorY);
+      cursorY += wrapped.length * 6 + 2;
+    });
+
+    doc.setFontSize(12);
+    doc.text(
+      `Total: $${this.calculateTotal(order).toFixed(2)}`,
+      196,
+      cursorY + 6,
+      { align: 'right' },
+    );
+
+    doc.save(`${order.poNumber}-${type}.pdf`);
   }
 
   calculateTotal(order: PurchaseOrder): number {
@@ -284,5 +363,48 @@ export class PurchaseOrdersService {
       ? Math.max(...numericValues) + 1
       : 2400;
     return `${prefix}${nextNumber}`;
+  }
+
+  private jsPdfLoader?: Promise<any>;
+
+  private loadJsPdf(): Promise<any> {
+    if (!this.jsPdfLoader) {
+      this.jsPdfLoader = new Promise((resolve) => {
+        const existing = (window as any).jspdf?.jsPDF;
+        if (existing) {
+          resolve(existing);
+          return;
+        }
+
+        const script = document.createElement('script');
+        script.src =
+          'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
+        script.async = true;
+        script.onload = () => resolve((window as any).jspdf?.jsPDF ?? null);
+        script.onerror = () => resolve(null);
+        document.body.appendChild(script);
+      });
+    }
+
+    return this.jsPdfLoader;
+  }
+
+  private async getLogoDataUrl(logoUrl?: string | null): Promise<string | null> {
+    if (!logoUrl) return null;
+
+    try {
+      const response = await fetch(logoUrl);
+      if (!response.ok) return null;
+      const blob = await response.blob();
+      return await new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result as string);
+        reader.onerror = () => resolve(null);
+        reader.readAsDataURL(blob);
+      });
+    } catch (err) {
+      console.warn('Unable to fetch logo for PDF export', err);
+      return null;
+    }
   }
 }
