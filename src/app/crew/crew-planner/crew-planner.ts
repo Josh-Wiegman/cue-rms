@@ -326,7 +326,8 @@ export class CrewPlannerComponent {
     return Array.from(conflicts);
   }
 
-  vehicleStatus(event: CrewEvent, referenceDate: Date) {
+  vehicleStatus(event: CrewEvent, referenceDateIso: string) {
+    const referenceDate = new Date(referenceDateIso);
     const statuses = event.assignedVehicleIds.map((vehicleId) => {
       const vehicle = this.vehicles.find((v) => v.id === vehicleId);
       if (!vehicle) return null;

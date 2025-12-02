@@ -131,11 +131,11 @@
               </div>
             </div>
 
-            <div class="alerts">
-              <div class="alert warning" *ngIf="vehicleStatus(item.event, new Date(item.block.start)).length">
+            <div class="alerts" *ngIf="vehicleStatus(item.event, item.block.start) as vehicleStatuses">
+              <div class="alert warning" *ngIf="vehicleStatuses.length">
                 <span class="pill pill-wof">WOF alert</span>
                 <ul>
-                  <li *ngFor="let status of vehicleStatus(item.event, new Date(item.block.start))">
+                  <li *ngFor="let status of vehicleStatuses">
                     {{ status }} (relative to this call)
                   </li>
                 </ul>
