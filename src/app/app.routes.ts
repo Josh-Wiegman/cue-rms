@@ -157,6 +157,15 @@ export const routes: Routes = [
     canActivate: [authGuard],
   },
   {
+    path: 'purchase-orders',
+    loadComponent: () =>
+      import('./purchasing/purchase-orders.component').then(
+        (m) => m.PurchaseOrdersComponent,
+      ),
+    title: 'Purchase Orders | Cue RMS',
+    canActivate: [authGuard],
+  },
+  {
     path: 'settings',
     loadComponent: () =>
       import('./settings/settings-dashboard/settings-dashboard.component').then(

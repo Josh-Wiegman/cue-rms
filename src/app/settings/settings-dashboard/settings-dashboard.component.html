@@ -62,6 +62,26 @@
             </select>
           </label>
         </div>
+
+        <div class="settings__preferences">
+          <h3>Purchase order numbering</h3>
+          <p class="settings__hint">
+            Configure the prefix used when automatically generating new PO numbers (e.g. GRAV-PO- or PO-).
+          </p>
+          <label>
+            <span>PO prefix</span>
+            <input
+              type="text"
+              [(ngModel)]="poPrefix"
+              (change)="updatePoPrefix()"
+              [disabled]="!canManagePurchasing()"
+            />
+          </label>
+          <p class="settings__status" *ngIf="poPrefixMessage">{{ poPrefixMessage }}</p>
+          <p class="settings__warning" *ngIf="!canManagePurchasing()">
+            You need administrator access (level 3 or higher) to change the prefix.
+          </p>
+        </div>
       </section>
 
       <section class="settings__panel" *ngIf="activeSection === 'add-user'">

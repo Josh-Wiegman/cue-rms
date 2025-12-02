@@ -78,12 +78,14 @@ export class MainNavigationComponent implements OnInit {
       this.navItems = [
         ...flattened,
         { label: 'Customers', path: '/customers' },
+        { label: 'Purchase Orders', path: '/purchase-orders' },
         this.createToolsNavigation(),
       ];
     } catch (error) {
       console.error('Failed to load navigation items', error);
       this.navItems = [
         { label: 'Customers', path: '/customers' },
+        { label: 'Purchase Orders', path: '/purchase-orders' },
         this.createToolsNavigation(),
       ];
     }
