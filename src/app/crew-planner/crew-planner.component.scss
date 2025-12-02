@@ -1,0 +1,278 @@
+.crew-planner {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.crew-planner__header {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: flex-start;
+}
+
+.crew-planner__header h1 {
+  margin: 0.25rem 0;
+}
+
+.crew-planner__actions {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.button-group {
+  display: inline-flex;
+  border: 1px solid #e0e4ec;
+  border-radius: 0.5rem;
+  overflow: hidden;
+  background: #f8fafc;
+}
+
+.button-group button {
+  padding: 0.6rem 0.9rem;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+}
+
+.button-group button + button {
+  border-left: 1px solid #e0e4ec;
+}
+
+.button-group .primary {
+  background: #3f5dff;
+  color: #fff;
+}
+
+.segmented {
+  display: inline-flex;
+  border: 1px solid #e0e4ec;
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.segmented button {
+  border: none;
+  background: transparent;
+  padding: 0.55rem 0.9rem;
+  cursor: pointer;
+}
+
+.segmented button.active {
+  background: #e8ecff;
+  color: #1f3bb3;
+}
+
+.crew-planner__legend {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.75rem 1rem;
+  background: #f8fafc;
+  border: 1px solid #e0e4ec;
+  border-radius: 0.75rem;
+  align-items: center;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.2rem 0.45rem;
+  border-radius: 0.35rem;
+  font-size: 0.75rem;
+  background: #eef2ff;
+  color: #1f3bb3;
+  border: 1px solid transparent;
+}
+
+.badge[data-type='Dry Hire'] {
+  background: #fef9c3;
+  color: #854d0e;
+}
+
+.badge--outline {
+  background: #fff;
+  border-color: #d6dae5;
+  color: #3c4664;
+}
+
+.badge--info {
+  width: 0.8rem;
+  height: 0.8rem;
+  border-radius: 999px;
+  background: #1f3bb3;
+}
+
+.legend__hint {
+  display: flex;
+  gap: 1rem;
+  color: #6b7280;
+  align-items: center;
+}
+
+.dot {
+  width: 0.75rem;
+  height: 0.75rem;
+  display: inline-block;
+  border-radius: 999px;
+  margin-right: 0.25rem;
+}
+
+.dot--packin { background: #c7d2fe; }
+.dot--show { background: #fef08a; }
+.dot--packout { background: #d9f99d; }
+
+.week-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 1rem;
+}
+
+.day {
+  border: 1px solid #e0e4ec;
+  border-radius: 0.75rem;
+  background: #fff;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 1rem;
+}
+
+.day__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+
+.day__count {
+  color: #6b7280;
+  font-size: 0.9rem;
+}
+
+.day__empty {
+  background: #f8fafc;
+  padding: 0.75rem;
+  border-radius: 0.5rem;
+  color: #6b7280;
+}
+
+.event {
+  border: 1px solid #e0e4ec;
+  border-radius: 0.75rem;
+  padding: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.event__header {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.event__notes {
+  background: #f8fafc;
+  border-radius: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  max-width: 280px;
+}
+
+.event__tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.event__timeline {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.timeline__row {
+  border: 1px solid #e0e4ec;
+  border-radius: 0.6rem;
+  padding: 0.45rem 0.6rem;
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.timeline__row[data-slot='packIn'] {
+  background: #f4f6ff;
+}
+
+.timeline__row[data-slot='show'] {
+  background: #fffbeb;
+}
+
+.timeline__row[data-slot='packOut'] {
+  background: #f7fee7;
+}
+
+.timeline__time {
+  min-width: 140px;
+}
+
+.timeline__label {
+  display: block;
+  color: #6b7280;
+  font-size: 0.85rem;
+}
+
+.timeline__value {
+  font-weight: 600;
+}
+
+.crew-list {
+  margin: 0;
+  color: #111827;
+}
+
+.muted {
+  color: #6b7280;
+}
+
+.event__warnings {
+  border-top: 1px dashed #e0e4ec;
+  padding-top: 0.5rem;
+}
+
+.alert {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.35rem 0.55rem;
+  border-radius: 0.45rem;
+  font-size: 0.9rem;
+}
+
+.alert--crew {
+  background: #fef2f2;
+  color: #991b1b;
+}
+
+.alert--vehicle {
+  background: #ecfeff;
+  color: #0f172a;
+}
+
+@media (max-width: 900px) {
+  .crew-planner__header {
+    flex-direction: column;
+  }
+
+  .crew-planner__actions {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .event__header {
+    flex-direction: column;
+  }
+}

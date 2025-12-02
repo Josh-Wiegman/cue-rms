@@ -130,6 +130,15 @@ export const routes: Routes = [
     canActivate: [authGuard],
   },
   {
+    path: 'crew-planner',
+    loadComponent: () =>
+      import('./crew-planner/crew-planner.component').then(
+        (m) => m.CrewPlannerComponent,
+      ),
+    title: 'Crew Planner | Cue RMS',
+    canActivate: [authGuard],
+  },
+  {
     path: 'reporting',
     loadComponent: () =>
       import('./reporting/reporting-component/reporting-component').then(
