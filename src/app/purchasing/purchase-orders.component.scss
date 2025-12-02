@@ -1,0 +1,267 @@
+.po-content {
+  display: block;
+  padding: 24px 32px;
+}
+
+.po-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  margin-bottom: 24px;
+
+  .actions {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+  }
+}
+
+.subtitle {
+  color: #4a5568;
+  margin-top: 4px;
+}
+
+.inline-control {
+  display: inline-flex;
+  gap: 8px;
+  align-items: center;
+  font-size: 14px;
+}
+
+.table-wrapper {
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+
+  th,
+  td {
+    padding: 12px 14px;
+    border-bottom: 1px solid #e2e8f0;
+    text-align: left;
+  }
+
+  tbody tr.clickable-row {
+    cursor: pointer;
+    transition: background 0.15s ease;
+
+    &:hover {
+      background: #f8fafc;
+    }
+  }
+
+  th {
+    background: #f8fafc;
+    font-weight: 600;
+    font-size: 14px;
+  }
+
+  td select,
+  td input[type='number'] {
+    width: 100%;
+  }
+}
+
+.stacked {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.empty-state {
+  padding: 32px;
+  text-align: center;
+  color: #4a5568;
+}
+
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.32);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  z-index: 50;
+}
+
+.modal {
+  background: #fff;
+  border-radius: 12px;
+  width: min(960px, 100%);
+  max-height: 90vh;
+  overflow: auto;
+  box-shadow: 0 10px 35px rgba(0, 0, 0, 0.12);
+}
+
+.modal__header,
+.modal__actions {
+  padding: 20px 24px;
+  border-bottom: 1px solid #e2e8f0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.modal__actions {
+  border-bottom: none;
+  border-top: 1px solid #e2e8f0;
+}
+
+.modal__body {
+  padding: 20px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.insights {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 12px 14px;
+
+  strong {
+    display: block;
+    font-size: 15px;
+  }
+
+  small {
+    color: #4a5568;
+  }
+}
+
+.modal__close {
+  background: transparent;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+}
+
+.grid {
+  display: grid;
+  gap: 12px;
+
+  &.two {
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  }
+
+  &.three {
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  }
+}
+
+label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-weight: 600;
+  color: #2d3748;
+
+  input,
+  select,
+  textarea {
+    border: 1px solid #cbd5e0;
+    border-radius: 6px;
+    padding: 10px 12px;
+    font-weight: 500;
+  }
+}
+
+.line-items {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.line-item {
+  display: grid;
+  grid-template-columns: 1.4fr 0.4fr 0.4fr auto auto;
+  gap: 10px;
+  align-items: center;
+}
+
+.line-item__main {
+  position: relative;
+}
+
+.suggestions {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: #fff;
+  border: 1px solid #cbd5e0;
+  border-radius: 8px;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  z-index: 10;
+
+  button {
+    width: 100%;
+    text-align: left;
+  }
+}
+
+.line-item__total {
+  font-weight: 700;
+}
+
+.modal__actions-buttons {
+  display: flex;
+  gap: 10px;
+}
+
+.summary {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.export-actions {
+  display: flex;
+  gap: 4px;
+}
+
+button.ghost {
+  background: transparent;
+  border: 1px solid #cbd5e0;
+  padding: 6px 10px;
+  border-radius: 6px;
+}
+
+button.secondary {
+  background: #fff;
+  border: 1px solid #3182ce;
+  color: #2b6cb0;
+}
+
+button.primary {
+  background: #2b6cb0;
+  border: none;
+  color: #fff;
+  padding: 10px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.eyebrow {
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #718096;
+  font-size: 12px;
+  margin: 0;
+}
