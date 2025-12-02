@@ -1,0 +1,230 @@
+<ui-shell>
+  <content class="crew-planner">
+    <header class="crew-planner__header">
+      <div>
+        <p class="eyebrow">Crew planner</p>
+        <h1>Week of {{ weekDays()[0].date | date: 'MMM d' }} -
+          {{ weekDays()[6].date | date: 'MMM d' }}</h1>
+        <p>
+          Allocate crew, vehicles, and timings for each booking. Warnings show overlapping crew
+          or vehicles with expiring warrants.
+        </p>
+      </div>
+      <div class="crew-planner__actions">
+        <div class="button-group">
+          <button type="button" (click)="adjustWeek(-1)">Previous week</button>
+          <button type="button" class="primary" (click)="adjustWeek(1)">Next week</button>
+        </div>
+        <div class="segmented">
+          <button type="button"
+                  [class.active]="viewMode() === 'byTask'"
+                  (click)="toggleView('byTask')">
+            Pack-in view
+          </button>
+          <button type="button"
+                  [class.active]="viewMode() === 'byTime'"
+                  (click)="toggleView('byTime')">
+            Chronological
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <section class="crew-planner__legend">
+      <div>
+        <span class="badge badge--info"></span>
+        <span>Warnings highlight crew overlaps and WOF expiries but do not block scheduling.</span>
+      </div>
+      <div class="legend__hint">
+        <span class="dot dot--packin"></span> Pack in
+        <span class="dot dot--show"></span> Show
+        <span class="dot dot--packout"></span> Pack out
+      </div>
+    </section>
+
+    <section class="add-event">
+      <header>
+        <div>
+          <p class="eyebrow">Add to this week</p>
+          <h2>Create a new booking</h2>
+          <p>Capture essentials for a pack in / show / pack out and drop it into the weekly planner.</p>
+        </div>
+      </header>
+
+      <form class="add-event__form" (ngSubmit)="addEvent()" #addEventForm="ngForm">
+        <div class="form-grid">
+          <label>
+            <span>Sales order</span>
+            <input name="salesOrder" type="text" required [(ngModel)]="newEventDraft.salesOrder" />
+          </label>
+          <label>
+            <span>Title</span>
+            <input name="title" type="text" required [(ngModel)]="newEventDraft.title" />
+          </label>
+          <label>
+            <span>Location</span>
+            <input name="location" type="text" [(ngModel)]="newEventDraft.location" />
+          </label>
+          <label>
+            <span>Type</span>
+            <select name="type" [(ngModel)]="newEventDraft.type">
+              <option value="Production">Production</option>
+              <option value="Dry Hire">Dry Hire</option>
+            </select>
+          </label>
+          <label>
+            <span>Date</span>
+            <input name="date" type="date" required [(ngModel)]="newEventDraft.date" />
+          </label>
+          <label>
+            <span>Vehicles</span>
+            <select multiple name="vehicles" [(ngModel)]="newEventDraft.vehicles">
+              <option *ngFor="let vehicle of vehicles()" [value]="vehicle.id">
+                {{ vehicle.name }} · {{ vehicle.licensePlate }}
+              </option>
+            </select>
+          </label>
+        </div>
+
+        <div class="time-grid">
+          <div class="time-group">
+            <p class="eyebrow">Pack in</p>
+            <div class="inline-fields">
+              <label>
+                <span>Start</span>
+                <input name="packInStart" type="time" required [(ngModel)]="newEventDraft.packInStart" />
+              </label>
+              <label>
+                <span>Duration (min)</span>
+                <input name="packInDuration" type="number" min="0" [(ngModel)]="newEventDraft.packInDuration" />
+              </label>
+            </div>
+            <label>
+              <span>Crew</span>
+              <select multiple name="packInCrew" [(ngModel)]="newEventDraft.packInCrew">
+                <option *ngFor="let crew of crewMembers()" [value]="crew.id">{{ crew.name }} ({{ crew.role }})</option>
+              </select>
+            </label>
+          </div>
+
+          <div class="time-group">
+            <p class="eyebrow">Show (optional)</p>
+            <div class="inline-fields">
+              <label>
+                <span>Start</span>
+                <input name="showStart" type="time" [(ngModel)]="newEventDraft.showStart" />
+              </label>
+              <label>
+                <span>Duration (min)</span>
+                <input name="showDuration" type="number" min="0" [(ngModel)]="newEventDraft.showDuration" />
+              </label>
+            </div>
+            <label>
+              <span>Crew</span>
+              <select multiple name="showCrew" [(ngModel)]="newEventDraft.showCrew">
+                <option *ngFor="let crew of crewMembers()" [value]="crew.id">{{ crew.name }} ({{ crew.role }})</option>
+              </select>
+            </label>
+          </div>
+
+          <div class="time-group">
+            <p class="eyebrow">Pack out</p>
+            <div class="inline-fields">
+              <label>
+                <span>Start</span>
+                <input name="packOutStart" type="time" required [(ngModel)]="newEventDraft.packOutStart" />
+              </label>
+              <label>
+                <span>Duration (min)</span>
+                <input name="packOutDuration" type="number" min="0" [(ngModel)]="newEventDraft.packOutDuration" />
+              </label>
+            </div>
+            <label>
+              <span>Crew</span>
+              <select multiple name="packOutCrew" [(ngModel)]="newEventDraft.packOutCrew">
+                <option *ngFor="let crew of crewMembers()" [value]="crew.id">{{ crew.name }} ({{ crew.role }})</option>
+              </select>
+            </label>
+          </div>
+        </div>
+
+        <label class="notes">
+          <span>Notes</span>
+          <textarea name="notes" rows="2" [(ngModel)]="newEventDraft.notes"></textarea>
+        </label>
+
+        <div class="add-event__actions">
+          <p class="muted">New items will adopt the current week and honor crew overlap + vehicle alerts.</p>
+          <button type="submit" class="primary" [disabled]="addEventForm.invalid">Add to planner</button>
+        </div>
+      </form>
+    </section>
+
+    <div class="week-grid">
+      <section class="day" *ngFor="let day of weekDays()">
+        <header class="day__header">
+          <div>
+            <p class="eyebrow">{{ day.date | date: 'EEEE' }}</p>
+            <h2>{{ day.date | date: 'MMM d' }}</h2>
+          </div>
+          <span class="day__count">{{ eventsForDay(day.date).length }} events</span>
+        </header>
+
+        <div class="day__empty" *ngIf="eventsForDay(day.date).length === 0">
+          <p>No bookings for this day.</p>
+        </div>
+
+        <article class="event" *ngFor="let event of eventsForDay(day.date)">
+          <header class="event__header">
+            <div>
+              <p class="eyebrow">{{ event.salesOrder }} · {{ event.location }}</p>
+              <h3>{{ event.title }}</h3>
+              <div class="event__tags">
+                <span class="badge" [attr.data-type]="event.type">{{ event.type }}</span>
+                <span class="badge badge--outline" *ngFor="let vehicleId of event.vehicles">
+                  {{ getVehicle(vehicleId)?.name }} · {{ getVehicle(vehicleId)?.licensePlate }}
+                </span>
+              </div>
+            </div>
+            <div class="event__notes" *ngIf="event.notes">
+              <p>{{ event.notes }}</p>
+            </div>
+          </header>
+
+          <ul class="event__timeline">
+            <li class="timeline__row" *ngFor="let slot of slotOrder(event.slots)"
+                [attr.data-slot]="slot.key">
+              <div class="timeline__time">
+                <span class="timeline__label">{{ slot.label }}</span>
+                <span class="timeline__value">{{ formattedTime(event.date, slot.start) }}</span>
+              </div>
+              <div class="timeline__crew">
+                <p class="crew-list">
+                  <span *ngFor="let assignment of slot.crew; let last = last">
+                    {{ crewName(assignment.crewId) }}
+                    <ng-container *ngIf="assignment.responsibility">
+                      <span class="muted">({{ assignment.responsibility }})</span>
+                    </ng-container>
+                    <span *ngIf="!last"> • </span>
+                  </span>
+                </p>
+              </div>
+            </li>
+          </ul>
+
+          <div class="event__warnings" *ngIf="warningForEvent(event.id).crewConflicts.length || warningForEvent(event.id).vehicleAlerts.length">
+            <p class="eyebrow">Alerts</p>
+            <ul>
+              <li *ngFor="let warning of warningForEvent(event.id).crewConflicts">
+                <span class="alert alert--crew">Crew overlap · {{ warning }}</span>
+              </li>
+              <li *ngFor="let warning of warningForEvent(event.id).vehicleAlerts">
+                <span class="alert alert--vehicle">Vehicle · {{ warning }}</span>
+              </li>
+            </ul>
+          </div>
+        </article>
+      </section>
+    </div>
+  </content>
+</ui-shell>
