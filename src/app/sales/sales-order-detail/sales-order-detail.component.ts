@@ -43,7 +43,12 @@ export class SalesOrderDetailComponent implements OnInit, OnDestroy {
     search: '',
     selections: {} as Record<string, PickerSelection>,
   };
-  draftSchedule = { startDate: '', endDate: '', billableDays: 1, rentalPeriodDays: 1 };
+  draftSchedule = {
+    startDate: '',
+    endDate: '',
+    billableDays: 1,
+    rentalPeriodDays: 1,
+  };
   draftCustomer = {
     customer: '',
     deliveryLocation: '',
@@ -82,7 +87,7 @@ export class SalesOrderDetailComponent implements OnInit, OnDestroy {
         }
         this.order = JSON.parse(JSON.stringify(order));
         this.availableItems = this.salesOrdersService.getStockLibrary();
-        if (!this.order.globalDiscount) {
+        if (this.order && !this.order.globalDiscount) {
           this.order.globalDiscount = { type: 'percent', value: 0 };
         }
       }),
@@ -103,14 +108,21 @@ export class SalesOrderDetailComponent implements OnInit, OnDestroy {
   }
 
   closePicker() {
-    this.pickerModal = { open: false, groupId: null, search: '', selections: {} };
+    this.pickerModal = {
+      open: false,
+      groupId: null,
+      search: '',
+      selections: {},
+    };
   }
 
   filteredLibrary(): StockItem[] {
     const term = this.pickerModal.search.toLowerCase();
     return this.availableItems
       .filter((item) =>
-        term ? [item.name, item.sku].join(' ').toLowerCase().includes(term) : true,
+        term
+          ? [item.name, item.sku].join(' ').toLowerCase().includes(term)
+          : true,
       )
       .slice(0, 30);
   }
@@ -214,10 +226,7 @@ export class SalesOrderDetailComponent implements OnInit, OnDestroy {
     item.billableDays = parsed > 0 ? parsed : undefined;
   }
 
-  setItemDiscountType(
-    item: StockItem,
-    discountType: Discount['type'] | '',
-  ) {
+  setItemDiscountType(item: StockItem, discountType: Discount['type'] | '') {
     if (!discountType) {
       item.discount = undefined;
       return;
@@ -330,7 +339,8 @@ export class SalesOrderDetailComponent implements OnInit, OnDestroy {
     this.order.startDate = this.draftSchedule.startDate;
     this.order.endDate = this.draftSchedule.endDate;
     this.order.billableDays = Number(this.draftSchedule.billableDays) || 1;
-    this.order.rentalPeriodDays = Number(this.draftSchedule.rentalPeriodDays) || 1;
+    this.order.rentalPeriodDays =
+      Number(this.draftSchedule.rentalPeriodDays) || 1;
     this.closeEdit();
   }
 
