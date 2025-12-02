@@ -104,7 +104,7 @@
             <dt>Global discount</dt>
             <dd>
               <select
-                [ngModel]="current.globalDiscount?.type"
+                [(ngModel)]="current.globalDiscount?.type"
                 (ngModelChange)="current.globalDiscount = current.globalDiscount || { type: 'percent', value: 0 }"
               >
                 <option value="percent">% off subtotal</option>
@@ -156,7 +156,7 @@
               <button
                 type="button"
                 class="quiet-button"
-                (click)="togglePicker(group.id)"
+                (click)="openPicker(group.id)"
                 aria-label="Open item picker"
               >
                 🔍 Show picker
@@ -168,7 +168,28 @@
             <div class="item" *ngFor="let item of group.items">
               <div>
                 <p class="item-name">{{ item.name }}</p>
-                <p class="item-meta">{{ item.sku }} · Qty {{ item.quantity }}</p>
+                <p class="item-meta">{{ item.sku }}</p>
+              </div>
+              <div class="item-controls">
+                <label>
+                  <span>Qty</span>
+                  <input
+                    type="number"
+                    min="1"
+                    [ngModel]="item.quantity"
+                    (ngModelChange)="updateItemQuantity(item, $event)"
+                  />
+                </label>
+                <label>
+                  <span>Days</span>
+                  <input
+                    type="number"
+                    min="1"
+                    [ngModel]="item.billableDays"
+                    (ngModelChange)="updateItemBillableDays(item, $event)"
+                    [placeholder]="order?.billableDays?.toString()"
+                  />
+                </label>
               </div>
               <div class="pricing">
                 <label>
@@ -191,35 +212,9 @@
                   placeholder="0"
                 />
                 <p class="item-total">
-                  {{ itemPrice(item, order?.billableDays || 1) | currency: 'NZD':'symbol':'1.0-0' }}
+                  {{ itemPrice(item) | currency: 'NZD':'symbol':'1.0-0' }}
                 </p>
               </div>
-            </div>
-          </div>
-
-          <div class="picker" *ngIf="pickerState[group.id]?.isOpen">
-            <div class="picker-header">
-              <input
-                type="search"
-                placeholder="Search items"
-                [ngModel]="pickerState[group.id].search"
-                (ngModelChange)="onSearchChange(group.id, $event)"
-              />
-              <small>Showing up to 30 results</small>
-            </div>
-            <div class="picker-items">
-              <button
-                class="picker-item"
-                type="button"
-                *ngFor="let item of filteredLibrary(group.id)"
-                (click)="addItem(group.id, item)"
-              >
-                <div>
-                  <p class="item-name">{{ item.name }}</p>
-                  <p class="item-meta">{{ item.sku }}</p>
-                </div>
-                <span>{{ item.rates.oneDay | currency: 'NZD':'symbol':'1.0-0' }} / day</span>
-              </button>
             </div>
           </div>
 
@@ -246,6 +241,78 @@
         </div>
       </ng-template>
     </section>
+    <div class="modal-backdrop" *ngIf="pickerModal.open" (click)="closePicker()">
+      <div class="modal picker-modal" (click)="$event.stopPropagation()">
+        <header class="modal-header">
+          <p class="eyebrow">Add items to group</p>
+          <button type="button" class="close" (click)="closePicker()">×</button>
+        </header>
+
+        <div class="picker-modal__controls">
+          <input
+            type="search"
+            placeholder="Search items"
+            [(ngModel)]="pickerModal.search"
+          />
+          <small>Showing up to 30 results</small>
+        </div>
+
+        <div class="picker-modal__body">
+          <div class="picker-list">
+            <button
+              class="picker-item"
+              type="button"
+              *ngFor="let item of filteredLibrary()"
+              [class.selected]="isSelected(item.id)"
+              (click)="toggleSelection(item)"
+            >
+              <div>
+                <p class="item-name">{{ item.name }}</p>
+                <p class="item-meta">{{ item.sku }}</p>
+              </div>
+              <span>{{ item.rates.oneDay | currency: 'NZD':'symbol':'1.0-0' }} / day</span>
+            </button>
+          </div>
+
+          <div class="picker-selections">
+            <div class="picker-selections__heading">
+              <h4>Selected items</h4>
+              <span class="badge">{{ pickerSelections.length }}</span>
+            </div>
+            <div *ngIf="!pickerSelections.length" class="empty-state compact">
+              Choose items to set quantities before adding.
+            </div>
+            <div class="selection-row" *ngFor="let selection of pickerSelections">
+              <div>
+                <p class="item-name">{{ selection.item.name }}</p>
+                <p class="item-meta">{{ selection.item.sku }}</p>
+              </div>
+              <label>
+                <span>Qty</span>
+                <input
+                  type="number"
+                  min="1"
+                  [ngModel]="selection.quantity"
+                  (ngModelChange)="updateSelectionQuantity(selection.item.id, $event)"
+                />
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <footer class="modal-actions">
+          <button type="button" class="secondary" (click)="closePicker()">Cancel</button>
+          <button
+            type="button"
+            class="primary"
+            [disabled]="!pickerSelections.length"
+            (click)="confirmPicker()"
+          >
+            Add to group
+          </button>
+        </footer>
+      </div>
+    </div>
     <div class="modal-backdrop" *ngIf="activeEdit" (click)="closeEdit()">
       <div class="modal" (click)="$event.stopPropagation()">
         <header class="modal-header">

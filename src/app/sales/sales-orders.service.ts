@@ -31,6 +31,7 @@ export interface StockItem {
   name: string;
   sku: string;
   quantity: number;
+  billableDays?: number;
   rates: {
     oneDay: number;
     threeDay?: number;

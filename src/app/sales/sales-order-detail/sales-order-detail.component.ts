@@ -12,9 +12,9 @@ import {
 } from '../sales-orders.service';
 import { UiShellComponent } from '../../shared/ui-shell/ui-shell-component';
 
-interface PickerState {
-  search: string;
-  isOpen: boolean;
+interface PickerSelection {
+  item: StockItem;
+  quantity: number;
 }
 
 type EditSection = 'schedule' | 'customer' | 'financial' | null;
@@ -35,15 +35,15 @@ type EditSection = 'schedule' | 'customer' | 'financial' | null;
 })
 export class SalesOrderDetailComponent implements OnInit, OnDestroy {
   order?: SalesOrderSummary;
-  pickerState: Record<string, PickerState> = {};
   availableItems: StockItem[] = [];
   activeEdit: EditSection = null;
-  draftSchedule = {
-    startDate: '',
-    endDate: '',
-    billableDays: 1,
-    rentalPeriodDays: 1,
+  pickerModal = {
+    open: false,
+    groupId: null as string | null,
+    search: '',
+    selections: {} as Record<string, PickerSelection>,
   };
+  draftSchedule = { startDate: '', endDate: '', billableDays: 1, rentalPeriodDays: 1 };
   draftCustomer = {
     customer: '',
     deliveryLocation: '',
@@ -82,11 +82,8 @@ export class SalesOrderDetailComponent implements OnInit, OnDestroy {
         }
         this.order = JSON.parse(JSON.stringify(order));
         this.availableItems = this.salesOrdersService.getStockLibrary();
-        if (this.order && !this.order.globalDiscount) {
+        if (!this.order.globalDiscount) {
           this.order.globalDiscount = { type: 'percent', value: 0 };
-        }
-        if (this.order?.groups) {
-          this.seedPickerState(this.order.groups);
         }
       }),
     );
@@ -96,51 +93,72 @@ export class SalesOrderDetailComponent implements OnInit, OnDestroy {
     this.subscriptions.forEach((sub) => sub.unsubscribe());
   }
 
-  private seedPickerState(groups: StockGroup[]) {
-    groups.forEach((group) => {
-      this.pickerState[group.id] = { search: '', isOpen: false };
-      if (group.groups.length) {
-        this.seedPickerState(group.groups);
-      }
-    });
-  }
-
-  togglePicker(groupId: string) {
-    const state = this.pickerState[groupId];
-    this.pickerState[groupId] = {
-      ...(state || { search: '' }),
-      isOpen: !state?.isOpen,
+  openPicker(groupId: string) {
+    this.pickerModal = {
+      open: true,
+      groupId,
+      search: '',
+      selections: {},
     };
   }
 
-  filteredLibrary(groupId: string): StockItem[] {
-    const state = this.pickerState[groupId];
-    const term = state?.search?.toLowerCase() ?? '';
+  closePicker() {
+    this.pickerModal = { open: false, groupId: null, search: '', selections: {} };
+  }
+
+  filteredLibrary(): StockItem[] {
+    const term = this.pickerModal.search.toLowerCase();
     return this.availableItems
       .filter((item) =>
-        term
-          ? [item.name, item.sku].join(' ').toLowerCase().includes(term)
-          : true,
+        term ? [item.name, item.sku].join(' ').toLowerCase().includes(term) : true,
       )
       .slice(0, 30);
   }
 
-  onSearchChange(groupId: string, value: string) {
-    this.pickerState[groupId] = {
-      ...(this.pickerState[groupId] || { isOpen: true }),
-      search: value,
-    };
+  toggleSelection(libraryItem: StockItem) {
+    const selections = { ...this.pickerModal.selections };
+    if (selections[libraryItem.id]) {
+      delete selections[libraryItem.id];
+    } else {
+      selections[libraryItem.id] = { item: libraryItem, quantity: 1 };
+    }
+    this.pickerModal = { ...this.pickerModal, selections };
   }
 
-  addItem(groupId: string, libraryItem: StockItem) {
-    if (!this.order) return;
-    const clone: StockItem = {
-      ...libraryItem,
-      id: `${libraryItem.id}-${crypto.randomUUID()}`,
-    };
-    this.applyToGroup(this.order.groups, groupId, (group) => {
-      group.items = [...group.items, clone];
+  updateSelectionQuantity(itemId: string, value: number) {
+    const selections = { ...this.pickerModal.selections };
+    if (!selections[itemId]) return;
+    const quantity = Math.max(1, Number(value) || 1);
+    selections[itemId] = { ...selections[itemId], quantity };
+    this.pickerModal = { ...this.pickerModal, selections };
+  }
+
+  isSelected(itemId: string): boolean {
+    return Boolean(this.pickerModal.selections[itemId]);
+  }
+
+  get pickerSelections(): PickerSelection[] {
+    return Object.values(this.pickerModal.selections);
+  }
+
+  confirmPicker() {
+    if (!this.order || !this.pickerModal.groupId) return;
+    const selections = this.pickerSelections;
+    if (!selections.length) {
+      this.closePicker();
+      return;
+    }
+
+    this.applyToGroup(this.order.groups, this.pickerModal.groupId, (group) => {
+      const additions = selections.map((selection) => ({
+        ...selection.item,
+        quantity: selection.quantity,
+        id: `${selection.item.id}-${crypto.randomUUID()}`,
+      }));
+      group.items = [...group.items, ...additions];
     });
+
+    this.closePicker();
   }
 
   addGroup(parentId?: string) {
@@ -154,13 +172,11 @@ export class SalesOrderDetailComponent implements OnInit, OnDestroy {
 
     if (!parentId) {
       this.order.groups = [...this.order.groups, newGroup];
-      this.pickerState[newGroup.id] = { search: '', isOpen: false };
       return;
     }
 
     this.applyToGroup(this.order.groups, parentId, (group) => {
       group.groups = [...group.groups, newGroup];
-      this.pickerState[newGroup.id] = { search: '', isOpen: false };
     });
   }
 
@@ -185,7 +201,23 @@ export class SalesOrderDetailComponent implements OnInit, OnDestroy {
     this.order.billableDays = Number(value) || 1;
   }
 
-  setItemDiscountType(item: StockItem, discountType: Discount['type'] | '') {
+  updateItemQuantity(item: StockItem, value: number) {
+    item.quantity = Math.max(1, Number(value) || 1);
+  }
+
+  updateItemBillableDays(item: StockItem, value: number | null | string) {
+    if (value === '' || value === null) {
+      item.billableDays = undefined;
+      return;
+    }
+    const parsed = Number(value);
+    item.billableDays = parsed > 0 ? parsed : undefined;
+  }
+
+  setItemDiscountType(
+    item: StockItem,
+    discountType: Discount['type'] | '',
+  ) {
     if (!discountType) {
       item.discount = undefined;
       return;
@@ -207,7 +239,8 @@ export class SalesOrderDetailComponent implements OnInit, OnDestroy {
     this.salesOrdersService.updateOrder(this.order);
   }
 
-  itemPrice(item: StockItem, billableDays: number): number {
+  itemPrice(item: StockItem): number {
+    const billableDays = item.billableDays ?? this.order?.billableDays ?? 1;
     const oneDayPrice = item.rates.oneDay * billableDays;
     const threeDayPrice = item.rates.threeDay ?? oneDayPrice;
     const weekPrice = item.rates.week ?? Math.min(oneDayPrice, threeDayPrice);
@@ -231,10 +264,7 @@ export class SalesOrderDetailComponent implements OnInit, OnDestroy {
     if (!this.order) return 0;
     return this.order.groups
       .flatMap((group) => this.collectItems(group))
-      .reduce(
-        (sum, item) => sum + this.itemPrice(item, this.order!.billableDays),
-        0,
-      );
+      .reduce((sum, item) => sum + this.itemPrice(item), 0);
   }
 
   private collectItems(group: StockGroup): StockItem[] {
@@ -300,8 +330,7 @@ export class SalesOrderDetailComponent implements OnInit, OnDestroy {
     this.order.startDate = this.draftSchedule.startDate;
     this.order.endDate = this.draftSchedule.endDate;
     this.order.billableDays = Number(this.draftSchedule.billableDays) || 1;
-    this.order.rentalPeriodDays =
-      Number(this.draftSchedule.rentalPeriodDays) || 1;
+    this.order.rentalPeriodDays = Number(this.draftSchedule.rentalPeriodDays) || 1;
     this.closeEdit();
   }
 
