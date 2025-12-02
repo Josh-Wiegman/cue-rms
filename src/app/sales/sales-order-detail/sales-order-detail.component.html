@@ -28,9 +28,6 @@
             {{ totalIncl | currency: "NZD" : "symbol" : "1.0-0" }}
           </p>
         </div>
-        <button type="button" class="primary" (click)="updateOrder()">
-          Save order
-        </button>
       </div>
     </header>
 
@@ -107,34 +104,16 @@
       <div class="card">
         <div class="card-heading">
           <h3>Financial</h3>
-          <button
-            type="button"
-            class="edit-button"
-            (click)="openEdit('financial')"
-          >
-            Edit
-          </button>
         </div>
         <dl>
           <div>
             <dt>Global discount</dt>
             <dd>
-              <select
-                [ngModel]="current.globalDiscount?.type"
-                (ngModelChange)="
-                  current.globalDiscount = current.globalDiscount || {
-                    type: 'percent',
-                    value: 0,
-                  }
-                "
-              >
-                <option value="percent">% off subtotal</option>
-                <option value="amount">$ off subtotal</option>
-              </select>
               <input
-                type="number"
-                min="0"
-                [(ngModel)]="current.globalDiscount!.value"
+                type="text"
+                placeholder="10% or $10"
+                [ngModel]="formatDiscount(current.globalDiscount)"
+                (ngModelChange)="updateGlobalDiscountInput($event)"
               />
             </dd>
           </div>
@@ -219,9 +198,11 @@
               <div class="drag-handle" title="Drag to reorder">
                 ☰
               </div>
-              <div>
-                <p class="item-name">{{ item.name }}</p>
-                <p class="item-meta">{{ item.sku }}</p>
+              <div class="item-title">
+                <p class="item-name">
+                  {{ item.name }}
+                  <span class="item-sku">· {{ item.sku }}</span>
+                </p>
               </div>
               <div class="item-cell">
                 <input
@@ -241,21 +222,11 @@
                 />
               </div>
               <div class="item-cell discount">
-                <select
-                  [ngModel]="item.discount?.type || ''"
-                  (ngModelChange)="setItemDiscountType(item, $event)"
-                >
-                  <option value="">None</option>
-                  <option value="percent">%</option>
-                  <option value="amount">$</option>
-                </select>
                 <input
-                  type="number"
-                  min="0"
-                  [ngModel]="item.discount?.value"
-                  (ngModelChange)="updateItemDiscountValue(item, $event)"
-                  [disabled]="!item.discount"
-                  placeholder="0"
+                  type="text"
+                  placeholder="10% or $10"
+                  [ngModel]="formatDiscount(item.discount)"
+                  (ngModelChange)="updateItemDiscountInput(item, $event)"
                 />
               </div>
               <p class="item-total">
@@ -476,18 +447,12 @@
 
           <ng-container *ngSwitchCase="'financial'">
             <label>
-              <span>Global discount type</span>
-              <select [(ngModel)]="draftFinancial.globalDiscountType">
-                <option value="percent">Percent</option>
-                <option value="amount">Amount</option>
-              </select>
-            </label>
-            <label>
               <span>Global discount value</span>
               <input
-                type="number"
-                min="0"
-                [(ngModel)]="draftFinancial.globalDiscountValue"
+                type="text"
+                placeholder="10% or $10"
+                [ngModel]="formatDiscountDraft()"
+                (ngModelChange)="updateDraftFinancialDiscount($event)"
               />
             </label>
             <label>

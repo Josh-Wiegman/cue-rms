@@ -246,9 +246,23 @@
   text-align: center;
 }
 
+.item-title {
+  display: flex;
+  align-items: center;
+}
+
 .item-name {
   font-weight: 600;
   margin: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.item-sku {
+  color: #6b7280;
+  font-size: 0.9rem;
+  font-weight: 500;
 }
 
 .item-meta {
@@ -271,9 +285,7 @@
 }
 
 .discount {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 0.3rem;
+  display: flex;
   align-items: center;
 }
 
@@ -419,6 +431,18 @@
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
+}
+
+.children .group {
+  border: none;
+  background: transparent;
+  padding: 0.35rem 0 0 0;
+}
+
+.children .items {
+  background: transparent;
+  border: none;
+  padding: 0.35rem 0 0.35rem 0;
 }
 
 .empty-state {
