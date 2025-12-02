@@ -25,6 +25,7 @@
           name="mode"
           value="packInFirst"
           [(ngModel)]="viewMode"
+          (change)="onViewModeChange()"
         />
         Group pack-ins first
       </label>
@@ -34,6 +35,7 @@
           name="mode"
           value="chronological"
           [(ngModel)]="viewMode"
+          (change)="onViewModeChange()"
         />
         Chronological per day
       </label>
@@ -54,12 +56,13 @@
           <div class="day-date">{{ day | date: 'd MMM' }}</div>
         </div>
 
-        <div class="day-content" *ngIf="getDayBlocks(day).length; else emptyDay">
-          <article
-            class="event"
-            *ngFor="let item of getDayBlocks(day)"
-            [class.production]="item.event.isProduction"
-          >
+        <ng-container *ngIf="getDayBlocks(day) as dayBlocks">
+          <div class="day-content" *ngIf="dayBlocks.length; else emptyDay">
+            <article
+              class="event"
+              *ngFor="let item of dayBlocks"
+              [class.production]="item.event.isProduction"
+            >
             <header class="event-header">
               <div>
                 <div class="event-title">
@@ -90,11 +93,19 @@
             <div class="event-body">
               <div class="field">
                 <label>Start</label>
-                <input type="datetime-local" [(ngModel)]="item.block.start" />
+                <input
+                  type="datetime-local"
+                  [(ngModel)]="item.block.start"
+                  (ngModelChange)="onBlockTimeChange()"
+                />
               </div>
               <div class="field">
                 <label>End</label>
-                <input type="datetime-local" [(ngModel)]="item.block.end" />
+                <input
+                  type="datetime-local"
+                  [(ngModel)]="item.block.end"
+                  (ngModelChange)="onBlockTimeChange()"
+                />
               </div>
               <div class="field crew">
                 <label>Crew for this block</label>
@@ -105,12 +116,14 @@
                     </option>
                   </select>
                 </div>
-                <div class="conflicts" *ngIf="crewConflicts(item).length">
-                  <span class="pill pill-warning">Crew clash</span>
-                  <span class="conflict-names">
-                    {{ crewConflicts(item).join(', ') }} already allocated elsewhere
-                  </span>
-                </div>
+                <ng-container *ngIf="crewConflicts(item) as conflicts">
+                  <div class="conflicts" *ngIf="conflicts.length">
+                    <span class="pill pill-warning">Crew clash</span>
+                    <span class="conflict-names">
+                      {{ conflicts.join(', ') }} already allocated elsewhere
+                    </span>
+                  </div>
+                </ng-container>
               </div>
               <div class="field vehicles">
                 <label>Vehicles</label>
@@ -142,7 +155,8 @@
               </div>
             </div>
           </article>
-        </div>
+          </div>
+        </ng-container>
 
         <ng-template #emptyDay>
           <div class="empty">No events scheduled</div>

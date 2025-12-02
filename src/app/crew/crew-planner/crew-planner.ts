@@ -52,6 +52,8 @@ export class CrewPlannerComponent {
   weekOffset = 0;
   weekRange!: { start: Date; end: Date };
   private readonly anchorDate: Date;
+  private flattenedWeekBlocks: DayBlock[] = [];
+  private dayBlocksCache = new Map<string, DayBlock[]>();
 
   readonly crew: CrewMember[] = [
     { id: 'crew-alex', name: 'Alex McKay', role: 'Production Manager' },
@@ -221,6 +223,7 @@ export class CrewPlannerComponent {
     const baseDate = new Date(this.anchorDate);
     baseDate.setDate(this.anchorDate.getDate() + this.weekOffset * 7);
     this.weekRange = this.getWeekRange(baseDate);
+    this.recomputeWeekBlocks();
   }
 
   prevWeek() {
@@ -247,6 +250,26 @@ export class CrewPlannerComponent {
     return date >= this.weekRange.start && date <= this.weekRange.end;
   }
 
+  private recomputeWeekBlocks() {
+    this.flattenedWeekBlocks = this.events
+      .flatMap((event) =>
+        event.blocks.map((block) => ({
+          event,
+          block,
+        })),
+      )
+      .filter(({ block }) => this.isWithinWeek(new Date(block.start)));
+
+    this.dayBlocksCache.clear();
+    this.weekDays.forEach((day) => {
+      const target = day.toDateString();
+      const dayBlocks = this.flattenedWeekBlocks.filter(
+        ({ block }) => new Date(block.start).toDateString() === target,
+      );
+      this.dayBlocksCache.set(target, this.sortBlocks([...dayBlocks]));
+    });
+  }
+
   private computeAnchorDate() {
     const allDates = this.events
       .flatMap((event) => event.blocks)
@@ -258,24 +281,9 @@ export class CrewPlannerComponent {
     return new Date(earliest);
   }
 
-  private flattenBlocks(): DayBlock[] {
-    return this.events
-      .flatMap((event) =>
-        event.blocks.map((block) => ({
-          event,
-          block,
-        })),
-      )
-      .filter(({ block }) => this.isWithinWeek(new Date(block.start)));
-  }
-
   getDayBlocks(date: Date): DayBlock[] {
     const target = date.toDateString();
-    const dayBlocks = this.flattenBlocks().filter(
-      ({ block }) => new Date(block.start).toDateString() === target,
-    );
-
-    return this.sortBlocks(dayBlocks);
+    return this.dayBlocksCache.get(target) ?? [];
   }
 
   private sortBlocks(blocks: DayBlock[]): DayBlock[] {
@@ -303,12 +311,20 @@ export class CrewPlannerComponent {
     return [...packIns, ...others];
   }
 
+  onViewModeChange() {
+    this.recomputeWeekBlocks();
+  }
+
+  onBlockTimeChange() {
+    this.recomputeWeekBlocks();
+  }
+
   crewConflicts(target: DayBlock): string[] {
     const conflicts = new Set<string>();
     const targetStart = new Date(target.block.start).getTime();
     const targetEnd = new Date(target.block.end).getTime();
 
-    this.flattenBlocks().forEach(({ block, event }) => {
+    this.flattenedWeekBlocks.forEach(({ block, event }) => {
       if (block.id === target.block.id) return;
       const start = new Date(block.start).getTime();
       const end = new Date(block.end).getTime();
