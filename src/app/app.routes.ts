@@ -33,9 +33,9 @@ export const routes: Routes = [
   {
     path: 'sales/:orderNumber',
     loadComponent: () =>
-      import(
-        './sales/sales-order-detail/sales-order-detail.component'
-      ).then((m) => m.SalesOrderDetailComponent),
+      import('./sales/sales-order-detail/sales-order-detail.component').then(
+        (m) => m.SalesOrderDetailComponent,
+      ),
     title: 'Sales Order | Cue RMS',
     canActivate: [authGuard],
   },
@@ -73,33 +73,6 @@ export const routes: Routes = [
         (m) => m.PartyHireComponent,
       ),
     title: 'PartyHire Orders | Cue RMS',
-    canActivate: [authGuard],
-  },
-  {
-    path: 'crew',
-    loadComponent: () =>
-      import('./crew/crew-component/crew-component').then(
-        (m) => m.CrewComponent,
-      ),
-    title: 'Crew | Cue RMS',
-    canActivate: [authGuard],
-  },
-  {
-    path: 'crew-schedule',
-    loadComponent: () =>
-      import('./crew/crew-scheduler/crew-scheduler').then(
-        (m) => m.CrewScheduler,
-      ),
-    title: 'Scheduler | Cue RMS',
-    canActivate: [authGuard],
-  },
-  {
-    path: 'crew-planner',
-    loadComponent: () =>
-      import('./crew/crew-planner/crew-planner').then(
-        (m) => m.CrewPlannerComponent,
-      ),
-    title: 'Crew Planner | Cue RMS',
     canActivate: [authGuard],
   },
   {
