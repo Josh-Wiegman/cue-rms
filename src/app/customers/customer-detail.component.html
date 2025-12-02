@@ -1,0 +1,69 @@
+<ui-shell>
+  <content class="customer-detail" *ngIf="customer as record">
+    <div class="breadcrumb">
+      <a routerLink="/customers">Customers</a>
+      <span>/</span>
+      <span class="crumb">{{ record.name }}</span>
+    </div>
+
+    <header class="hero">
+      <div>
+        <p class="eyebrow">Customer</p>
+        <h1>{{ record.name }}</h1>
+        <p class="subtitle">{{ record.email }}</p>
+      </div>
+      <div class="tags">
+        <span class="pill">{{ record.cashCustomer ? 'Cash (7 days)' : 'Account' }}</span>
+        <span class="pill">{{ record.paymentTerms }}</span>
+      </div>
+    </header>
+
+    <section class="info-grid">
+      <div class="card">
+        <h3>Contact</h3>
+        <dl>
+          <div>
+            <dt>Email</dt>
+            <dd>{{ record.email }}</dd>
+          </div>
+          <div>
+            <dt>Phone</dt>
+            <dd>{{ record.phone }}</dd>
+          </div>
+          <div>
+            <dt>Secondary phone</dt>
+            <dd>{{ record.secondaryPhone || '—' }}</dd>
+          </div>
+        </dl>
+      </div>
+
+      <div class="card">
+        <h3>Addresses</h3>
+        <dl>
+          <div>
+            <dt>Billing address</dt>
+            <dd>{{ record.billingAddress }}</dd>
+          </div>
+          <div>
+            <dt>Default delivery address</dt>
+            <dd>{{ record.deliveryAddress || '—' }}</dd>
+          </div>
+        </dl>
+      </div>
+
+      <div class="card">
+        <h3>Terms</h3>
+        <dl>
+          <div>
+            <dt>Payment terms</dt>
+            <dd>{{ record.cashCustomer ? 'Cash (7 days)' : record.paymentTerms }}</dd>
+          </div>
+          <div>
+            <dt>Customer type</dt>
+            <dd>{{ record.cashCustomer ? 'Cash' : 'Credit' }}</dd>
+          </div>
+        </dl>
+      </div>
+    </section>
+  </content>
+</ui-shell>

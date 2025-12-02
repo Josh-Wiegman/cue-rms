@@ -1,0 +1,63 @@
+.customers-content {
+  padding: 1.5rem 2rem 3rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.subtitle {
+  color: #6b7280;
+  margin: 0.15rem 0 0;
+}
+
+.table-wrapper {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+input[type='search'] {
+  min-width: 280px;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+thead {
+  background: #f9fafb;
+  text-align: left;
+}
+
+thead th {
+  padding: 0.75rem 1rem;
+  font-weight: 600;
+  color: #374151;
+}
+
+tbody td {
+  padding: 0.75rem 1rem;
+  border-top: 1px solid #e5e7eb;
+}
+
+tbody tr:hover {
+  background: #f1f5f9;
+  cursor: pointer;
+}
+
+.empty-state {
+  padding: 1rem;
+  background: #f6f8fb;
+  border: 1px dashed #cfd6e2;
+  border-radius: 10px;
+  text-align: center;
+}
