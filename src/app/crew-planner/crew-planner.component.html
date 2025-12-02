@@ -42,6 +42,124 @@
       </div>
     </section>
 
+    <section class="add-event">
+      <header>
+        <div>
+          <p class="eyebrow">Add to this week</p>
+          <h2>Create a new booking</h2>
+          <p>Capture essentials for a pack in / show / pack out and drop it into the weekly planner.</p>
+        </div>
+      </header>
+
+      <form class="add-event__form" (ngSubmit)="addEvent()" #addEventForm="ngForm">
+        <div class="form-grid">
+          <label>
+            <span>Sales order</span>
+            <input name="salesOrder" type="text" required [(ngModel)]="newEventDraft.salesOrder" />
+          </label>
+          <label>
+            <span>Title</span>
+            <input name="title" type="text" required [(ngModel)]="newEventDraft.title" />
+          </label>
+          <label>
+            <span>Location</span>
+            <input name="location" type="text" [(ngModel)]="newEventDraft.location" />
+          </label>
+          <label>
+            <span>Type</span>
+            <select name="type" [(ngModel)]="newEventDraft.type">
+              <option value="Production">Production</option>
+              <option value="Dry Hire">Dry Hire</option>
+            </select>
+          </label>
+          <label>
+            <span>Date</span>
+            <input name="date" type="date" required [(ngModel)]="newEventDraft.date" />
+          </label>
+          <label>
+            <span>Vehicles</span>
+            <select multiple name="vehicles" [(ngModel)]="newEventDraft.vehicles">
+              <option *ngFor="let vehicle of vehicles()" [value]="vehicle.id">
+                {{ vehicle.name }} · {{ vehicle.licensePlate }}
+              </option>
+            </select>
+          </label>
+        </div>
+
+        <div class="time-grid">
+          <div class="time-group">
+            <p class="eyebrow">Pack in</p>
+            <div class="inline-fields">
+              <label>
+                <span>Start</span>
+                <input name="packInStart" type="time" required [(ngModel)]="newEventDraft.packInStart" />
+              </label>
+              <label>
+                <span>Duration (min)</span>
+                <input name="packInDuration" type="number" min="0" [(ngModel)]="newEventDraft.packInDuration" />
+              </label>
+            </div>
+            <label>
+              <span>Crew</span>
+              <select multiple name="packInCrew" [(ngModel)]="newEventDraft.packInCrew">
+                <option *ngFor="let crew of crewMembers()" [value]="crew.id">{{ crew.name }} ({{ crew.role }})</option>
+              </select>
+            </label>
+          </div>
+
+          <div class="time-group">
+            <p class="eyebrow">Show (optional)</p>
+            <div class="inline-fields">
+              <label>
+                <span>Start</span>
+                <input name="showStart" type="time" [(ngModel)]="newEventDraft.showStart" />
+              </label>
+              <label>
+                <span>Duration (min)</span>
+                <input name="showDuration" type="number" min="0" [(ngModel)]="newEventDraft.showDuration" />
+              </label>
+            </div>
+            <label>
+              <span>Crew</span>
+              <select multiple name="showCrew" [(ngModel)]="newEventDraft.showCrew">
+                <option *ngFor="let crew of crewMembers()" [value]="crew.id">{{ crew.name }} ({{ crew.role }})</option>
+              </select>
+            </label>
+          </div>
+
+          <div class="time-group">
+            <p class="eyebrow">Pack out</p>
+            <div class="inline-fields">
+              <label>
+                <span>Start</span>
+                <input name="packOutStart" type="time" required [(ngModel)]="newEventDraft.packOutStart" />
+              </label>
+              <label>
+                <span>Duration (min)</span>
+                <input name="packOutDuration" type="number" min="0" [(ngModel)]="newEventDraft.packOutDuration" />
+              </label>
+            </div>
+            <label>
+              <span>Crew</span>
+              <select multiple name="packOutCrew" [(ngModel)]="newEventDraft.packOutCrew">
+                <option *ngFor="let crew of crewMembers()" [value]="crew.id">{{ crew.name }} ({{ crew.role }})</option>
+              </select>
+            </label>
+          </div>
+        </div>
+
+        <label class="notes">
+          <span>Notes</span>
+          <textarea name="notes" rows="2" [(ngModel)]="newEventDraft.notes"></textarea>
+        </label>
+
+        <div class="add-event__actions">
+          <p class="muted">New items will adopt the current week and honor crew overlap + vehicle alerts.</p>
+          <button type="submit" class="primary" [disabled]="addEventForm.invalid">Add to planner</button>
+        </div>
+      </form>
+    </section>
+
     <div class="week-grid">
       <section class="day" *ngFor="let day of weekDays()">
         <header class="day__header">

@@ -1,5 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { Component, computed, signal } from '@angular/core';
+import { FormsModule } from '@angular/forms';
 import { UiShellComponent } from '../shared/ui-shell/ui-shell-component';
 
 interface CrewMember {
@@ -20,8 +21,10 @@ interface CrewAssignment {
   responsibility?: string;
 }
 
+type SlotKey = 'packIn' | 'show' | 'packOut' | 'rehearsal';
+
 interface PlannerSlot {
-  key: 'packIn' | 'show' | 'packOut' | 'rehearsal';
+  key: SlotKey;
   label: string;
   start: string; // HH:mm
   durationMinutes: number;
@@ -50,9 +53,28 @@ interface WeekDay {
   date: Date;
 }
 
+interface PlannerDraft {
+  salesOrder: string;
+  title: string;
+  location: string;
+  type: PlannerEvent['type'];
+  date: string; // yyyy-MM-dd
+  notes: string;
+  vehicles: string[];
+  packInStart: string;
+  packInDuration: number;
+  showStart: string;
+  showDuration: number;
+  packOutStart: string;
+  packOutDuration: number;
+  packInCrew: string[];
+  showCrew: string[];
+  packOutCrew: string[];
+}
+
 @Component({
   selector: 'crew-planner',
-  imports: [CommonModule, UiShellComponent],
+  imports: [CommonModule, FormsModule, UiShellComponent],
   templateUrl: './crew-planner.component.html',
   styleUrl: './crew-planner.component.scss',
 })
@@ -87,7 +109,7 @@ export class CrewPlannerComponent {
     },
   ]);
 
-  private readonly baseEvents: PlannerEvent[] = [
+  protected readonly events = signal<PlannerEvent[]>([
     {
       id: 'event-1',
       salesOrder: 'SO-3102',
@@ -290,12 +312,14 @@ export class CrewPlannerComponent {
         },
       ],
     },
-  ];
+  ]);
 
   protected readonly viewMode = signal<'byTask' | 'byTime'>('byTask');
   protected readonly selectedWeekStart = signal<Date>(
     this.getStartOfWeek(new Date()),
   );
+
+  protected newEventDraft: PlannerDraft = this.createEmptyDraft();
 
   protected readonly weekDays = computed<WeekDay[]>(() => {
     const start = this.selectedWeekStart();
@@ -311,7 +335,7 @@ export class CrewPlannerComponent {
 
   protected readonly plannerEvents = computed<(PlannerEvent & { date: Date })[]>(
     () =>
-      this.baseEvents.map((event) => ({
+      this.events().map((event) => ({
         ...event,
         date: this.addDays(this.selectedWeekStart(), event.dateOffset),
       })),
@@ -404,6 +428,65 @@ export class CrewPlannerComponent {
   protected adjustWeek(by: number): void {
     const updated = this.addDays(this.selectedWeekStart(), by * 7);
     this.selectedWeekStart.set(updated);
+    this.newEventDraft.date = this.formatInputDate(updated);
+  }
+
+  protected addEvent(): void {
+    if (!this.newEventDraft.salesOrder || !this.newEventDraft.title) {
+      return;
+    }
+
+    const eventDate =
+      this.parseLocalDate(this.newEventDraft.date) ?? this.selectedWeekStart();
+    const offset = Math.round(
+      (eventDate.getTime() - this.selectedWeekStart().getTime()) /
+        (1000 * 60 * 60 * 24),
+    );
+
+    const slots: PlannerSlot[] = [
+      {
+        key: 'packIn',
+        label: 'Pack in',
+        start: this.newEventDraft.packInStart,
+        durationMinutes: Number(this.newEventDraft.packInDuration) || 0,
+        crew: this.newEventDraft.packInCrew.map((crewId) => ({ crewId })),
+      },
+    ];
+
+    if (this.newEventDraft.showStart) {
+      slots.push({
+        key: 'show',
+        label: 'Show',
+        start: this.newEventDraft.showStart,
+        durationMinutes: Number(this.newEventDraft.showDuration) || 0,
+        crew: this.newEventDraft.showCrew.map((crewId) => ({ crewId })),
+      });
+    }
+
+    if (this.newEventDraft.packOutStart) {
+      slots.push({
+        key: 'packOut',
+        label: 'Pack out',
+        start: this.newEventDraft.packOutStart,
+        durationMinutes: Number(this.newEventDraft.packOutDuration) || 0,
+        crew: this.newEventDraft.packOutCrew.map((crewId) => ({ crewId })),
+      });
+    }
+
+    const newEvent: PlannerEvent = {
+      id: `event-${Date.now()}`,
+      salesOrder: this.newEventDraft.salesOrder,
+      title: this.newEventDraft.title,
+      location: this.newEventDraft.location,
+      type: this.newEventDraft.type,
+      dateOffset: offset,
+      notes: this.newEventDraft.notes,
+      vehicles: [...this.newEventDraft.vehicles],
+      slots,
+    };
+
+    this.events.update((list) => [...list, newEvent]);
+    this.newEventDraft = this.createEmptyDraft();
   }
 
   protected slotOrder(slots: PlannerSlot[]): PlannerSlot[] {
@@ -483,6 +566,7 @@ export class CrewPlannerComponent {
         const next = sorted[i + 1];
 
         if (current.end > next.start) {
+          if (current.eventId === next.eventId) continue;
           const crewName = this.crewName(crewId);
           const currentEvent = eventsById.get(current.eventId);
           const nextEvent = eventsById.get(next.eventId);
@@ -529,5 +613,39 @@ export class CrewPlannerComponent {
     const copy = new Date(date);
     copy.setHours(hours, minutes, 0, 0);
     return copy;
+  }
+
+  private createEmptyDraft(): PlannerDraft {
+    return {
+      salesOrder: '',
+      title: '',
+      location: '',
+      type: 'Production',
+      date: this.formatInputDate(this.selectedWeekStart()),
+      notes: '',
+      vehicles: [],
+      packInStart: '08:00',
+      packInDuration: 120,
+      showStart: '',
+      showDuration: 120,
+      packOutStart: '17:00',
+      packOutDuration: 90,
+      packInCrew: [],
+      showCrew: [],
+      packOutCrew: [],
+    };
+  }
+
+  private formatInputDate(date: Date): string {
+    const copy = new Date(date);
+    copy.setHours(0, 0, 0, 0);
+    return copy.toISOString().slice(0, 10);
+  }
+
+  private parseLocalDate(value: string | undefined): Date | null {
+    if (!value) return null;
+    const [year, month, day] = value.split('-').map(Number);
+    if (!year || !month || !day) return null;
+    return new Date(year, month - 1, day);
   }
 }
