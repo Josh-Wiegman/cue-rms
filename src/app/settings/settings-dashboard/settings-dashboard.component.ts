@@ -56,6 +56,8 @@ export class SettingsDashboardComponent implements OnInit {
   protected organisationBranding: OrganisationBranding | null = null;
   protected warehouses: string[] = [];
   protected defaultWarehouse = '';
+  protected poPrefix = '';
+  protected poPrefixMessage = '';
   compareLevels = (a: PermissionLevel, b: PermissionLevel) => a === b;
 
   async ngOnInit(): Promise<void> {
@@ -65,6 +67,7 @@ export class SettingsDashboardComponent implements OnInit {
     this.warehouses = this.inventoryService.getWarehouses();
     this.defaultWarehouse =
       this.preferencesService.getDefaultWarehouse() || this.warehouses[0];
+    this.poPrefix = this.preferencesService.getPurchaseOrderPrefix();
   }
 
   protected switchSection(section: 'profile' | 'add-user'): void {
@@ -79,6 +82,21 @@ export class SettingsDashboardComponent implements OnInit {
   protected updateDefaultWarehouse(): void {
     if (!this.defaultWarehouse) return;
     this.preferencesService.setDefaultWarehouse(this.defaultWarehouse);
+  }
+
+  protected updatePoPrefix(): void {
+    if (!this.canManagePurchasing()) {
+      this.poPrefixMessage =
+        'Only administrators can change purchase order numbering.';
+      return;
+    }
+
+    this.preferencesService.setPurchaseOrderPrefix(this.poPrefix);
+    this.poPrefixMessage = `Prefix saved as "${this.poPrefix}".`;
+  }
+
+  protected canManagePurchasing(): boolean {
+    return this.authService.hasPermission(PermissionLevel.Administrator);
   }
 
   protected readonly visiblePermissionLevels$ = this.user$.pipe(
