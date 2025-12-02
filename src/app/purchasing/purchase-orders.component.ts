@@ -48,15 +48,19 @@ export class PurchaseOrdersComponent implements OnInit, OnDestroy {
     'Posthaste',
   ];
 
-  newOrder = this.blankOrder();
+  // ⚠️ IMPORTANT: don't call blankOrder() here, DI isn't ready yet
+  newOrder!: PurchaseOrder & { items: DraftItem[] };
 
   private readonly subscriptions: Subscription[] = [];
 
   constructor(private readonly purchaseOrdersService: PurchaseOrdersService) {}
 
   ngOnInit(): void {
+    // DI is ready here, so it's safe to call methods using the service
+    this.newOrder = this.blankOrder();
+
     this.subscriptions.push(
-      this.purchaseOrdersService.orders$.subscribe((order) => {
+      this.purchaseOrdersService.orders$.subscribe(() => {
         this.activeOrders = this.purchaseOrdersService.activeOrders;
         this.archivedOrders = this.purchaseOrdersService.archivedOrders;
       }),
