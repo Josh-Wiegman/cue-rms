@@ -11,10 +11,10 @@
   </div>
 
   <div class="landscape">
-    <div class="hill back" aria-hidden="true"></div>
-    <div class="hill mid" aria-hidden="true"></div>
-    <div class="hill front" aria-hidden="true"></div>
-    <div class="string-lights" aria-hidden="true">
+    <div class="hill back"></div>
+    <div class="hill mid"></div>
+    <div class="hill front"></div>
+    <div class="string-lights">
       <span class="bulb"></span>
       <span class="bulb"></span>
       <span class="bulb"></span>
@@ -31,45 +31,40 @@
       <h1>Christmas Surprise!</h1>
       <p class="lede">
         Ten presents are hidden behind pine trees draped in Christmas lights.
-        Click each one to reveal its message. Only one hides the real gift—can
-        you spot it?
+        Click each one to reveal its message.
       </p>
     </section>
 
-    <section
-      class="forest present-grid"
-      aria-label="Christmas presents hidden by pine trees"
-    >
+    <section class="forest present-grid">
       <div
         class="tree-plot"
         *ngFor="let present of presents; index as i"
-        [style.--peek-offset.px]="present.offset || 0"
-        [style.--peek-lift.px]="present.lift || -8"
-        [style.--peek-rotation.deg]="present.rotation || 0"
-        [style.--depth]="present.y || 0"
-        [style.left.%]="present.x || 0"
-        [style.top.%]="present.y || 0"
-        [style.zIndex]="200 - (present.y || 0)"
+        [style.left.%]="present.x"
+        [style.top.%]="present.y"
+        [style.zIndex]="200 - (present.y ?? 0)"
+        [style.--depth]="present.y"
+        [style.--peek-offset.px]="present.offset"
+        [style.--peek-lift.px]="present.lift"
+        [style.--peek-rotation.deg]="present.rotation"
       >
         <div class="tree-plot-inner">
-          <div class="snow-tile" aria-hidden="true"></div>
+          <div class="snow-tile"></div>
 
           <button
             class="present"
             type="button"
             (click)="openPresent(i)"
             [class.opened]="present.opened"
-            [attr.aria-pressed]="present.opened"
           >
             <span class="tag">#{{ i + 1 }}</span>
             <span class="lid"></span>
             <span class="box"></span>
             <span class="ribbon ribbon-horizontal"></span>
             <span class="ribbon ribbon-vertical"></span>
-            <span class="sparkle" aria-hidden="true">✶</span>
+            <span class="sparkle">✶</span>
           </button>
 
-          <div class="tree" aria-hidden="true">
+          <div class="tree">
             <div class="tree-topper">✷</div>
             <div class="bough bough-1"></div>
             <div class="bough bough-2"></div>
@@ -88,7 +83,7 @@
             <div class="snow-cap"></div>
           </div>
 
-          <div class="snow-bank" aria-hidden="true"></div>
+          <div class="snow-bank"></div>
         </div>
       </div>
 
