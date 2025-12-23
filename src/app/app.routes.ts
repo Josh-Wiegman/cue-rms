@@ -1,9 +1,25 @@
-import { Routes } from '@angular/router';
+import { isPlatformBrowser } from '@angular/common';
+import { inject, PLATFORM_ID } from '@angular/core';
+import { CanMatchFn, Routes } from '@angular/router';
 import { HomeComponent } from './home/home-component/home-component';
 import { NotFoundComponent } from './shared/not-found-component/not-found-component';
 import { authGuard } from './auth/auth.guard';
 
+const xmasSubdomainMatcher: CanMatchFn = () => {
+  const platformId = inject(PLATFORM_ID);
+
+  if (!isPlatformBrowser(platformId)) return false;
+
+  return window.location.hostname.toLowerCase().includes('xmas.');
+};
+
 export const routes: Routes = [
+  {
+    path: '',
+    pathMatch: 'full',
+    canMatch: [xmasSubdomainMatcher],
+    redirectTo: 'xmas',
+  },
   {
     path: 'login',
     loadComponent: () =>
@@ -23,6 +39,12 @@ export const routes: Routes = [
     component: HomeComponent,
     title: 'Cue RMS',
     canActivate: [authGuard],
+  },
+  {
+    path: 'xmas',
+    loadComponent: () =>
+      import('./xmas/xmas.component').then((m) => m.XmasComponent),
+    title: 'Merry Christmas | Cue RMS',
   },
   {
     path: 'home',
