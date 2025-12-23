@@ -220,7 +220,7 @@ h1 {
 .present-grid {
   position: relative;
   width: min(1280px, 96vw);
-  min-height: clamp(620px, 68vh, 920px);
+  min-height: clamp(740px, 76vh, 1080px);
   padding: clamp(1.25rem, 3vw, 2.5rem) clamp(0.75rem, 4vw, 2.5rem) 3.5rem;
   margin: 0 auto;
   isolation: isolate;
@@ -661,7 +661,7 @@ h1 {
 
 @media (max-width: 900px) {
   .present-grid {
-    min-height: 740px;
+    min-height: 820px;
   }
 
   .tree-plot {
@@ -671,7 +671,7 @@ h1 {
 
 @media (max-width: 640px) {
   .present-grid {
-    min-height: 840px;
+    min-height: 900px;
     padding: 1.25rem 1rem 2.75rem;
   }
 
