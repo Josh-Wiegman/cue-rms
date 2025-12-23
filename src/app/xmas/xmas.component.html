@@ -28,15 +28,18 @@
 
   <main class="content">
     <section class="intro">
-      <p class="eyebrow">xmas.cue-rms.com</p>
-      <h1>Winter Wonderland Surprise</h1>
+      <h1>Christmas Surprise!</h1>
       <p class="lede">
-        Ten presents are hidden behind pine trees draped in Christmas lights. Click each one to reveal its message.
-        Only one hides the real gift—can you spot it?
+        Ten presents are hidden behind pine trees draped in Christmas lights.
+        Click each one to reveal its message. Only one hides the real gift—can
+        you spot it?
       </p>
     </section>
 
-    <section class="forest present-grid" aria-label="Christmas presents hidden by pine trees">
+    <section
+      class="forest present-grid"
+      aria-label="Christmas presents hidden by pine trees"
+    >
       <div
         class="tree-plot"
         *ngFor="let present of presents; index as i"
@@ -48,43 +51,45 @@
         [style.top.%]="present.y || 0"
         [style.zIndex]="200 - (present.y || 0)"
       >
-        <div class="snow-tile" aria-hidden="true"></div>
+        <div class="tree-plot-inner">
+          <div class="snow-tile" aria-hidden="true"></div>
 
-        <button
-          class="present"
-          type="button"
-          (click)="openPresent(i)"
-          [class.opened]="present.opened"
-          [attr.aria-pressed]="present.opened"
-        >
-          <span class="tag">#{{ i + 1 }}</span>
-          <span class="lid"></span>
-          <span class="box"></span>
-          <span class="ribbon ribbon-horizontal"></span>
-          <span class="ribbon ribbon-vertical"></span>
-          <span class="sparkle" aria-hidden="true">✶</span>
-        </button>
+          <button
+            class="present"
+            type="button"
+            (click)="openPresent(i)"
+            [class.opened]="present.opened"
+            [attr.aria-pressed]="present.opened"
+          >
+            <span class="tag">#{{ i + 1 }}</span>
+            <span class="lid"></span>
+            <span class="box"></span>
+            <span class="ribbon ribbon-horizontal"></span>
+            <span class="ribbon ribbon-vertical"></span>
+            <span class="sparkle" aria-hidden="true">✶</span>
+          </button>
 
-        <div class="tree" aria-hidden="true">
-          <div class="tree-topper">✷</div>
-          <div class="bough bough-1"></div>
-          <div class="bough bough-2"></div>
-          <div class="bough bough-3"></div>
-          <div class="trunk"></div>
-          <div class="lights">
-            <span class="light"></span>
-            <span class="light"></span>
-            <span class="light"></span>
-            <span class="light"></span>
-            <span class="light"></span>
-            <span class="light"></span>
-            <span class="light"></span>
-            <span class="light"></span>
+          <div class="tree" aria-hidden="true">
+            <div class="tree-topper">✷</div>
+            <div class="bough bough-1"></div>
+            <div class="bough bough-2"></div>
+            <div class="bough bough-3"></div>
+            <div class="trunk"></div>
+            <div class="lights">
+              <span class="light"></span>
+              <span class="light"></span>
+              <span class="light"></span>
+              <span class="light"></span>
+              <span class="light"></span>
+              <span class="light"></span>
+              <span class="light"></span>
+              <span class="light"></span>
+            </div>
+            <div class="snow-cap"></div>
           </div>
-          <div class="snow-cap"></div>
-        </div>
 
-        <div class="snow-bank" aria-hidden="true"></div>
+          <div class="snow-bank" aria-hidden="true"></div>
+        </div>
       </div>
 
       <div class="message-overlay" *ngIf="activeMessage">
