@@ -84,13 +84,13 @@
 
         <div class="snow-bank" aria-hidden="true"></div>
       </div>
-    </section>
 
-    <section class="message" *ngIf="activeMessage">
-      <p [class.grand-reveal]="isGrandReveal">{{ activeMessage }}</p>
-      <p class="hint" *ngIf="!isGrandReveal">
-        Keep exploring the presents—someone tucked away a special surprise.
-      </p>
+      <div class="message-overlay" *ngIf="activeMessage">
+        <p [class.grand-reveal]="isGrandReveal">{{ activeMessage }}</p>
+        <p class="hint" *ngIf="!isGrandReveal">
+          Keep exploring the presents—someone tucked away a special surprise.
+        </p>
+      </div>
     </section>
   </main>
 </div>
