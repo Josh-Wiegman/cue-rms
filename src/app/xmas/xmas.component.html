@@ -56,6 +56,7 @@
         height: 25%;
         background: linear-gradient(to bottom, #ffffff 0%, #e8f4f8 100%);
         border-radius: 50% 50% 0 0 / 20% 20% 0 0;
+        z-index: 1;
       }
 
       .tree {
@@ -135,6 +136,7 @@
         color: #ffd700;
         z-index: 32;
         filter: drop-shadow(0 0 5px #ffd700);
+        pointer-events: none;
       }
 
       .tree-ornament {
@@ -143,6 +145,7 @@
         height: 10px;
         border-radius: 50%;
         z-index: 32;
+        pointer-events: none;
       }
 
       .tree-garland {
@@ -156,6 +159,7 @@
           transparent 10px
         );
         z-index: 32;
+        pointer-events: none;
       }
 
       .tree-light {
@@ -166,6 +170,7 @@
         animation: treeLightGlow 1.5s ease-in-out infinite;
         box-shadow: 0 0 10px currentColor;
         z-index: 32;
+        pointer-events: none;
       }
 
       @keyframes treeLightGlow {
@@ -929,358 +934,368 @@
     <div class="ground"></div>
 
     <script>
-      const messages = [
-        {
-          message: "Haha you thought this had a present, try another one.",
-          x: 3,
-          y: 15,
-        },
-        {
-          message: "Nope, just more tinsel in this one. Keep hunting!",
-          x: 13,
-          y: 40,
-        },
-        {
-          message: "Rudolph ate the gift in here. Maybe the next box?",
-          x: 25,
-          y: 65,
-        },
-        {
-          message: "Santa said this one is only filled with giggles.",
-          x: 38,
-          y: 25,
-        },
-        {
-          message: "Plot twist: it's empty wrapping paper. Next!",
-          x: 51,
-          y: 80,
-        },
-        {
-          message: "Elves are on break, so this box is a decoy.",
-          x: 63,
-          y: 35,
-        },
-        {
-          message: "This one contains... dramatic suspense. Keep going!",
-          x: 75,
-          y: 55,
-        },
-        {
-          message: "Almost there! But this gift took a holiday.",
-          x: 85,
-          y: 20,
-        },
-        {
-          message: "Close! This present is just jingling bells.",
-          x: 92,
-          y: 70,
-        },
-        {
-          message: "Whoops, this one's stuffed with candy wrappers.",
-          x: 45,
-          y: 45,
-        },
-      ];
+      (function () {
+        const messages = [
+          {
+            message: "Haha you thought this had a present, try another one.",
+            x: 3,
+            y: 15,
+          },
+          {
+            message: "Nope, just more tinsel in this one. Keep hunting!",
+            x: 13,
+            y: 40,
+          },
+          {
+            message: "Rudolph ate the gift in here. Maybe the next box?",
+            x: 25,
+            y: 65,
+          },
+          {
+            message: "Santa said this one is only filled with giggles.",
+            x: 38,
+            y: 25,
+          },
+          {
+            message: "Plot twist: it's empty wrapping paper. Next!",
+            x: 51,
+            y: 80,
+          },
+          {
+            message: "Elves are on break, so this box is a decoy.",
+            x: 63,
+            y: 35,
+          },
+          {
+            message: "This one contains... dramatic suspense. Keep going!",
+            x: 75,
+            y: 55,
+          },
+          {
+            message: "Almost there! But this gift took a holiday.",
+            x: 85,
+            y: 20,
+          },
+          {
+            message: "Close! This present is just jingling bells.",
+            x: 92,
+            y: 70,
+          },
+          {
+            message: "Whoops, this one's stuffed with candy wrappers.",
+            x: 45,
+            y: 45,
+          },
+        ];
 
-      const finalMessage =
-        "Merry Christmas Mum & Dad, TeAna and I have booked you in for a nice meal at the Central Fire Station Bistro in Napier, we hope you enjoy (it's got good reviews lol). Love you guys!";
+        const finalMessage =
+          "Merry Christmas Mum & Dad, TeAna and I have booked you in for a nice meal at the Central Fire Station Bistro in Napier, we hope you enjoy (it's got good reviews lol). Love you guys!";
 
-      const shuffled = [...messages];
-      for (let i = shuffled.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
-      }
+        const shuffled = [...messages];
+        for (let i = shuffled.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+        }
 
-      let clickedCount = 0;
+        let clickedCount = 0;
 
-      // Presents on left side: indices 0, 3, 7
-      const leftSide = [0, 3, 7];
+        const leftSide = [0, 3, 7];
 
-      // Create trees with presents
-      for (let i = 0; i < 10; i++) {
-        const treeContainer = document.createElement("div");
-        treeContainer.className = "tree";
-        treeContainer.style.left = shuffled[i].x + "%";
-        treeContainer.style.bottom = shuffled[i].y / 5 + "%";
+        for (let i = 0; i < 10; i++) {
+          const treeContainer = document.createElement("div");
+          treeContainer.className = "tree";
+          treeContainer.style.left = shuffled[i].x + "%";
+          treeContainer.style.bottom = shuffled[i].y / 5 + "%";
 
-        const present = document.createElement("div");
-        present.className = leftSide.includes(i)
-          ? "present left"
-          : "present right";
-        present.innerHTML = '<div class="present-bow"></div>';
+          const present = document.createElement("div");
+          present.className = leftSide.includes(i)
+            ? "present left"
+            : "present right";
+          present.innerHTML = '<div class="present-bow"></div>';
 
-        const messageIndex = i;
-        present.addEventListener("click", (e) => {
-          e.stopPropagation();
-          present.style.display = "none";
-          clickedCount++;
+          const messageIndex = i;
+          present.addEventListener("click", function (e) {
+            e.stopPropagation();
+            present.style.display = "none";
+            clickedCount++;
 
-          if (clickedCount === 10) {
-            showFinalMessage();
-          } else {
-            showMessage(shuffled[messageIndex].message);
+            if (clickedCount === 10) {
+              showFinalMessage();
+            } else {
+              showMessage(shuffled[messageIndex].message);
+            }
+          });
+
+          treeContainer.appendChild(present);
+
+          const treeStructure = document.createElement("div");
+          treeStructure.className = "tree-container";
+          treeStructure.innerHTML = `
+                    <div class="tree-star">★</div>
+                    <div class="tree-layer tree-layer-1"></div>
+                    <div class="tree-layer tree-layer-2"></div>
+                    <div class="tree-layer tree-layer-3"></div>
+                    <div class="tree-layer tree-layer-4"></div>
+                    <div class="tree-trunk"></div>
+                `;
+
+          const ornamentColors = [
+            "#ff0000",
+            "#ffd700",
+            "#0000ff",
+            "#ff69b4",
+            "#9370db",
+          ];
+          for (let j = 0; j < 6; j++) {
+            const ornament = document.createElement("div");
+            ornament.className = "tree-ornament";
+            ornament.style.background =
+              ornamentColors[Math.floor(Math.random() * ornamentColors.length)];
+            ornament.style.left = 20 + Math.random() * 60 + "%";
+            ornament.style.bottom = 15 + Math.random() * 100 + "px";
+            treeStructure.appendChild(ornament);
           }
+
+          for (let k = 1; k <= 3; k++) {
+            const garland = document.createElement("div");
+            garland.className = "tree-garland";
+            garland.style.width = 90 - k * 20 + "px";
+            garland.style.left = "50%";
+            garland.style.transform = "translateX(-50%)";
+            garland.style.bottom = 30 + k * 30 + "px";
+            treeStructure.appendChild(garland);
+          }
+
+          const lightColors = [
+            "#ff0000",
+            "#ffd700",
+            "#00ff00",
+            "#0000ff",
+            "#ff69b4",
+            "#ffff00",
+          ];
+          const numLights = 6 + Math.floor(Math.random() * 4);
+          for (let j = 0; j < numLights; j++) {
+            const light = document.createElement("div");
+            light.className = "tree-light";
+            light.style.background =
+              lightColors[Math.floor(Math.random() * lightColors.length)];
+            light.style.left = 20 + Math.random() * 60 + "%";
+            light.style.bottom = 10 + Math.random() * 110 + "px";
+            light.style.animationDelay = Math.random() * 1.5 + "s";
+            treeStructure.appendChild(light);
+          }
+
+          treeContainer.appendChild(treeStructure);
+          document.body.appendChild(treeContainer);
+        }
+
+        const snowmanPositions = [{ x: 20 }, { x: 55 }, { x: 80 }];
+
+        snowmanPositions.forEach(function (pos) {
+          const snowman = document.createElement("div");
+          snowman.className = "snowman";
+          snowman.style.left = pos.x + "%";
+          snowman.innerHTML = `
+                    <div class="snowman-bottom"></div>
+                    <div class="snowman-middle">
+                        <div class="snowman-button" style="top: 10px;"></div>
+                        <div class="snowman-button" style="top: 25px;"></div>
+                    </div>
+                    <div class="snowman-head">
+                        <div class="snowman-eye left"></div>
+                        <div class="snowman-eye right"></div>
+                        <div class="snowman-nose"></div>
+                        <div class="snowman-hat"></div>
+                    </div>
+                `;
+          document.body.appendChild(snowman);
         });
 
-        treeContainer.appendChild(present);
-
-        const treeStructure = document.createElement("div");
-        treeStructure.className = "tree-container";
-        treeStructure.innerHTML = `
-                <div class="tree-star">★</div>
-                <div class="tree-layer tree-layer-1"></div>
-                <div class="tree-layer tree-layer-2"></div>
-                <div class="tree-layer tree-layer-3"></div>
-                <div class="tree-layer tree-layer-4"></div>
-                <div class="tree-trunk"></div>
-            `;
-
-        const ornamentColors = [
-          "#ff0000",
-          "#ffd700",
-          "#0000ff",
-          "#ff69b4",
-          "#9370db",
-        ];
-        for (let j = 0; j < 6; j++) {
-          const ornament = document.createElement("div");
-          ornament.className = "tree-ornament";
-          ornament.style.background =
-            ornamentColors[Math.floor(Math.random() * ornamentColors.length)];
-          ornament.style.left = 20 + Math.random() * 60 + "%";
-          ornament.style.bottom = 15 + Math.random() * 100 + "px";
-          treeStructure.appendChild(ornament);
-        }
-
-        for (let k = 1; k <= 3; k++) {
-          const garland = document.createElement("div");
-          garland.className = "tree-garland";
-          garland.style.width = 90 - k * 20 + "px";
-          garland.style.left = "50%";
-          garland.style.transform = "translateX(-50%)";
-          garland.style.bottom = 30 + k * 30 + "px";
-          treeStructure.appendChild(garland);
-        }
-
-        const lightColors = [
-          "#ff0000",
-          "#ffd700",
-          "#00ff00",
-          "#0000ff",
-          "#ff69b4",
-          "#ffff00",
-        ];
-        const numLights = 6 + Math.floor(Math.random() * 4);
-        for (let j = 0; j < numLights; j++) {
-          const light = document.createElement("div");
-          light.className = "tree-light";
-          light.style.background =
-            lightColors[Math.floor(Math.random() * lightColors.length)];
-          light.style.left = 20 + Math.random() * 60 + "%";
-          light.style.bottom = 10 + Math.random() * 110 + "px";
-          light.style.animationDelay = Math.random() * 1.5 + "s";
-          treeStructure.appendChild(light);
-        }
-
-        treeContainer.appendChild(treeStructure);
-        document.body.appendChild(treeContainer);
-      }
-
-      const snowmanPositions = [{ x: 20 }, { x: 55 }, { x: 80 }];
-
-      snowmanPositions.forEach((pos) => {
-        const snowman = document.createElement("div");
-        snowman.className = "snowman";
-        snowman.style.left = pos.x + "%";
-        snowman.innerHTML = `
-                <div class="snowman-bottom"></div>
-                <div class="snowman-middle">
-                    <div class="snowman-button" style="top: 10px;"></div>
-                    <div class="snowman-button" style="top: 25px;"></div>
-                </div>
-                <div class="snowman-head">
-                    <div class="snowman-eye left"></div>
-                    <div class="snowman-eye right"></div>
-                    <div class="snowman-nose"></div>
-                    <div class="snowman-hat"></div>
+        const santaSleigh = document.createElement("div");
+        santaSleigh.className = "santa-sleigh";
+        santaSleigh.innerHTML = `
+                <div class="sleigh-container">
+                    <div class="reindeer">
+                        <div class="reindeer-body">
+                            <div class="reindeer-neck">
+                                <div class="reindeer-head">
+                                    <div class="reindeer-ear left"></div>
+                                    <div class="reindeer-ear right"></div>
+                                    <div class="reindeer-antler left"></div>
+                                    <div class="reindeer-antler right"></div>
+                                    <div class="reindeer-eye left"></div>
+                                    <div class="reindeer-eye right"></div>
+                                    <div class="reindeer-nose"></div>
+                                </div>
+                            </div>
+                            <div class="reindeer-leg"></div>
+                            <div class="reindeer-leg"></div>
+                            <div class="reindeer-leg"></div>
+                            <div class="reindeer-leg"></div>
+                        </div>
+                        <div class="harness"></div>
+                    </div>
+                    <div class="reindeer">
+                        <div class="reindeer-body">
+                            <div class="reindeer-neck">
+                                <div class="reindeer-head">
+                                    <div class="reindeer-ear left"></div>
+                                    <div class="reindeer-ear right"></div>
+                                    <div class="reindeer-antler left"></div>
+                                    <div class="reindeer-antler right"></div>
+                                    <div class="reindeer-eye left"></div>
+                                    <div class="reindeer-eye right"></div>
+                                </div>
+                            </div>
+                            <div class="reindeer-leg"></div>
+                            <div class="reindeer-leg"></div>
+                            <div class="reindeer-leg"></div>
+                            <div class="reindeer-leg"></div>
+                        </div>
+                        <div class="harness"></div>
+                    </div>
+                    <div class="sleigh">
+                        <div class="sleigh-pattern"></div>
+                        <div class="sleigh-runner"></div>
+                        <div class="santa">
+                            <div class="santa-arm left">
+                                <div class="santa-hand"></div>
+                            </div>
+                            <div class="santa-arm right">
+                                <div class="santa-hand"></div>
+                            </div>
+                            <div class="santa-body">
+                                <div class="santa-belt">
+                                    <div class="santa-buckle"></div>
+                                </div>
+                            </div>
+                            <div class="santa-head">
+                                <div class="santa-hat">
+                                    <div class="santa-hat-brim"></div>
+                                    <div class="santa-hat-pompom"></div>
+                                </div>
+                                <div class="santa-eye left"></div>
+                                <div class="santa-eye right"></div>
+                                <div class="santa-nose"></div>
+                                <div class="santa-mustache"></div>
+                                <div class="santa-beard"></div>
+                            </div>
+                        </div>
+                        <div class="gift-sack"></div>
+                    </div>
                 </div>
             `;
-        document.body.appendChild(snowman);
-      });
+        document.body.appendChild(santaSleigh);
 
-      const santaSleigh = document.createElement("div");
-      santaSleigh.className = "santa-sleigh";
-      santaSleigh.innerHTML = `
-            <div class="sleigh-container">
-                <div class="reindeer">
-                    <div class="reindeer-body">
-                        <div class="reindeer-neck">
-                            <div class="reindeer-head">
-                                <div class="reindeer-ear left"></div>
-                                <div class="reindeer-ear right"></div>
-                                <div class="reindeer-antler left"></div>
-                                <div class="reindeer-antler right"></div>
-                                <div class="reindeer-eye left"></div>
-                                <div class="reindeer-eye right"></div>
-                                <div class="reindeer-nose"></div>
-                            </div>
-                        </div>
-                        <div class="reindeer-leg"></div>
-                        <div class="reindeer-leg"></div>
-                        <div class="reindeer-leg"></div>
-                        <div class="reindeer-leg"></div>
-                    </div>
-                    <div class="harness"></div>
-                </div>
-                <div class="reindeer">
-                    <div class="reindeer-body">
-                        <div class="reindeer-neck">
-                            <div class="reindeer-head">
-                                <div class="reindeer-ear left"></div>
-                                <div class="reindeer-ear right"></div>
-                                <div class="reindeer-antler left"></div>
-                                <div class="reindeer-antler right"></div>
-                                <div class="reindeer-eye left"></div>
-                                <div class="reindeer-eye right"></div>
-                            </div>
-                        </div>
-                        <div class="reindeer-leg"></div>
-                        <div class="reindeer-leg"></div>
-                        <div class="reindeer-leg"></div>
-                        <div class="reindeer-leg"></div>
-                    </div>
-                    <div class="harness"></div>
-                </div>
-                <div class="sleigh">
-                    <div class="sleigh-pattern"></div>
-                    <div class="sleigh-runner"></div>
-                    <div class="santa">
-                        <div class="santa-arm left">
-                            <div class="santa-hand"></div>
-                        </div>
-                        <div class="santa-arm right">
-                            <div class="santa-hand"></div>
-                        </div>
-                        <div class="santa-body">
-                            <div class="santa-belt">
-                                <div class="santa-buckle"></div>
-                            </div>
-                        </div>
-                        <div class="santa-head">
-                            <div class="santa-hat">
-                                <div class="santa-hat-brim"></div>
-                                <div class="santa-hat-pompom"></div>
-                            </div>
-                            <div class="santa-eye left"></div>
-                            <div class="santa-eye right"></div>
-                            <div class="santa-nose"></div>
-                            <div class="santa-mustache"></div>
-                            <div class="santa-beard"></div>
-                        </div>
-                    </div>
-                    <div class="gift-sack"></div>
-                </div>
-            </div>
-        `;
-      document.body.appendChild(santaSleigh);
+        function showMessage(text) {
+          const msg = document.createElement("div");
+          msg.className = "message";
+          msg.textContent = text;
+          msg.style.left = "50%";
+          msg.style.top = "50%";
+          msg.style.transform = "translate(-50%, -50%)";
+          document.body.appendChild(msg);
 
-      function showMessage(text) {
-        const msg = document.createElement("div");
-        msg.className = "message";
-        msg.textContent = text;
-        msg.style.left = "50%";
-        msg.style.top = "50%";
-        msg.style.transform = "translate(-50%, -50%)";
-        document.body.appendChild(msg);
-
-        setTimeout(() => {
-          msg.remove();
-        }, 3000);
-      }
-
-      function showFinalMessage() {
-        const msg = document.createElement("div");
-        msg.className = "message final-message";
-        msg.textContent = finalMessage;
-        msg.style.left = "50%";
-        msg.style.top = "50%";
-        msg.style.transform = "translate(-50%, -50%)";
-        document.body.appendChild(msg);
-
-        createConfetti();
-        intensifySnow();
-        addStars();
-      }
-
-      function createConfetti() {
-        const colors = ["#c41e3a", "#ffd700", "#228b22", "#ffffff", "#4169e1"];
-        for (let i = 0; i < 100; i++) {
-          setTimeout(() => {
-            const confetti = document.createElement("div");
-            confetti.className = "celebration";
-            confetti.style.left = Math.random() * 100 + "%";
-            confetti.style.top = "-10px";
-            confetti.style.background =
-              colors[Math.floor(Math.random() * colors.length)];
-            confetti.style.animationDelay = Math.random() * 0.5 + "s";
-            document.body.appendChild(confetti);
-
-            setTimeout(() => confetti.remove(), 3000);
-          }, i * 30);
+          setTimeout(function () {
+            msg.remove();
+          }, 3000);
         }
-      }
 
-      function intensifySnow() {
+        function showFinalMessage() {
+          const msg = document.createElement("div");
+          msg.className = "message final-message";
+          msg.textContent = finalMessage;
+          msg.style.left = "50%";
+          msg.style.top = "50%";
+          msg.style.transform = "translate(-50%, -50%)";
+          document.body.appendChild(msg);
+
+          createConfetti();
+          intensifySnow();
+          addStars();
+        }
+
+        function createConfetti() {
+          const colors = [
+            "#c41e3a",
+            "#ffd700",
+            "#228b22",
+            "#ffffff",
+            "#4169e1",
+          ];
+          for (let i = 0; i < 100; i++) {
+            setTimeout(function () {
+              const confetti = document.createElement("div");
+              confetti.className = "celebration";
+              confetti.style.left = Math.random() * 100 + "%";
+              confetti.style.top = "-10px";
+              confetti.style.background =
+                colors[Math.floor(Math.random() * colors.length)];
+              confetti.style.animationDelay = Math.random() * 0.5 + "s";
+              document.body.appendChild(confetti);
+
+              setTimeout(function () {
+                confetti.remove();
+              }, 3000);
+            }, i * 30);
+          }
+        }
+
+        function intensifySnow() {
+          for (let i = 0; i < 50; i++) {
+            createSnowflake();
+          }
+        }
+
+        function addStars() {
+          for (let i = 0; i < 20; i++) {
+            const star = document.createElement("div");
+            star.className = "star";
+            star.textContent = "★";
+            star.style.left = Math.random() * 100 + "%";
+            star.style.top = Math.random() * 50 + "%";
+            star.style.animationDelay = Math.random() * 2 + "s";
+            document.body.appendChild(star);
+          }
+        }
+
+        function createSnowflake() {
+          const snowflake = document.createElement("div");
+          snowflake.className = "snowflake";
+          snowflake.textContent = "❄";
+          snowflake.style.left = Math.random() * 100 + "%";
+          snowflake.style.fontSize = Math.random() * 1.5 + 0.5 + "em";
+          snowflake.style.animationDuration = Math.random() * 3 + 2 + "s";
+          snowflake.style.animationDelay = Math.random() * 2 + "s";
+          document.getElementById("snowContainer").appendChild(snowflake);
+
+          setTimeout(function () {
+            snowflake.remove();
+          }, 5000);
+        }
+
         for (let i = 0; i < 50; i++) {
           createSnowflake();
         }
-      }
 
-      function addStars() {
+        setInterval(createSnowflake, 200);
+
+        const festoon = document.getElementById("festoon");
+        const line = document.createElement("div");
+        line.className = "festoon-line";
+        festoon.appendChild(line);
+
+        const colors = ["#c41e3a", "#ffd700", "#228b22", "#4169e1", "#ff69b4"];
         for (let i = 0; i < 20; i++) {
-          const star = document.createElement("div");
-          star.className = "star";
-          star.textContent = "★";
-          star.style.left = Math.random() * 100 + "%";
-          star.style.top = Math.random() * 50 + "%";
-          star.style.animationDelay = Math.random() * 2 + "s";
-          document.body.appendChild(star);
+          const bulb = document.createElement("div");
+          bulb.className = "festoon-bulb";
+          bulb.style.left = i * 5 + 2 + "%";
+          bulb.style.background = colors[i % colors.length];
+          bulb.style.animationDelay = i * 0.1 + "s";
+          festoon.appendChild(bulb);
         }
-      }
-
-      function createSnowflake() {
-        const snowflake = document.createElement("div");
-        snowflake.className = "snowflake";
-        snowflake.textContent = "❄";
-        snowflake.style.left = Math.random() * 100 + "%";
-        snowflake.style.fontSize = Math.random() * 1.5 + 0.5 + "em";
-        snowflake.style.animationDuration = Math.random() * 3 + 2 + "s";
-        snowflake.style.animationDelay = Math.random() * 2 + "s";
-        document.getElementById("snowContainer").appendChild(snowflake);
-
-        setTimeout(() => snowflake.remove(), 5000);
-      }
-
-      for (let i = 0; i < 50; i++) {
-        createSnowflake();
-      }
-
-      setInterval(createSnowflake, 200);
-
-      const festoon = document.getElementById("festoon");
-      const line = document.createElement("div");
-      line.className = "festoon-line";
-      festoon.appendChild(line);
-
-      const colors = ["#c41e3a", "#ffd700", "#228b22", "#4169e1", "#ff69b4"];
-      for (let i = 0; i < 20; i++) {
-        const bulb = document.createElement("div");
-        bulb.className = "festoon-bulb";
-        bulb.style.left = i * 5 + 2 + "%";
-        bulb.style.background = colors[i % colors.length];
-        bulb.style.animationDelay = i * 0.1 + "s";
-        festoon.appendChild(bulb);
-      }
+      })();
     </script>
   </body>
 </html>
