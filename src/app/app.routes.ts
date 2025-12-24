@@ -43,7 +43,9 @@ export const routes: Routes = [
   {
     path: 'xmas',
     loadComponent: () =>
-      import('./xmas/xmas.component').then((m) => m.XmasComponent),
+      import('./xmas/xmas.component').then(
+        (m) => m.ChristmasPresentHuntComponent,
+      ),
     title: 'Merry Christmas | Cue RMS',
   },
   {
