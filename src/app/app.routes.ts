@@ -41,14 +41,6 @@ export const routes: Routes = [
     canActivate: [authGuard],
   },
   {
-    path: 'xmas',
-    loadComponent: () =>
-      import('./xmas/xmas.component').then(
-        (m) => m.ChristmasPresentHuntComponent,
-      ),
-    title: 'Merry Christmas | Cue RMS',
-  },
-  {
     path: 'home',
     component: HomeComponent,
     title: 'Cue RMS',
