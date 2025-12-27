@@ -25,10 +25,10 @@ $hero-gradient-minor: linear-gradient(145deg, $accent-color, $hero-light-color);
 $main-gradient: linear-gradient(140deg, $main-dark-color, $main-light-color);
 
 // Borders
-$main-border: 2px solid $main-border-color;
+$main-border: 1px solid $main-border-color;
 $minor-border: 1px solid $main-border-color;
-$minor-border-radius: 0.6rem;
-$minor-border-radius-internal: 0.4rem;
+$minor-border-radius: 0.4rem;
+$minor-border-radius-internal: 0.2rem;
 $major-border-radius: 1rem;
 
 // Transitions
