@@ -12,8 +12,11 @@
   font-size: $normal-text;
 }
 
+html,
 body {
   background-color: $main-light-color;
+  height: 100%;
+  width: 100%;
 }
 
 h1 {

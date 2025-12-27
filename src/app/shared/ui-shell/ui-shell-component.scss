@@ -3,8 +3,8 @@
 :host {
   display: grid;
   grid-template-columns: 280px minmax(0, 1fr);
-  height: 100vh;
-  width: 100vw;
+  height: 100%;
+  width: 100%;
 }
 
 main-navigation-component {
@@ -15,5 +15,6 @@ main-navigation-component {
   grid-column: 2;
   padding: 2.5rem 3rem;
   overflow-x: hidden;
+  overflow-y: scroll;
   background: $main-gradient;
 }
