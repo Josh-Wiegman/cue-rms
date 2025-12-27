@@ -133,4 +133,14 @@ export class MainNavigationComponent implements OnInit {
       ],
     };
   }
+
+  protected openGroup: NavigationItem | null = null;
+
+  protected toggleSubGroup(item: NavigationItem): void {
+    this.openGroup = this.openGroup === item ? null : item;
+  }
+
+  isOpen(item: NavigationItem): boolean {
+    return this.openGroup === item;
+  }
 }

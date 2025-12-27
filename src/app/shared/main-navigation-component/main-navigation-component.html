@@ -1,46 +1,62 @@
 <nav>
-  <div class="nav__brand">
-    <a class="brand">
+  <div class="nav__header">
+    <a routerLink="">
       @if (orgLogoUrl) {
         <img
           [src]="orgLogoUrl"
           [alt]="orgName || 'Company Logo'"
-          class="brand__logo"
+          class="nav__header__logo"
           loading="eager"
           decoding="async"
         />
       }
-      <span class="brand__name">{{ orgName || "Company Name" }}</span>
+
+      <span class="nav__header__title">{{ orgName || "Company Name" }}</span>
     </a>
   </div>
 
-  <ul class="nav__links">
-    @for (item of navItems; track item.label) {
-      <li [class.nav__item--group]="isGroup(item)">
-        @if (isGroup(item)) {
-          <div class="nav__group">
-            <div class="nav__group-label">{{ item.label }}</div>
-            <ul class="nav__group-links">
-              @for (child of item.children; track child.label) {
-                <li>
-                  <a [routerLink]="child.path" routerLinkActive="active">
-                    {{ child.label }}
-                  </a>
-                </li>
-              }
-            </ul>
-          </div>
-        } @else {
-          <a [routerLink]="item.path" routerLinkActive="active">{{
-            item.label
-          }}</a>
-        }
-      </li>
-    }
-  </ul>
+  <div class="nav__main-navigation">
+    <span class="nav__main-navigation__title">Navigation</span>
+
+    <ul class="nav__main-navigation__items">
+      @for (item of navItems; track item.label) {
+        <li>
+          @if (isGroup(item)) {
+            <div
+              class="nav__sub-navigation"
+              [class.nav__sub-navigation--open]="isOpen(item)"
+            >
+              <span
+                class="nav__sub-navigation__title"
+                (click)="toggleSubGroup(item)"
+                ><p>{{ item.label }}</p>
+                <svg>
+                  <use [attr.href]="'icons/chevron-down.svg'" />
+                  <desc>more</desc>
+                </svg>
+              </span>
+              <ul class="nav__sub-navigation__items">
+                @for (child of item.children; track child.label) {
+                  <li>
+                    <a [routerLink]="child.path" routerLinkActive="active">{{
+                      child.label
+                    }}</a>
+                  </li>
+                }
+              </ul>
+            </div>
+          } @else {
+            <a [routerLink]="item.path" routerLinkActive="active">{{
+              item.label
+            }}</a>
+          }
+        </li>
+      }
+    </ul>
+  </div>
 
   <div class="nav__actions" *ngIf="user$ | async as user">
-    <div class="nav__actions--user">
+    <div class="nav__actions__user-info">
       {{ user.displayName }} · L{{ user.permissionLevel }}
     </div>
     <cg-dropdown-menu
