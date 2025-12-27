@@ -3,13 +3,14 @@
 :host {
   border-right: $main-border;
 }
+
 nav {
   background-color: $main-light-color;
   color: $main-text-color;
-  height: 99%;
+  height: 100%;
   display: flex;
   flex-direction: column;
-  gap: 1.25rem;
+  gap: 1rem;
 }
 
 .nav__header {
@@ -42,16 +43,17 @@ nav {
 }
 
 .nav__main-navigation {
-  padding: 0.5rem 0.45rem;
+  padding: 0 0.75rem;
   display: flex;
   flex-direction: column;
-  gap: 0.25rem;
 }
 
 .nav__main-navigation__title {
   font-weight: 700;
+  display: block;
   font-size: 0.85rem;
-  padding: 0 0.2rem;
+  padding: 0.45rem 0.65rem;
+  color: rgba($main-text-color, 0.4);
 }
 
 .nav__main-navigation__items,
@@ -59,9 +61,8 @@ nav {
   list-style: none;
   display: flex;
   flex-direction: column;
-  gap: 0.25rem;
+  gap: 0.4rem;
   font-size: 1rem;
-
   li {
     width: 100%;
   }
@@ -81,13 +82,12 @@ nav {
 }
 
 .nav__main-navigation__items a.active {
-  background-color: rgba($accent-color, 0.08);
+  background-color: rgba($main-text-color, 0.06);
 }
 
 .nav__main-navigation__items a:hover,
 .nav__sub-navigation__title:hover {
-  background-color: rgba($accent-color, 0.14);
-  color: $accent-color;
+  background-color: rgba($accent-color, 0.1);
 }
 
 .nav__sub-navigation {
@@ -143,10 +143,12 @@ nav {
   align-items: center;
   justify-content: space-between;
   border-top: $main-border;
-  padding: 1.25rem 0.5rem 0.5rem 0.5rem;
-}
+  padding: 1.25rem;
+  background-color: $main-dark-color;
 
-.nav__actions__user-info {
-  font-weight: 600;
-  font-size: 0.9rem;
+  .nav__actions__user-info {
+    font-weight: 700;
+    @include compact-text;
+    font-size: 0.95rem;
+  }
 }
