@@ -140,7 +140,18 @@ export class MainNavigationComponent implements OnInit {
     this.openGroup = this.openGroup === item ? null : item;
   }
 
-  isOpen(item: NavigationItem): boolean {
+  protected isOpen(item: NavigationItem): boolean {
     return this.openGroup === item;
+  }
+
+  protected sidebarIsOpen: boolean = true;
+
+  protected toggleSidebar(item?: NavigationItem): void {
+    this.sidebarIsOpen = !this.sidebarIsOpen;
+    if (item) {
+      this.openGroup = this.openGroup === item ? null : item;
+    } else {
+      this.openGroup = null;
+    }
   }
 }

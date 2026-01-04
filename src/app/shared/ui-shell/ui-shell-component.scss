@@ -2,7 +2,7 @@
 
 :host {
   display: grid;
-  grid-template-columns: 280px minmax(0, 1fr);
+  grid-template-columns: max-content minmax(0, 1fr);
   height: 100%;
   width: 100%;
 }

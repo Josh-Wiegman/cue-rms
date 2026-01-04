@@ -8,9 +8,15 @@ nav {
   background-color: $main-light-color;
   color: $main-text-color;
   height: 100%;
+  width: 280px;
   display: flex;
   flex-direction: column;
   gap: 1rem;
+  transition: $medium-transition;
+}
+
+.nav--closed {
+  width: 100%;
 }
 
 .nav__header {
@@ -46,14 +52,36 @@ nav {
   padding: 0 0.75rem;
   display: flex;
   flex-direction: column;
+  width: 100%;
 }
 
 .nav__main-navigation__title {
-  font-weight: 700;
-  display: block;
-  font-size: 0.85rem;
-  padding: 0.45rem 0.65rem;
   color: rgba($main-text-color, 0.4);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  flex-direction: row;
+  padding: 0.45rem 0.65rem;
+
+  p {
+    font-weight: 700;
+    display: block;
+    font-size: 0.85rem;
+    line-height: 1.25rem;
+  }
+
+  svg {
+    height: 1.25rem;
+    width: 1.25rem;
+    display: block;
+    transition: $medium-transition;
+
+    &:hover {
+      color: rgba($main-text-color, 0.8);
+      cursor: pointer;
+    }
+  }
 }
 
 .nav__main-navigation__items,
@@ -63,6 +91,7 @@ nav {
   flex-direction: column;
   gap: 0.4rem;
   font-size: 1rem;
+
   li {
     width: 100%;
   }
@@ -79,6 +108,14 @@ nav {
   transition: $quick-transition;
   cursor: pointer;
   font-weight: 500;
+  width: 100%;
+
+  svg {
+    width: 1.25rem;
+    height: 1.25rem;
+    display: block;
+    transition: $medium-transition;
+  }
 }
 
 .nav__main-navigation__items a.active {

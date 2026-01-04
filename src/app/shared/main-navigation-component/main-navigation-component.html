@@ -1,22 +1,37 @@
-<nav>
+<nav [class.nav--closed]="!sidebarIsOpen">
   <div class="nav__header">
     <a routerLink="">
-      @if (orgLogoUrl) {
-        <img
-          [src]="orgLogoUrl"
-          [alt]="orgName || 'Company Logo'"
-          class="nav__header__logo"
-          loading="eager"
-          decoding="async"
-        />
-      }
+      <!-- <img
+        [src]="orgLogoUrl"
+        [alt]="orgName || 'Company Logo'"
+        class="nav__header__logo"
+        loading="eager"
+        decoding="async"
+      /> -->
+      <img
+        src="images.png"
+        [alt]="orgName || 'Company Logo'"
+        class="nav__header__logo"
+        loading="eager"
+        decoding="async"
+      />
 
-      <span class="nav__header__title">{{ orgName || "Company Name" }}</span>
+      @if (sidebarIsOpen) {
+        <span class="nav__header__title">{{ orgName || "Company Name" }}</span>
+      }
     </a>
   </div>
 
   <div class="nav__main-navigation">
-    <span class="nav__main-navigation__title">Navigation</span>
+    <span class="nav__main-navigation__title">
+      @if (sidebarIsOpen) {
+        <p>Navigation</p>
+      }
+      <svg (click)="toggleSidebar()">
+        <use [attr.href]="'icons/sidebar.svg'" />
+        <desc>Collapse</desc>
+      </svg>
+    </span>
 
     <ul class="nav__main-navigation__items">
       @for (item of navItems; track item.label) {
@@ -28,12 +43,22 @@
             >
               <span
                 class="nav__sub-navigation__title"
-                (click)="toggleSubGroup(item)"
-                ><p>{{ item.label }}</p>
-                <svg>
-                  <use [attr.href]="'icons/chevron-down.svg'" />
-                  <desc>more</desc>
+                (click)="
+                  sidebarIsOpen ? toggleSubGroup(item) : toggleSidebar(item)
+                "
+              >
+                <svg (click)="toggleSidebar()">
+                  <use [attr.href]="'icons/sidebar.svg'" />
+                  <desc>{{ item.label }}</desc>
                 </svg>
+                @if (sidebarIsOpen) {
+                  <p>{{ item.label }}</p>
+
+                  <svg>
+                    <use [attr.href]="'icons/chevron-down.svg'" />
+                    <desc>More</desc>
+                  </svg>
+                }
               </span>
               <ul class="nav__sub-navigation__items">
                 @for (child of item.children; track child.label) {
@@ -46,9 +71,15 @@
               </ul>
             </div>
           } @else {
-            <a [routerLink]="item.path" routerLinkActive="active">{{
-              item.label
-            }}</a>
+            <a [routerLink]="item.path" routerLinkActive="active">
+              <svg (click)="toggleSidebar()">
+                <use [attr.href]="'icons/sidebar.svg'" />
+                <desc>{{ item.label }}</desc>
+              </svg>
+              @if (sidebarIsOpen) {
+                <p>{{ item.label }}</p>
+              }
+            </a>
           }
         </li>
       }
@@ -56,9 +87,11 @@
   </div>
 
   <div class="nav__actions" *ngIf="user$ | async as user">
-    <div class="nav__actions__user-info">
-      {{ user.displayName }} · L{{ user.permissionLevel }}
-    </div>
+    @if (sidebarIsOpen) {
+      <div class="nav__actions__user-info">
+        {{ user.displayName }} · L{{ user.permissionLevel }}
+      </div>
+    }
     <cg-dropdown-menu
       menuLabel="Account Options"
       iconPath="more-vertical.svg"
