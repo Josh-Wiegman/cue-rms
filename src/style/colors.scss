@@ -8,6 +8,11 @@ $hero-text-color: rgb(246, 248, 251);
 $main-dark-color: rgb(246, 248, 251);
 $main-light-color: rgb(255, 255, 255);
 $main-text-color: hsl(222, 37%, 19%);
+$main-sub-text-color: color.adjust(
+  $main-text-color,
+  $lightness: +60%,
+  $saturation: -30%
+);
 $main-border-color: color.adjust(
   $main-dark-color,
   $lightness: -15%,

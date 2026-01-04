@@ -16,82 +16,84 @@
         decoding="async"
       />
 
-      @if (sidebarIsOpen) {
-        <span class="nav__header__title">{{ orgName || "Company Name" }}</span>
-      }
+      <span class="nav__header__title">{{
+        orgName || "Company Name testing testing"
+      }}</span>
     </a>
   </div>
 
-  <div class="nav__main-navigation">
-    <span class="nav__main-navigation__title">
-      @if (sidebarIsOpen) {
-        <p>Navigation</p>
-      }
-      <svg (click)="toggleSidebar()">
+  <div class="nav__main">
+    <span class="nav__row">
+      <p class="nav__main__title">Navigation</p>
+
+      <svg class="nav__main__collapse" (click)="toggleSidebar()">
         <use [attr.href]="'icons/sidebar.svg'" />
         <desc>Collapse</desc>
       </svg>
     </span>
 
-    <ul class="nav__main-navigation__items">
+    <ul class="nav__main__items">
       @for (item of navItems; track item.label) {
-        <li>
-          @if (isGroup(item)) {
-            <div
-              class="nav__sub-navigation"
-              [class.nav__sub-navigation--open]="isOpen(item)"
+        @if (isGroup(item)) {
+          <li
+            class="nav__sub"
+            [class]="isOpen(item) ? 'nav__sub--open' : 'nav__sub--closed'"
+          >
+            <span
+              class="nav__row nav__item"
+              (click)="
+                sidebarIsOpen ? toggleSubGroup(item) : toggleSidebar(item)
+              "
             >
-              <span
-                class="nav__sub-navigation__title"
-                (click)="
-                  sidebarIsOpen ? toggleSubGroup(item) : toggleSidebar(item)
-                "
-              >
-                <svg (click)="toggleSidebar()">
-                  <use [attr.href]="'icons/sidebar.svg'" />
-                  <desc>{{ item.label }}</desc>
-                </svg>
-                @if (sidebarIsOpen) {
-                  <p>{{ item.label }}</p>
-
-                  <svg>
-                    <use [attr.href]="'icons/chevron-down.svg'" />
-                    <desc>More</desc>
-                  </svg>
-                }
-              </span>
-              <ul class="nav__sub-navigation__items">
-                @for (child of item.children; track child.label) {
-                  <li>
-                    <a [routerLink]="child.path" routerLinkActive="active">{{
-                      child.label
-                    }}</a>
-                  </li>
-                }
-              </ul>
-            </div>
-          } @else {
-            <a [routerLink]="item.path" routerLinkActive="active">
-              <svg (click)="toggleSidebar()">
+              <svg class="nav__icon">
                 <use [attr.href]="'icons/sidebar.svg'" />
                 <desc>{{ item.label }}</desc>
               </svg>
-              @if (sidebarIsOpen) {
-                <p>{{ item.label }}</p>
+
+              <p class="nav__label">{{ item.label }}</p>
+
+              <svg class="nav__icon nav__sub__expand">
+                <use [attr.href]="'icons/chevron-down.svg'" />
+                <desc>More</desc>
+              </svg>
+            </span>
+            <ul class="nav__sub__items">
+              @for (child of item.children; track child.label) {
+                <li class="">
+                  <a
+                    class="nav__item nav__row"
+                    [routerLink]="child.path"
+                    routerLinkActive="active"
+                    >{{ child.label }}</a
+                  >
+                </li>
               }
+            </ul>
+          </li>
+        } @else {
+          <li>
+            <a
+              class="nav__row nav__item"
+              [routerLink]="item.path"
+              routerLinkActive="active"
+            >
+              <svg class="nav__icon">
+                <use [attr.href]="'icons/sidebar.svg'" />
+                <desc>{{ item.label }}</desc>
+              </svg>
+              <p class="nav__label">{{ item.label }}</p>
             </a>
-          }
-        </li>
+          </li>
+        }
       }
     </ul>
   </div>
 
-  <div class="nav__actions" *ngIf="user$ | async as user">
-    @if (sidebarIsOpen) {
-      <div class="nav__actions__user-info">
-        {{ user.displayName }} · L{{ user.permissionLevel }}
-      </div>
-    }
+  <div class="nav__footer" *ngIf="user$ | async as user">
+    <p class="nav__footer__info">
+      {{ user.displayName }} · L{{ user.permissionLevel }}
+    </p>
+
     <cg-dropdown-menu
       menuLabel="Account Options"
       iconPath="more-vertical.svg"
