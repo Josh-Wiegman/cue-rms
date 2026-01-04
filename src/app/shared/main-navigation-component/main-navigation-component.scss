@@ -58,20 +58,20 @@ nav {
   }
 }
 
+.nav__row {
+  padding: 0.45rem 0.65rem;
+  display: flex;
+  justify-content: left;
+  width: 100%;
+  min-height: 2rem;
+  min-width: 2rem;
+}
+
 .nav__main {
   padding: 0 0.75rem;
   display: flex;
   flex-direction: column;
   width: 100%;
-
-  .nav__row {
-    padding: 0.45rem 0.65rem;
-    display: flex;
-    justify-content: left;
-    width: 100%;
-    min-height: 2rem;
-    min-width: 2rem;
-  }
 
   .nav__main__title {
     color: $main-sub-text-color;
@@ -102,22 +102,22 @@ nav {
     flex-direction: column;
     gap: 0.2rem;
   }
+}
 
-  .nav__item {
-    padding: 0.6rem 0.65rem;
-    border-radius: $minor-border-radius;
-    color: $main-text-color;
-    text-decoration: none;
-    cursor: pointer;
-    transition: $quick-transition;
+.nav__item {
+  padding: 0.6rem 0.65rem;
+  border-radius: $minor-border-radius;
+  color: $main-text-color;
+  text-decoration: none;
+  cursor: pointer;
+  transition: $quick-transition;
 
-    &.active {
-      background-color: rgba($main-text-color, 0.06);
-    }
+  &.active {
+    background-color: rgba($main-text-color, 0.06);
+  }
 
-    &:hover {
-      background-color: rgba($accent-color, 0.1);
-    }
+  &:hover {
+    background-color: rgba($accent-color, 0.1);
   }
 
   .nav__label {
@@ -129,6 +129,8 @@ nav {
   .nav__icon {
     width: 1.25rem;
     height: 1.25rem;
+    min-width: 1.25rem;
+    min-height: 1.25rem;
     display: block;
     transition: $medium-transition;
   }
