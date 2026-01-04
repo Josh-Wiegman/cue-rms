@@ -1,48 +1,92 @@
-<nav>
-  <div class="nav__brand">
-    <a class="brand">
-      @if (orgLogoUrl) {
-        <img
-          [src]="orgLogoUrl"
-          [alt]="orgName || 'Company Logo'"
-          class="brand__logo"
-          loading="eager"
-          decoding="async"
-        />
-      }
-      <span class="brand__name">{{ orgName || "Company Name" }}</span>
+<nav [class.nav--closed]="!sidebarIsOpen">
+  <div class="nav__header">
+    <a routerLink="">
+      <img
+        [src]="orgLogoUrl"
+        [alt]="orgName || 'Company Logo'"
+        class="nav__header__logo"
+        loading="eager"
+        decoding="async"
+      />
+
+      <span class="nav__header__title">{{
+        orgName || "Company Name testing testing"
+      }}</span>
     </a>
   </div>
 
-  <ul class="nav__links">
-    @for (item of navItems; track item.label) {
-      <li [class.nav__item--group]="isGroup(item)">
+  <div class="nav__main">
+    <span class="nav__row">
+      <p class="nav__main__title">Navigation</p>
+
+      <svg class="nav__main__collapse" (click)="toggleSidebar()">
+        <use [attr.href]="'icons/sidebar.svg'" />
+        <desc>Collapse</desc>
+      </svg>
+    </span>
+
+    <ul class="nav__main__items">
+      @for (item of navItems; track item.label) {
         @if (isGroup(item)) {
-          <div class="nav__group">
-            <div class="nav__group-label">{{ item.label }}</div>
-            <ul class="nav__group-links">
+          <li
+            class="nav__sub"
+            [class]="isOpen(item) ? 'nav__sub--open' : 'nav__sub--closed'"
+          >
+            <span
+              class="nav__row nav__item"
+              (click)="
+                sidebarIsOpen ? toggleSubGroup(item) : toggleSidebar(item)
+              "
+            >
+              <svg class="nav__icon">
+                <use [attr.href]="mapLabelToIcon(item)" />
+                <desc>{{ item.label }}</desc>
+              </svg>
+
+              <p class="nav__label">{{ item.label }}</p>
+
+              <svg class="nav__icon nav__sub__expand">
+                <use [attr.href]="'icons/chevron-down.svg'" />
+                <desc>More</desc>
+              </svg>
+            </span>
+            <ul class="nav__sub__items">
               @for (child of item.children; track child.label) {
-                <li>
-                  <a [routerLink]="child.path" routerLinkActive="active">
-                    {{ child.label }}
-                  </a>
+                <li class="">
+                  <a
+                    class="nav__item nav__row"
+                    [routerLink]="child.path"
+                    routerLinkActive="active"
+                    >{{ child.label }}</a
+                  >
                 </li>
               }
             </ul>
-          </div>
+          </li>
         } @else {
-          <a [routerLink]="item.path" routerLinkActive="active">{{
-            item.label
-          }}</a>
+          <li>
+            <a
+              class="nav__row nav__item"
+              [routerLink]="item.path"
+              routerLinkActive="active"
+            >
+              <svg class="nav__icon">
+                <use [attr.href]="mapLabelToIcon(item)" />
+                <desc>{{ item.label }}</desc>
+              </svg>
+              <p class="nav__label">{{ item.label }}</p>
+            </a>
+          </li>
         }
-      </li>
-    }
-  </ul>
+      }
+    </ul>
+  </div>
 
-  <div class="nav__actions" *ngIf="user$ | async as user">
-    <div class="nav__actions--user">
+  <div class="nav__footer" *ngIf="user$ | async as user">
+    <p class="nav__footer__info">
       {{ user.displayName }} · L{{ user.permissionLevel }}
-    </div>
+    </p>
+
     <cg-dropdown-menu
       menuLabel="Account Options"
       iconPath="more-vertical.svg"

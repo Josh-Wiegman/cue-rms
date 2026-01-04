@@ -133,4 +133,35 @@ export class MainNavigationComponent implements OnInit {
       ],
     };
   }
+
+  protected openGroup: NavigationItem | null = null;
+
+  protected toggleSubGroup(item: NavigationItem): void {
+    this.openGroup = this.openGroup === item ? null : item;
+  }
+
+  protected isOpen(item: NavigationItem): boolean {
+    return this.openGroup === item;
+  }
+
+  protected sidebarIsOpen: boolean = true;
+
+  protected toggleSidebar(item?: NavigationItem): void {
+    this.sidebarIsOpen = !this.sidebarIsOpen;
+    if (item) {
+      this.openGroup = this.openGroup === item ? null : item;
+    } else {
+      this.openGroup = null;
+    }
+  }
+
+  protected mapLabelToIcon(item: NavigationItem): string {
+    const mapping: Map<string, string> = new Map<string, string>();
+
+    mapping.set('Customers', 'icons/users.svg');
+    mapping.set('Purchase Orders', 'icons/file-text.svg');
+    mapping.set('Tools', 'icons/tool.svg');
+
+    return mapping.get(item.label) ?? 'icons/tool.svg';
+  }
 }

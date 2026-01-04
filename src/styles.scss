@@ -1,5 +1,9 @@
 @use "style/colors.scss" as *;
 
+:root {
+  interpolate-size: allow-keywords;
+}
+
 * {
   box-sizing: border-box;
   margin: 0;
@@ -8,8 +12,11 @@
   font-size: $normal-text;
 }
 
+html,
 body {
   background-color: $main-light-color;
+  height: 100%;
+  width: 100%;
 }
 
 h1 {

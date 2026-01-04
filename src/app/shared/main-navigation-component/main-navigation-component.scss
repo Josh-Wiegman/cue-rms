@@ -1,111 +1,212 @@
 @use "../../../style/colors.scss" as *;
 
+:host {
+  border-right: $main-border;
+}
+
 nav {
   background-color: $main-light-color;
   color: $main-text-color;
   height: 100%;
+  width: 280px;
   display: flex;
   flex-direction: column;
-  gap: 1.25rem;
+  gap: 1rem;
+
+  transition: $medium-transition;
+
+  .nav__label,
+  .nav__main__title,
+  .nav__header__title,
+  .nav__footer__info,
+  .nav__sub__expand {
+    transition: $medium-transition;
+    white-space: nowrap;
+  }
 }
 
-.nav__links {
-  list-style: none;
-  margin: 0;
-  padding: 0;
+.nav__header {
+  min-height: 4rem;
+  padding: 1rem;
+  background-color: $main-dark-color;
+  border-bottom: $main-border;
+
+  a {
+    display: flex;
+    align-items: start;
+    gap: 0.6rem;
+    text-decoration: none;
+    color: inherit;
+  }
+
+  .nav__header__logo {
+    height: 2rem;
+    width: 2rem;
+    border-radius: $minor-border-radius;
+    object-fit: contain;
+  }
+
+  .nav__header__title {
+    font-size: 1rem;
+    line-height: 2rem;
+    font-weight: 700;
+    @include compact-text;
+
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+}
+
+.nav__row {
+  padding: 0.45rem 0.65rem;
   display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-  font-size: 1rem;
-}
-
-.nav__item--group {
-  padding-bottom: 0.5rem;
-}
-
-.nav__group {
-  display: flex;
-  flex-direction: column;
-  gap: 0.35rem;
-}
-
-.nav__group-label {
-  font-size: 0.75rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: rgba($main-text-color, 0.7);
-  padding: 0.25rem 0.8rem;
-}
-
-.nav__group-links {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 0.2rem;
-}
-
-.nav__links li {
+  justify-content: left;
   width: 100%;
+  min-height: 2rem;
+  min-width: 2rem;
 }
 
-.nav__links a {
-  padding: 0.5rem 0.8rem;
+.nav__main {
+  padding: 0 0.75rem;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+
+  .nav__main__title {
+    color: $main-sub-text-color;
+    display: block;
+    font-weight: 600;
+    font-size: 0.85rem;
+    line-height: 1.25rem;
+  }
+
+  .nav__main__collapse {
+    color: $main-sub-text-color;
+    height: 1.25rem;
+    width: 1.25rem;
+    display: block;
+    transition: $medium-transition;
+    margin-left: auto;
+
+    &:hover {
+      color: rgba($main-text-color, 0.8);
+      cursor: pointer;
+    }
+  }
+
+  .nav__main__items,
+  .nav__sub__items {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+  }
+}
+
+.nav__item {
+  padding: 0.6rem 0.65rem;
+  border-radius: $minor-border-radius;
   color: $main-text-color;
   text-decoration: none;
-  display: block;
-  border-radius: $minor-border-radius;
-  transition: $quick-transition;
   cursor: pointer;
+  transition: $quick-transition;
+
+  &.active {
+    background-color: rgba($main-text-color, 0.06);
+  }
+
+  &:hover {
+    background-color: rgba($accent-color, 0.1);
+  }
+
+  .nav__label {
+    max-height: 1.25rem;
+    padding-left: 0.45rem;
+    font-weight: 500;
+  }
+
+  .nav__icon {
+    width: 1.25rem;
+    height: 1.25rem;
+    min-width: 1.25rem;
+    min-height: 1.25rem;
+    display: block;
+    transition: $medium-transition;
+  }
 }
 
-.nav__links a.active {
-  background-color: rgba($accent-color, 0.08);
+.nav__sub {
+  position: relative;
+  width: 100%;
+
+  .nav__sub__expand {
+    margin-left: auto;
+  }
+
+  .nav__sub__items {
+    margin-left: 1rem;
+    border-left: $main-border;
+    padding-left: 0.6rem;
+    margin-top: 0.2rem;
+    transition: $medium-transition;
+  }
+
+  &--closed {
+    .nav__sub__items {
+      visibility: hidden;
+      opacity: 0;
+      height: 0px;
+      overflow: hidden;
+      transform: translateX(0) translateY(-10px);
+      -webkit-transform: translateX(0) translateY(-10px);
+    }
+  }
+
+  &--open {
+    .nav__sub__items {
+      visibility: visible;
+      opacity: 1;
+      height: auto;
+      transform: translateX(0) translateY(0);
+      -webkit-transform: translateX(0) translateY(0);
+    }
+    .nav__sub__expand {
+      transform: rotate(180deg);
+    }
+  }
 }
 
-.nav__links a:hover {
-  background-color: rgba($accent-color, 0.14);
-  color: $accent-color;
-}
-
-.nav__actions {
+.nav__footer {
   margin-top: auto;
+  background-color: $main-dark-color;
+  min-height: 4rem;
   display: flex;
   align-items: center;
   justify-content: space-between;
   border-top: $main-border;
-  padding: 1.25rem 0.5rem 0.5rem 0.5rem;
+  padding: 1rem;
+
+  .nav__footer__info {
+    font-weight: 700;
+    @include compact-text;
+    font-size: 0.95rem;
+  }
 }
 
-.nav__actions--user {
-  font-weight: 600;
-  font-size: 0.9rem;
-}
+.nav--closed {
+  width: 4.05rem;
+  transition: $medium-transition;
 
-.nav__brand {
-  border-bottom: $main-border;
-  padding-bottom: 1.25rem;
-}
-
-.brand {
-  display: flex;
-  align-items: center;
-  gap: 0.6rem;
-  text-decoration: none;
-  color: inherit;
-}
-
-.brand__logo {
-  height: 40px;
-  width: 40px;
-  object-fit: contain;
-  border-radius: $minor-border-radius;
-}
-
-.brand__name {
-  font-size: 1.1rem;
-  font-weight: 600;
-  height: 100%;
+  .nav__label,
+  .nav__main__title,
+  .nav__header__title,
+  .nav__footer__info,
+  .nav__sub__expand {
+    transition: $medium-transition;
+    opacity: 0;
+    max-width: 0;
+    pointer-events: none;
+    padding-left: 0;
+  }
 }

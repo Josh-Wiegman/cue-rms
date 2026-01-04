@@ -1,3 +1,5 @@
+@use "sass:color";
+
 // Colors
 $hero-dark-color: rgb(32, 41, 79);
 $hero-light-color: rgb(79, 70, 229);
@@ -5,8 +7,17 @@ $hero-text-color: rgb(246, 248, 251);
 
 $main-dark-color: rgb(246, 248, 251);
 $main-light-color: rgb(255, 255, 255);
-$main-border-color: rgb(226, 231, 239);
-$main-text-color: rgb(31, 42, 68);
+$main-text-color: hsl(222, 37%, 19%);
+$main-sub-text-color: color.adjust(
+  $main-text-color,
+  $lightness: +60%,
+  $saturation: -30%
+);
+$main-border-color: color.adjust(
+  $main-dark-color,
+  $lightness: -15%,
+  $saturation: -100%
+);
 
 $error-color: rgb(217, 48, 37);
 $error-text-light-color: rgb(217, 48, 37);
@@ -25,10 +36,10 @@ $hero-gradient-minor: linear-gradient(145deg, $accent-color, $hero-light-color);
 $main-gradient: linear-gradient(140deg, $main-dark-color, $main-light-color);
 
 // Borders
-$main-border: 2px solid $main-border-color;
+$main-border: 1px solid $main-border-color;
 $minor-border: 1px solid $main-border-color;
-$minor-border-radius: 0.6rem;
-$minor-border-radius-internal: 0.4rem;
+$minor-border-radius: 0.4rem;
+$minor-border-radius-internal: 0.3rem;
 $major-border-radius: 1rem;
 
 // Transitions
@@ -40,6 +51,10 @@ $medium-transition: 0.3s ease;
   box-shadow: 0px 4px 16px rgba($hero-dark-color, 0.05);
   -webkit-box-shadow: 0px 4px 16px rgba(0, 0, 0, 0.05);
   -moz-box-shadow: 0px 4px 16px rgba(0, 0, 0, 0.05);
+}
+
+@mixin compact-text {
+  letter-spacing: -0.05rem;
 }
 
 // Fonts
