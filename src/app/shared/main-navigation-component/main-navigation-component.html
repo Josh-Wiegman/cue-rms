@@ -46,7 +46,7 @@
               "
             >
               <svg class="nav__icon">
-                <use [attr.href]="'icons/sidebar.svg'" />
+                <use [attr.href]="mapLabelToIcon(item)" />
                 <desc>{{ item.label }}</desc>
               </svg>
 
@@ -78,7 +78,7 @@
               routerLinkActive="active"
             >
               <svg class="nav__icon">
-                <use [attr.href]="'icons/sidebar.svg'" />
+                <use [attr.href]="mapLabelToIcon(item)" />
                 <desc>{{ item.label }}</desc>
               </svg>
               <p class="nav__label">{{ item.label }}</p>

@@ -154,4 +154,14 @@ export class MainNavigationComponent implements OnInit {
       this.openGroup = null;
     }
   }
+
+  protected mapLabelToIcon(item: NavigationItem): string {
+    const mapping: Map<string, string> = new Map<string, string>();
+
+    mapping.set('Customers', 'icons/users.svg');
+    mapping.set('Purchase Orders', 'icons/file-text.svg');
+    mapping.set('Tools', 'icons/tool.svg');
+
+    return mapping.get(item.label) ?? 'icons/tool.svg';
+  }
 }
